@@ -1,0 +1,9 @@
+version: '3.3'
+
+services:
+  # wait-compose-ready-specific-version:
+  #   build: tool/YS.Knife.Wait.Compose.Ready
+  #   image: ysknife/wait-compose-ready:${IMAGE_VERSION}
+  # wait-compose-read-latest-version:
+  #   build: tool/YS.Knife.Wait.Compose.Ready
+  #   image: ysknife/wait-compose-ready:latest

@@ -1,0 +1,20 @@
+name: basic
+on:
+  push:
+    branches:
+      - "*"
+      - "!master"
+    tags-ignore:
+      - "*"  
+jobs:
+  basic:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 01 Checkout Code
+      uses: actions/checkout@v1
+    - name: 02 Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.100
+    - name: 03 Build with dotnet
+      run: dotnet build

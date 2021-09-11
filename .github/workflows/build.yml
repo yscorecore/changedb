@@ -1,0 +1,47 @@
+name: build
+on:
+  push:
+    branches:
+      - master
+    tags-ignore:
+      - "*"  
+  pull_request:
+    branches: 
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 01 Checkout Code
+      uses: actions/checkout@v1
+    - name: 02 Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.100
+    - name: 03 Restore Dotnet Tool
+      run: dotnet tool restore
+    - name: 04 Check Code Format
+      run: dotnet format --check 
+    - name: 05 Build with dotnet
+      run: dotnet build
+    - name: 06 Count Test Projects
+      run: echo TEST_PROJ_COUNT=$(ls -l test |grep "^d"|wc -l) >> $GITHUB_ENV
+    - name: 07 Run Unit test
+      if: env.TEST_PROJ_COUNT>0
+      run: dotnet test --no-restore /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude="[*Test]*"
+    - name: 08 Combin All Test Report
+      if: env.TEST_PROJ_COUNT>0
+      run: dotnet reportgenerator -reports:test/*/coverage.cobertura.xml -reporttype:cobertura -targetdir:.
+    - name: 09 Save Artifact
+      if: env.TEST_PROJ_COUNT>0  
+      uses: actions/upload-artifact@v1
+      with:
+        name: cobertura_report
+        path: ./Cobertura.xml
+    - name: 10 Upload coverage to Codecov
+      if: env.TEST_PROJ_COUNT>0  
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: unittests
+        fail_ci_if_error: true

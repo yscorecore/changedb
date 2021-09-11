@@ -1,0 +1,7 @@
+# Code files
+[*.{cs,csx,vb,vbx}]
+# CS0414: 删除未使用的私有成员
+dotnet_diagnostic.CS0414.severity = none
+
+# IDE0051: 删除未使用的私有成员
+dotnet_diagnostic.IDE0051.severity = none
