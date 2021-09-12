@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YS.Hello", "src\YS.Hello\YS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YS.Hello.UnitTest", "test\YS.Hello.UnitTest\YS.Hello.UnitTest.csproj", "{2327D54C-ABA8-4CC3-8FEA-ACF52F0B7A11}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChangeDB.Core", "ChangeDB.Core\ChangeDB.Core.csproj", "{D290511C-E36E-45ED-AB05-CF991D174201}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,10 @@ Global
 		{2327D54C-ABA8-4CC3-8FEA-ACF52F0B7A11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2327D54C-ABA8-4CC3-8FEA-ACF52F0B7A11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2327D54C-ABA8-4CC3-8FEA-ACF52F0B7A11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D290511C-E36E-45ED-AB05-CF991D174201}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D290511C-E36E-45ED-AB05-CF991D174201}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D290511C-E36E-45ED-AB05-CF991D174201}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D290511C-E36E-45ED-AB05-CF991D174201}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
