@@ -1,8 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-    <ItemGroup>
-        <PackageReference Include="YS.Knife.Hosting" Version="2.0.2" />
-    </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\..\src\YS.Hello\YS.Hello.csproj" />
-    </ItemGroup>
-</Project>

@@ -2,7 +2,7 @@
 
 namespace ChangeDB.Migration
 {
-    public interface IDataMigrate
+    public interface IDataMigrator
     {
         Task TransferData(MigrationContext context);
 
