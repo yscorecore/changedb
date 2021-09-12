@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace ChangeDB
 {
@@ -6,6 +7,7 @@ namespace ChangeDB
     {
         public string Name { get; set; }
         public string Description { get; set; }
-        public List<ColumnDescriptor> Columns { get; set; }
+        public string Schema { get; set; }
+        public ImmutableList<ColumnDescriptor> Columns { get; set; }
     }
 }

@@ -7,7 +7,9 @@ namespace ChangeDB.Migration
     {
         Task<DatabaseDescriptor> GetDatabaseDescriptor(DatabaseInfo databaseInfo, MigrationSetting migrationSetting);
 
-        Task<DataTable> FetchTableData(string tableName, PageInfo pageInfo, MigrationSetting migrationSetting);
+        Task<DataTable> ReadTableData(string tableName, PageInfo pageInfo, MigrationSetting migrationSetting);
+
+        Task<long> CountTable(string tableName, MigrationSetting migrationSetting);
 
         Task WriteTableData(DataTable dataTable, string tableName, MigrationSetting migrationSetting);
         
