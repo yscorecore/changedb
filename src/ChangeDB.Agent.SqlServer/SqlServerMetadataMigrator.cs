@@ -3,7 +3,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlServerMetadataMigrator:IMetadataMigrator
+    public class SqlServerMetadataMigrator : IMetadataMigrator
     {
         public static readonly IMetadataMigrator Default = new SqlServerMetadataMigrator();
         public Task<DatabaseDescriptor> GetDatabaseDescriptor(DatabaseInfo databaseInfo, MigrationSetting migrationSetting)

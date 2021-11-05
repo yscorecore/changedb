@@ -5,7 +5,7 @@ namespace ChangeDB.Migration
 {
     public interface IMigrationAgent
     {
-        IDataMigrator  DataMigrator { get; }
+        IDataMigrator DataMigrator { get; }
         IMetadataMigrator MetadataMigrator { get; }
     }
 }

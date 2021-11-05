@@ -4,7 +4,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlServerDataMigrator:IDataMigrator
+    public class SqlServerDataMigrator : IDataMigrator
     {
         public static readonly SqlServerDataMigrator Default = new SqlServerDataMigrator();
         public Task<DataTable> ReadTableData(TableDescriptor table, PageInfo pageInfo, MigrationSetting migrationSetting)

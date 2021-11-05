@@ -3,7 +3,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.Postgres
 {
-    public class PostgresMetadataMigrator:IMetadataMigrator
+    public class PostgresMetadataMigrator : IMetadataMigrator
     {
         public static readonly IMetadataMigrator Default = new PostgresMetadataMigrator();
         public Task<DatabaseDescriptor> GetDatabaseDescriptor(DatabaseInfo databaseInfo, MigrationSetting migrationSetting)

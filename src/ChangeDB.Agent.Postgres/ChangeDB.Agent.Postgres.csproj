@@ -6,6 +6,11 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ChangeDB.Core\ChangeDB.Core.csproj" />
+      <ProjectReference Include="..\ChangeDB.Utils\ChangeDB.Utils.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Npgsql" Version="5.0.10" />
     </ItemGroup>
 
 </Project>

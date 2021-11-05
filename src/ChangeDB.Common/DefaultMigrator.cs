@@ -4,7 +4,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Common
 {
-    public class DefaultMigrator:IDatabaseMigrate
+    public class DefaultMigrator : IDatabaseMigrate
     {
         private readonly IAgentFactory _agentFactory;
 
@@ -34,12 +34,12 @@ namespace ChangeDB.Common
             }
         }
 
-        protected  virtual Task PostMigrate(MigrationContext context, IMigrationAgent targetAgent, DatabaseDescriptor databaseDescriptor)
+        protected virtual Task PostMigrate(MigrationContext context, IMigrationAgent targetAgent, DatabaseDescriptor databaseDescriptor)
         {
-            return targetAgent.MetadataMigrator.PostMigrate(databaseDescriptor,context.TargetDatabase, context.Setting);
+            return targetAgent.MetadataMigrator.PostMigrate(databaseDescriptor, context.TargetDatabase, context.Setting);
         }
 
-        protected  virtual async Task PreMigrate(MigrationContext context, IMigrationAgent targetAgent,
+        protected virtual async Task PreMigrate(MigrationContext context, IMigrationAgent targetAgent,
             DatabaseDescriptor databaseDescriptor)
         {
             await targetAgent.MetadataMigrator.PreMigrate(databaseDescriptor, context.TargetDatabase, context.Setting);
@@ -53,7 +53,7 @@ namespace ChangeDB.Common
                 var migratedCount = 0;
                 while (true)
                 {
-                    var pageInfo = new PageInfo {Offset = migratedCount, Limit = context.Setting.MaxPageSize};
+                    var pageInfo = new PageInfo { Offset = migratedCount, Limit = context.Setting.MaxPageSize };
                     var sourceTableData = await source.DataMigrator.ReadTableData(tableDescriptor, pageInfo, context.SourceDatabase, context.Setting);
                     await target.DataMigrator.WriteTableData(sourceTableData, tableDescriptor, context.TargetDatabase, context.Setting);
                     if (sourceTableData.Rows.Count < context.Setting.MaxPageSize)
@@ -68,6 +68,6 @@ namespace ChangeDB.Common
                 }
             }
         }
-        
+
     }
 }
