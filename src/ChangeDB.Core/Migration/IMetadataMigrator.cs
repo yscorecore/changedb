@@ -6,8 +6,8 @@ namespace ChangeDB.Migration
     {
         Task<DatabaseDescriptor> GetDatabaseDescriptor(DatabaseInfo databaseInfo, MigrationSetting migrationSetting);
 
-        Task PreMigrate(DatabaseDescriptor databaseDescriptor, MigrationSetting migrationSetting);
+        Task PreMigrate(DatabaseDescriptor databaseDescriptor, DatabaseInfo databaseInfo, MigrationSetting migrationSetting);
 
-        Task PostMigrate(DatabaseDescriptor databaseDescriptor, MigrationSetting migrationSetting);
+        Task PostMigrate(DatabaseDescriptor databaseDescriptor, DatabaseInfo databaseInfo, MigrationSetting migrationSetting);
     }
 }

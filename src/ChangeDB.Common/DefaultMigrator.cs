@@ -36,26 +36,26 @@ namespace ChangeDB.Common
 
         protected  virtual Task PostMigrate(MigrationContext context, IMigrationAgent targetAgent, DatabaseDescriptor databaseDescriptor)
         {
-            return targetAgent.MetadataMigrator.PostMigrate(databaseDescriptor, context.Setting);
+            return targetAgent.MetadataMigrator.PostMigrate(databaseDescriptor,context.TargetDatabase, context.Setting);
         }
 
         protected  virtual async Task PreMigrate(MigrationContext context, IMigrationAgent targetAgent,
             DatabaseDescriptor databaseDescriptor)
         {
-            await targetAgent.MetadataMigrator.PreMigrate(databaseDescriptor, context.Setting);
+            await targetAgent.MetadataMigrator.PreMigrate(databaseDescriptor, context.TargetDatabase, context.Setting);
         }
 
         protected virtual async Task MigrationData(IMigrationAgent source, IMigrationAgent target, DatabaseDescriptor sourceDataBase, MigrationContext context)
         {
             foreach (var tableDescriptor in sourceDataBase.Tables)
             {
-                var totalCount = await source.DataMigrator.CountTable(tableDescriptor, context.Setting);
+                var totalCount = await source.DataMigrator.CountTable(tableDescriptor, context.SourceDatabase, context.Setting);
                 var migratedCount = 0;
                 while (true)
                 {
                     var pageInfo = new PageInfo {Offset = migratedCount, Limit = context.Setting.MaxPageSize};
-                    var sourceTableData = await source.DataMigrator.ReadTableData(tableDescriptor, pageInfo, context.Setting);
-                    await target.DataMigrator.WriteTableData(sourceTableData, tableDescriptor, context.Setting);
+                    var sourceTableData = await source.DataMigrator.ReadTableData(tableDescriptor, pageInfo, context.SourceDatabase, context.Setting);
+                    await target.DataMigrator.WriteTableData(sourceTableData, tableDescriptor, context.TargetDatabase, context.Setting);
                     if (sourceTableData.Rows.Count < context.Setting.MaxPageSize)
                     {
                         // end of table

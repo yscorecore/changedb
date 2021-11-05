@@ -21,5 +21,22 @@ namespace ChangeDB.Agent.Postgres
         {
             throw new System.NotImplementedException();
         }
+
+        public Task<DataTable> ReadTableData(TableDescriptor table, PageInfo pageInfo, DatabaseInfo databaseInfo,
+            MigrationSetting migrationSetting)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task<long> CountTable(TableDescriptor table, DatabaseInfo databaseInfo, MigrationSetting migrationSetting)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task WriteTableData(DataTable data, TableDescriptor table, DatabaseInfo databaseInfo,
+            MigrationSetting migrationSetting)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

@@ -5,7 +5,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\ChangeDB.Core\ChangeDB.Core.csproj" />
       <ProjectReference Include="..\ChangeDB.Core\ChangeDB.Core.csproj" />
     </ItemGroup>
 

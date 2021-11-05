@@ -11,6 +11,16 @@ namespace ChangeDB.Agent.Postgres
             throw new System.NotImplementedException();
         }
 
+        public Task PreMigrate(DatabaseDescriptor databaseDescriptor, DatabaseInfo databaseInfo, MigrationSetting migrationSetting)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task PostMigrate(DatabaseDescriptor databaseDescriptor, DatabaseInfo databaseInfo, MigrationSetting migrationSetting)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public Task PreMigrate(DatabaseDescriptor databaseDescriptor, MigrationSetting migrationSetting)
         {
             throw new System.NotImplementedException();
