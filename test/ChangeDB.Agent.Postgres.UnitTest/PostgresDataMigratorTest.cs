@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using FluentAssertions;
@@ -51,7 +52,30 @@ namespace ChangeDB.Agent.Postgres
             table.Rows[0]["id"].Should().Be(2);
             table.Rows[0]["nm"].Should().Be("name2");
         }
-
+        [Fact]
+        public async Task ShouldSuccessWhenWriteTableData()
+        {
+            var table = new DataTable();
+            table.Columns.Add("id", typeof(int));
+            table.Columns.Add("nm", typeof(string));
+            var row = table.NewRow();
+            row["id"] = 4;
+            row["nm"] = "name4";
+            table.Rows.Add(row);
+            var tableDescriptor = new TableDescriptor
+            {
+                Schema = "ts",
+                Name = "table1",
+                Columns = new List<ColumnDescriptor>
+                {
+                    new ColumnDescriptor{ Name = "id"},
+                    new ColumnDescriptor{Name = "nm"}
+                }
+            };
+            await _dataMigrator.WriteTableData(table, tableDescriptor, _databaseInfo, _migrationSetting);
+            var totalRows = await _dataMigrator.CountTable(tableDescriptor, _databaseInfo, _migrationSetting);
+            totalRows.Should().Be(4);
+        }
         public void Dispose()
         {
             _databaseInfo.Dispose();

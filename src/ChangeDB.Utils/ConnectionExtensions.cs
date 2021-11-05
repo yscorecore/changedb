@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 
@@ -16,11 +18,26 @@ namespace ChangeDB
         }
         public static int ExecuteNonQuery(this IDbConnection connection, string sql)
         {
+            return connection.ExecuteNonQuery(sql, default(IDictionary<string, object>));
+        }
+
+        public static int ExecuteNonQuery(this IDbConnection connection, string sql, IDictionary<string, object> args)
+        {
             _ = sql ?? throw new ArgumentNullException(nameof(sql));
             AlterOpen(connection);
             var command = connection.CreateCommand();
             command.CommandText = sql;
             command.CommandType = CommandType.Text;
+            if (args?.Count > 0)
+            {
+                foreach (var kv in args)
+                {
+                    var parameter = command.CreateParameter();
+                    parameter.Value = kv.Value;
+                    parameter.ParameterName = kv.Key;
+                    command.Parameters.Add(parameter);
+                }
+            }
             return command.ExecuteNonQuery();
         }
         public static void ExecuteNonQuery(this IDbConnection connection, params string[] sqls)
