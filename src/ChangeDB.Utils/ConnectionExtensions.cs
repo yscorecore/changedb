@@ -32,6 +32,19 @@ namespace ChangeDB
                 );
             }
         }
+
+        public static DataTable ExecuteReaderAsTable(this IDbConnection connection, string sql)
+        {
+            AlterOpen(connection);
+            var command = connection.CreateCommand();
+            command.CommandText = sql;
+            command.CommandType = CommandType.Text;
+            using var reader = command.ExecuteReader();
+            var table = new DataTable();
+            table.Load(reader);
+            return table;
+        }
+
         public static void AlterOpen(IDbConnection connection)
         {
             if (connection.State == ConnectionState.Closed)
