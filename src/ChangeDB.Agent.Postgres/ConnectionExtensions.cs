@@ -6,7 +6,7 @@ namespace ChangeDB.Agent.Postgres
 {
     public static class ConnectionExtensions
     {
-        public static void ReCreateDatabase(this IDbConnection connection)
+        public static void ReCreateDatabase(this DbConnection connection)
         {
             using (var newConnection = CreateNoDatabaseConnection(connection))
             {
@@ -16,6 +16,12 @@ namespace ChangeDB.Agent.Postgres
                             $"create database {connectionInfo.Database}"
                     );
             }
+        }
+
+        public static string ExtractDatabaseName(this DbConnection connection)
+        {
+            var connectionInfo = new NpgsqlConnectionStringBuilder(connection.ConnectionString);
+            return connectionInfo.Database;
         }
 
         private static NpgsqlConnection CreateNoDatabaseConnection(IDbConnection connection)
