@@ -7,7 +7,7 @@ namespace ChangeDB
     {
         public string Name { get; set; }
 
-        public List<SchemaDescriptor> Schemas { get; set; }
+        public List<string> Schemas { get; set; }
         public List<TableDescriptor> Tables { get; set; }
     }
 }
