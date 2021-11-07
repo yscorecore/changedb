@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChangeDB.Migration;
 using CommandLine;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ChangeDB.ConsoleApp.Commands
 {
     [Verb("migration", HelpText = "Migration database from source to target")]
-    public class Migration:ICommand
+    public class Migration : ICommand
     {
         [Value(1, MetaName = "source-dbtype", Required = true, HelpText = "source database type.")]
         public string SourceType { get; set; }
@@ -22,6 +24,14 @@ namespace ChangeDB.ConsoleApp.Commands
 
         public int Run()
         {
+            var service = ServiceHost.Default.GetRequiredService<IDatabaseMigrate>();
+            var task = service.MigrateDatabase(new MigrationContext
+            {
+                Setting = new MigrationSetting(),
+                SourceDatabase = new DatabaseInfo { Type = SourceType, ConnectionString = SourceConnectionString },
+                TargetDatabase = new DatabaseInfo { Type = TargetType, ConnectionString = TargetConnectionString }
+            });
+            task.Wait();
             return 0;
         }
     }

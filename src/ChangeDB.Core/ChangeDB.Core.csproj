@@ -5,4 +5,8 @@
         <RootNamespace>ChangeDB</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="YS.Knife.Core" Version="2.0.2" />
+    </ItemGroup>
+
 </Project>

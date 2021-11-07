@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ChangeDB.ConsoleApp": {
+      "commandName": "Project",
+      "commandLineArgs": "migration postgres \"Server=127.0.0.1;Port=5432;Database=testdb;User Id=postgres;Password=mypassword;\" postgres \"Server=127.0.0.1;Port=5432;Database=testdb2;User Id=postgres;Password=mypassword;\" "
+    }
+  }
+}

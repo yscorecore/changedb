@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
@@ -12,24 +13,24 @@ namespace ChangeDB.Agent.Postgres
         public static readonly PostgresMetadataMigrator Default = new PostgresMetadataMigrator();
 
         //https://github.com/npgsql/npgsql/blob/5c5c31e4d9d35ce22f023b45a6bd4a4ba6668f33/src/Npgsql/NpgsqlSchema.cs#L231
-        public Task<DatabaseDescriptor> GetDatabaseDescriptor(DatabaseInfo databaseInfo, MigrationSetting migrationSetting)
+        public Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection dbConnection, MigrationSetting migrationSetting)
         {
-            var databaseName = databaseInfo.Connection.ExtractDatabaseName();
+            var databaseName =dbConnection.ExtractDatabaseName();
 
-            var reservedwords = databaseInfo.Connection.GetSchema("RESERVEDWORDS");
-            var tables = databaseInfo.Connection.GetSchema("TABLES", new string[] { databaseName });
-            var columns = databaseInfo.Connection.GetSchema("COLUMNS", new string[] { databaseName });
+            var reservedwords =dbConnection.GetSchema("RESERVEDWORDS");
+            var tables =dbConnection.GetSchema("TABLES", new string[] { databaseName });
+            var columns =dbConnection.GetSchema("COLUMNS", new string[] { databaseName });
 
             var names = Enumerable.Range(0, columns.Columns.Count).Select(p => columns.Columns[p].ColumnName).ToArray();
 
 
-            var index = databaseInfo.Connection.GetSchema("INDEXES", new string[] { databaseName });
-            var indexColumns = databaseInfo.Connection.GetSchema("INDEXCOLUMNS", new string[] { databaseName });
-            var constraints = databaseInfo.Connection.GetSchema("CONSTRAINTS", new string[] { databaseName });
+            var index =dbConnection.GetSchema("INDEXES", new string[] { databaseName });
+            var indexColumns =dbConnection.GetSchema("INDEXCOLUMNS", new string[] { databaseName });
+            var constraints =dbConnection.GetSchema("CONSTRAINTS", new string[] { databaseName });
             var prmarykeys = constraints.AsEnumerable().Where(p => p.Field<string>("CONSTRAINT_TYPE") == "PRIMARY KEY").ToArray();
             var forigenKeys = constraints.AsEnumerable().Where(p => p.Field<string>("CONSTRAINT_TYPE") == "FOREIGN KEY").ToArray();
             var uniqueKeys = constraints.AsEnumerable().Where(p => p.Field<string>("CONSTRAINT_TYPE") == "UNIQUE KEY").ToArray();
-            var constraintColumns = databaseInfo.Connection.GetSchema("CONSTRAINTCOLUMNS", new string[] { databaseName });
+            var constraintColumns =dbConnection.GetSchema("CONSTRAINTCOLUMNS", new string[] { databaseName });
             var primaryKeyColumns = constraintColumns.AsEnumerable().Where(p => p.Field<string>("constraint_type") == "PRIMARY KEY").ToArray().AsEnumerable();
             var foreignKeyColumns = constraintColumns.AsEnumerable().Where(p => p.Field<string>("constraint_type") == "FOREIGN KEY").ToArray().AsEnumerable();
             var uniqueKeyColumns = constraintColumns.AsEnumerable().Where(p => p.Field<string>("constraint_type") == "UNIQUE KEY").ToArray().AsEnumerable();
@@ -84,38 +85,38 @@ namespace ChangeDB.Agent.Postgres
         }
 
 
-        public Task PreMigrate(DatabaseDescriptor databaseDescriptor, DatabaseInfo databaseInfo, MigrationSetting migrationSetting)
+        public Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
         {
-            CreateTargetDatabase(databaseInfo, migrationSetting);
-            CreateTargetSchemas(databaseDescriptor, databaseInfo, migrationSetting);
-            CreateTargetTablesWithoutConstraints(databaseDescriptor, databaseInfo, migrationSetting);
+            CreateTargetDatabase(dbConnection, migrationSetting);
+            CreateTargetSchemas(databaseDescriptor, dbConnection, migrationSetting);
+            CreateTargetTablesWithoutConstraints(databaseDescriptor, dbConnection, migrationSetting);
             return Task.CompletedTask;
         }
-        public Task PostMigrate(DatabaseDescriptor databaseDescriptor, DatabaseInfo databaseInfo, MigrationSetting migrationSetting)
+        public Task PostMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
         {
-            ApplyTargetTablesConstraints(databaseDescriptor, databaseInfo, migrationSetting);
+            ApplyTargetTablesConstraints(databaseDescriptor, dbConnection, migrationSetting);
             return Task.CompletedTask;
         }
 
-        private static void CreateTargetDatabase(DatabaseInfo databaseInfo, MigrationSetting migrationSetting)
+        private static void CreateTargetDatabase(DbConnection dbConnection, MigrationSetting migrationSetting)
         {
             if (migrationSetting.DropTargetDatabaseIfExists)
             {
-                databaseInfo.Connection.ReCreateDatabase();
+               dbConnection.ReCreateDatabase();
             }
             else
             {
-                databaseInfo.Connection.CreateDatabase();
+               dbConnection.CreateDatabase();
             }
         }
-        private static void CreateTargetSchemas(DatabaseDescriptor databaseDescriptor, DatabaseInfo databaseInfo, MigrationSetting migrationSetting)
+        private static void CreateTargetSchemas(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
         {
             foreach (var schema in databaseDescriptor.Schemas)
             {
-                databaseInfo.Connection.ExecuteNonQuery($"CREATE SCHEMA IF NOT EXISTS {PostgresUtils.IdentityName(schema)};");
+               dbConnection.ExecuteNonQuery($"CREATE SCHEMA IF NOT EXISTS {PostgresUtils.IdentityName(schema)};");
             }
         }
-        private static void CreateTargetTablesWithoutConstraints(DatabaseDescriptor databaseDescriptor, DatabaseInfo databaseInfo, MigrationSetting migrationSetting)
+        private static void CreateTargetTablesWithoutConstraints(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
         {
             // create table
             // primary key
@@ -124,12 +125,12 @@ namespace ChangeDB.Agent.Postgres
             {
                 var tableFullName = PostgresUtils.IdentityName(table.Schema, table.Name);
                 var columns = string.Join(",", table.Columns.Select(p => $"{PostgresUtils.IdentityName(p.Name)} {TranformDataType(p.DbType)}"));
-                databaseInfo.Connection.ExecuteNonQuery(
+               dbConnection.ExecuteNonQuery(
                     $"CREATE TABLE {tableFullName} ({columns});");
             }
 
         }
-        private static void ApplyTargetTablesConstraints(DatabaseDescriptor databaseDescriptor, DatabaseInfo databaseInfo, MigrationSetting migrationSetting)
+        private static void ApplyTargetTablesConstraints(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
         {
             // not null
             // unique

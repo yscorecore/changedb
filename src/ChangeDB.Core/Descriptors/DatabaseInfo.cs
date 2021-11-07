@@ -2,17 +2,9 @@
 
 namespace ChangeDB
 {
-    public class DatabaseInfo : System.IDisposable
+    public class DatabaseInfo
     {
         public string Type { get; set; }
-        public DbConnection Connection { get; set; }
-        public void Dispose()
-        {
-            if (Connection != null)
-            {
-                Connection.Dispose();
-                Connection = null;
-            }
-        }
+        public string ConnectionString { get; set; }
     }
 }
