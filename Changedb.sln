@@ -1,25 +1,27 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29424.173
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31410.414
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6C7E5914-CD6B-40F1-BFD7-8FB17E3EAE11}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{9D50B35B-1EAA-4620-B0A6-245456051247}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChangeDB.Common", "src\ChangeDB.Common\ChangeDB.Common.csproj", "{2B987016-D56B-4E92-9127-B11A7F3C7F80}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Common", "src\ChangeDB.Common\ChangeDB.Common.csproj", "{2B987016-D56B-4E92-9127-B11A7F3C7F80}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChangeDB.Core", "src\ChangeDB.Core\ChangeDB.Core.csproj", "{D498748A-7138-447B-80E3-E1BAE3CCFA59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Core", "src\ChangeDB.Core\ChangeDB.Core.csproj", "{D498748A-7138-447B-80E3-E1BAE3CCFA59}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChangeDB.Common.Test", "test\ChangeDB.Common.Test\ChangeDB.Common.Test.csproj", "{9DB8CBC3-5D36-42A7-8498-723A10065677}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Common.Test", "test\ChangeDB.Common.Test\ChangeDB.Common.Test.csproj", "{9DB8CBC3-5D36-42A7-8498-723A10065677}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChangeDB.Agent.Postgres", "src\ChangeDB.Agent.Postgres\ChangeDB.Agent.Postgres.csproj", "{0B3B6138-582E-43D5-86DE-D974A877B256}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.Postgres", "src\ChangeDB.Agent.Postgres\ChangeDB.Agent.Postgres.csproj", "{0B3B6138-582E-43D5-86DE-D974A877B256}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChangeDB.Agent.SqlServer", "src\ChangeDB.Agent.SqlServer\ChangeDB.Agent.SqlServer.csproj", "{81EBB755-D3DE-48A3-BB37-BA95C8466660}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.SqlServer", "src\ChangeDB.Agent.SqlServer\ChangeDB.Agent.SqlServer.csproj", "{81EBB755-D3DE-48A3-BB37-BA95C8466660}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChangeDB.Agent.Postgres.UnitTest", "test\ChangeDB.Agent.Postgres.UnitTest\ChangeDB.Agent.Postgres.UnitTest.csproj", "{5C5B1951-49F1-4C10-90BC-5315B82FE504}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.Postgres.UnitTest", "test\ChangeDB.Agent.Postgres.UnitTest\ChangeDB.Agent.Postgres.UnitTest.csproj", "{5C5B1951-49F1-4C10-90BC-5315B82FE504}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChangeDB.Utils", "src\ChangeDB.Utils\ChangeDB.Utils.csproj", "{E5476B25-6285-4F1C-A747-CEBBA6B59F0E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Utils", "src\ChangeDB.Utils\ChangeDB.Utils.csproj", "{E5476B25-6285-4F1C-A747-CEBBA6B59F0E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.ConsoleApp", "src\ChangeDB.ConsoleApp\ChangeDB.ConsoleApp.csproj", "{02D45DAF-E60D-42C0-BBDF-6B8BEFB65897}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +57,10 @@ Global
 		{E5476B25-6285-4F1C-A747-CEBBA6B59F0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E5476B25-6285-4F1C-A747-CEBBA6B59F0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E5476B25-6285-4F1C-A747-CEBBA6B59F0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02D45DAF-E60D-42C0-BBDF-6B8BEFB65897}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02D45DAF-E60D-42C0-BBDF-6B8BEFB65897}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02D45DAF-E60D-42C0-BBDF-6B8BEFB65897}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02D45DAF-E60D-42C0-BBDF-6B8BEFB65897}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,6 +73,7 @@ Global
 		{81EBB755-D3DE-48A3-BB37-BA95C8466660} = {6C7E5914-CD6B-40F1-BFD7-8FB17E3EAE11}
 		{5C5B1951-49F1-4C10-90BC-5315B82FE504} = {9D50B35B-1EAA-4620-B0A6-245456051247}
 		{E5476B25-6285-4F1C-A747-CEBBA6B59F0E} = {6C7E5914-CD6B-40F1-BFD7-8FB17E3EAE11}
+		{02D45DAF-E60D-42C0-BBDF-6B8BEFB65897} = {6C7E5914-CD6B-40F1-BFD7-8FB17E3EAE11}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB11BB21-3F5D-42D6-8737-F19C0666F1F8}
