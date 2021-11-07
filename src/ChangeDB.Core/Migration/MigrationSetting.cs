@@ -6,5 +6,7 @@
         public bool IncludeData { get; set; } = true;
 
         public int MaxPageSize { get; set; } = 10000;
+
+        public bool DropTargetDatabaseIfExists { get; set; } = false;
     }
 }

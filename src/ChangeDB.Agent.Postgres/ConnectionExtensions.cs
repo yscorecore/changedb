@@ -17,7 +17,24 @@ namespace ChangeDB.Agent.Postgres
                     );
             }
         }
-
+        public static int DropDatabaseIfExists(this DbConnection connection)
+        {
+            using (var newConnection = CreateNoDatabaseConnection(connection))
+            {
+                var connectionInfo = new NpgsqlConnectionStringBuilder(connection.ConnectionString);
+                return newConnection.ExecuteNonQuery(
+                     $"drop database if exists {connectionInfo.Database}"
+                     );
+            }
+        }
+        public static int CreateDatabase(this DbConnection connection)
+        {
+            using (var newConnection = CreateNoDatabaseConnection(connection))
+            {
+                var connectionInfo = new NpgsqlConnectionStringBuilder(connection.ConnectionString);
+                return newConnection.ExecuteNonQuery($"create database {connectionInfo.Database}");
+            }
+        }
         public static string ExtractDatabaseName(this DbConnection connection)
         {
             var connectionInfo = new NpgsqlConnectionStringBuilder(connection.ConnectionString);

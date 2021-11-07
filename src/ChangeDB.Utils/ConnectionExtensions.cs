@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 
 namespace ChangeDB
 {
@@ -60,6 +61,16 @@ namespace ChangeDB
             var table = new DataTable();
             table.Load(reader);
             return table;
+        }
+        public static List<T> ExecuteReaderAsList<T>(this IDbConnection connection, string sql,int columnIndex=0)
+        {
+            var table = ExecuteReaderAsTable(connection, sql);
+            return table.AsEnumerable().Select(p => p.Field<T>(columnIndex)).ToList();
+        }
+        public static List<T> ExecuteReaderAsList<T>(this IDbConnection connection, string sql, string columnName)
+        {
+            var table = ExecuteReaderAsTable(connection, sql);
+            return table.AsEnumerable().Select(p => p.Field<T>(columnName)).ToList();
         }
 
         public static void AlterOpen(IDbConnection connection)
