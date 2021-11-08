@@ -29,12 +29,47 @@ namespace ChangeDB
                 }
             }
         }
-        private string Type2String(DBType dbType) => $"{dbType.ToString().ToUpperInvariant().Replace("__"," ")}";
+
+
+
+        private string Type2String(DBType dbType) => $"{dbType.ToString().ToUpperInvariant().Replace("__", " ")}";
     }
 
     public enum DBType
     {
-        Character__Varying,
+        // int32
         Int,
+        // int16
+        SmallInt,
+        // int64
+        BigInt,
+        // int8
+        TinyInt,
+
+
+
+        Char,
+        Varchar,
+        Text,
+        NChar,
+        NVarchar,
+        NText,
+        Boolean,
+
+        Binary,
+        Varbinary,
+        Blob,
+
+        Uuid,
+        RowVersion,
+
+        Double,
+        Float,
+        Decimal,
+
+        Date,
+        Time,
+        DateTime,
+        DateTimeOffset,
     }
 }

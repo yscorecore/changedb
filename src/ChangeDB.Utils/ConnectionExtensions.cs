@@ -62,7 +62,7 @@ namespace ChangeDB
             table.Load(reader);
             return table;
         }
-        public static List<T> ExecuteReaderAsList<T>(this IDbConnection connection, string sql,int columnIndex=0)
+        public static List<T> ExecuteReaderAsList<T>(this IDbConnection connection, string sql, int columnIndex = 0)
         {
             var table = ExecuteReaderAsTable(connection, sql);
             return table.AsEnumerable().Select(p => p.Field<T>(columnIndex)).ToList();

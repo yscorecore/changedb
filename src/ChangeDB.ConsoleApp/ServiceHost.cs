@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChangeDB.ConsoleApp
 {
-    class ServiceHost:YS.Knife.Hosting.KnifeHost
+    class ServiceHost : YS.Knife.Hosting.KnifeHost
     {
         public readonly static ServiceHost Default = new ServiceHost();
     }

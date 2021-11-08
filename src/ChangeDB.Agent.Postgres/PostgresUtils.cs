@@ -10,7 +10,7 @@ namespace ChangeDB.Agent.Postgres
     {
         public static string IdentityName(string objectName, NameStyle nameStyle = NameStyle.Same)
         {
-            _=objectName??throw new ArgumentNullException(nameof(objectName));
+            _ = objectName ?? throw new ArgumentNullException(nameof(objectName));
             return nameStyle switch
             {
                 NameStyle.Lower => $"\"{objectName.ToLower()}\"",
@@ -30,6 +30,6 @@ namespace ChangeDB.Agent.Postgres
             }
         }
 
-      
+
     }
 }

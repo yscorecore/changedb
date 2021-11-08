@@ -6,6 +6,6 @@
         public DatabaseInfo TargetDatabase { get; set; }
         public MigrationSetting Setting { get; set; }
 
-        
+
     }
 }
