@@ -82,8 +82,8 @@ namespace ChangeDB.Agent.Postgres
                    }
             };
             await _metadataMigrator.PreMigrate(databaseDesc, _dbConnection, _migrationSetting);
-            var schemas = _dbConnection.ExecuteReaderAsList<string>("select table_schema || '.' ||table_name from information_schema.\"tables\" t where t.table_schema not in ('pg_catalog','pg_toast','information_schema')");
-            schemas.Should().Contain("ts.table1");
+            var databaseDesc2 = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc2.Should().BeEquivalentTo(databaseDesc);
         }
         [Theory]
 

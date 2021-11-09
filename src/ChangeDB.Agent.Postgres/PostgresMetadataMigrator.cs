@@ -17,15 +17,15 @@ namespace ChangeDB.Agent.Postgres
         {
             var databaseName = dbConnection.ExtractDatabaseName();
 
-            var reservedwords = dbConnection.GetSchema("RESERVEDWORDS");
+            //var reservedWords = dbConnection.GetSchema("RESERVEDWORDS");
             var tables = dbConnection.GetSchema("TABLES", new string[] { databaseName });
             var columns = dbConnection.GetSchema("COLUMNS", new string[] { databaseName });
 
             var index = dbConnection.GetSchema("INDEXES", new string[] { databaseName });
             var indexColumns = dbConnection.GetSchema("INDEXCOLUMNS", new string[] { databaseName });
             var constraints = dbConnection.GetSchema("CONSTRAINTS", new string[] { databaseName });
-            var prmarykeys = constraints.AsEnumerable().Where(p => p.Field<string>("CONSTRAINT_TYPE") == "PRIMARY KEY").ToArray();
-            var forigenKeys = constraints.AsEnumerable().Where(p => p.Field<string>("CONSTRAINT_TYPE") == "FOREIGN KEY").ToArray();
+            var primaryKeys = constraints.AsEnumerable().Where(p => p.Field<string>("CONSTRAINT_TYPE") == "PRIMARY KEY").ToArray();
+            var foreigenKeys = constraints.AsEnumerable().Where(p => p.Field<string>("CONSTRAINT_TYPE") == "FOREIGN KEY").ToArray();
             var uniqueKeys = constraints.AsEnumerable().Where(p => p.Field<string>("CONSTRAINT_TYPE") == "UNIQUE KEY").ToArray();
             var constraintColumns = dbConnection.GetSchema("CONSTRAINTCOLUMNS", new string[] { databaseName });
             var primaryKeyColumns = constraintColumns.AsEnumerable().Where(p => p.Field<string>("constraint_type") == "PRIMARY KEY").ToArray().AsEnumerable();
@@ -66,16 +66,18 @@ namespace ChangeDB.Agent.Postgres
 
                 return columnList;
             }
-            bool DBFilter(DataRow p, string dbname)
+
+            static bool DBFilter(DataRow p, string dbname)
             {
                 return p.Field<string>("table_catalog") == dbname;
             }
 
-            bool TableFilter(DataRow p, string dbname, string schemeName, string tableName)
+            static bool TableFilter(DataRow p, string dbname, string schemeName, string tableName)
             {
                 return p.Field<string>("table_catalog") == dbname && p.Field<string>("table_schema") == schemeName && p.Field<string>("table_name") == tableName;
             }
-            void SetAllSchemas(DatabaseDescriptor databaseDescriptor)
+
+            static void SetAllSchemas(DatabaseDescriptor databaseDescriptor)
             {
                 databaseDescriptor.Schemas = databaseDescriptor.Tables.Select(p => p.Schema).Distinct().ToList();
             }
@@ -108,7 +110,7 @@ namespace ChangeDB.Agent.Postgres
         }
         private static void CreateTargetSchemas(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
         {
-            foreach (var schema in databaseDescriptor.Schemas)
+            foreach (var schema in databaseDescriptor.Schemas??Enumerable.Empty<string>())
             {
                 dbConnection.ExecuteNonQuery($"CREATE SCHEMA IF NOT EXISTS {PostgresUtils.IdentityName(schema)};");
             }
@@ -121,9 +123,13 @@ namespace ChangeDB.Agent.Postgres
             foreach (var table in databaseDescriptor.Tables ?? Enumerable.Empty<TableDescriptor>())
             {
                 var tableFullName = PostgresUtils.IdentityName(table.Schema, table.Name);
-                var columns = string.Join(",", table.Columns.Select(p => $"{PostgresUtils.IdentityName(p.Name)} {TranformDataType(p.DbType)}"));
-                dbConnection.ExecuteNonQuery(
-                     $"CREATE TABLE {tableFullName} ({columns});");
+                var columnDefines = string.Join(",", table.Columns.Select(p => $"{PostgresUtils.IdentityName(p.Name)} {TranformDataType(p.DbType)}"));
+                dbConnection.ExecuteNonQuery($"CREATE TABLE {tableFullName} ({columnDefines});");
+                var primaryColumns = string.Join(",", table.Columns.Where(p => p.IsPrimaryKey).Select(p=>PostgresUtils.IdentityName(p.Name)));
+                if (!string.IsNullOrEmpty(primaryColumns))
+                {
+                    dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD PRIMARY KEY ({primaryColumns})");
+                }
             }
 
         }
@@ -134,6 +140,21 @@ namespace ChangeDB.Agent.Postgres
             // forgin key
             // identity column
             // default value
+            foreach (var table in databaseDescriptor.Tables ?? Enumerable.Empty<TableDescriptor>())
+            {
+                foreach (var column in table.Columns??Enumerable.Empty<ColumnDescriptor>())
+                {
+                    if (!column.AllowNull)
+                    {
+                        dbConnection.ExecuteNonQuery($"alter table {PostgresUtils.IdentityName(table.Schema,table.Name)} alter column {PostgresUtils.IdentityName(column.Name)} set not null;");
+                    }
+                }
+            }
+            //
+            // ALTER TABLE child_table 
+            //     ADD CONSTRAINT constraint_name 
+            // FOREIGN KEY (fk_columns) 
+            // REFERENCES parent_table (parent_key_columns);
 
         }
         private static DBTypeDescriptor CreateDbTypeDesc(DataRow row)
@@ -145,7 +166,7 @@ namespace ChangeDB.Agent.Postgres
             var numericPrecisionRadix = row.Field<int?>("numeric_precision_radix");
             var numericScale = row.Field<int?>("numeric_scale");
             var datetimePrecision = row.Field<int?>("datetime_precision");
-            return dataType.ToUpperInvariant() switch
+            return dataType?.ToUpperInvariant() switch
             {
                 "CHARACTER VARYING" => characterMaximumLength == null ? new DBTypeDescriptor { DbType = DBType.NText } : new DBTypeDescriptor { DbType = DBType.NVarchar, Length = characterMaximumLength },
                 "CHARACTER" => new DBTypeDescriptor { DbType = DBType.NChar, Length = characterMaximumLength },
@@ -173,15 +194,29 @@ namespace ChangeDB.Agent.Postgres
             return dataType.DbType switch
             {
                 DBType.Boolean => "bool",
-                DBType.Varchar => "varchar",
+                DBType.Varchar => $"varchar({dataType.Length})",
                 DBType.Char => "char",
-                DBType.NVarchar => "varchar",
+                DBType.NVarchar => $"varchar({dataType.Length})",
                 DBType.NChar => "varchar",
                 DBType.Uuid => "uuid",
                 DBType.Float => "real",
                 DBType.Double => "float",
                 DBType.Binary => "bytea",
-
+                DBType.Int => "int",
+                DBType.SmallInt => "smallint",
+                DBType.BigInt => "bigint",
+                DBType.TinyInt => "smallint",
+                DBType.Text => "text",
+                DBType.NText => "text",
+                DBType.Varbinary => "bytea",
+                DBType.Blob => "bytea",
+                DBType.RowVersion => "bytea",
+                DBType.Decimal => "numeric",
+                DBType.Date => "date",
+                DBType.Time => "TIME WITHOUT TIME ZONE",
+                DBType.DateTime => "TIMESTAMP WITHOUT TIME ZONE",
+                DBType.DateTimeOffset => "TIMESTAMP WITH TIME ZONE",
+                _ => throw new ArgumentOutOfRangeException()
             };
         }
     }
