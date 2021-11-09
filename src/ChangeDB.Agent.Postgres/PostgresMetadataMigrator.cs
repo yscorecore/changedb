@@ -144,7 +144,7 @@ namespace ChangeDB.Agent.Postgres
             {
                 foreach (var column in table.Columns??Enumerable.Empty<ColumnDescriptor>())
                 {
-                    if (!column.AllowNull)
+                    if (!column.IsPrimaryKey && !column.AllowNull)
                     {
                         dbConnection.ExecuteNonQuery($"alter table {PostgresUtils.IdentityName(table.Schema,table.Name)} alter column {PostgresUtils.IdentityName(column.Name)} set not null;");
                     }
