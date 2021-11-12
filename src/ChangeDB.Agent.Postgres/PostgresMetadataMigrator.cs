@@ -2,9 +2,19 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
+using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.EntityFrameworkCore.Scaffolding;
+using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Diagnostics.Internal;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Scaffolding.Internal;
 
 namespace ChangeDB.Agent.Postgres
 {
@@ -13,8 +23,10 @@ namespace ChangeDB.Agent.Postgres
         public static readonly PostgresMetadataMigrator Default = new PostgresMetadataMigrator();
 
         //https://github.com/npgsql/npgsql/blob/5c5c31e4d9d35ce22f023b45a6bd4a4ba6668f33/src/Npgsql/NpgsqlSchema.cs#L231
-        public Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection dbConnection, MigrationSetting migrationSetting)
+        public async Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection dbConnection, MigrationSetting migrationSetting)
         {
+
+            var databaseModel = await GetDataBaseModelFromEFCore(dbConnection);
             var databaseName = dbConnection.ExtractDatabaseName();
 
             //var reservedWords = dbConnection.GetSchema("RESERVEDWORDS");
@@ -37,7 +49,7 @@ namespace ChangeDB.Agent.Postgres
                 Tables = BuildTables(tables, columns, databaseName)
             };
             SetAllSchemas(databaseDesc);
-            return Task.FromResult(databaseDesc);
+            return databaseDesc;
             List<TableDescriptor> BuildTables(DataTable tableData, DataTable columnData, string dbname)
             {
                 var tableList = tableData.AsEnumerable()
@@ -61,37 +73,37 @@ namespace ChangeDB.Agent.Postgres
             {
                 string primaryKeyConstraintName = tb.PrimaryKey?.Name;
                 return indexColumns.AsEnumerable().Where(p => TableFilter(p, databaseName, tb.Schema, tb.Name))
-                    .Where(p=>p.Field<string>("constraint_name")!= primaryKeyConstraintName)
-                    .GroupBy(p => (p.Field<string>("constraint_schema"),p.Field<string>("index_name")))
+                    .Where(p => p.Field<string>("constraint_name") != primaryKeyConstraintName)
+                    .GroupBy(p => (p.Field<string>("constraint_schema"), p.Field<string>("index_name")))
                     .Select(g => new IndexDescriptor
                     {
                         Schema = g.Key.Item1,
                         Name = g.Key.Item2,
-                        Columns = g.Select(p=>p.Field<string>("column_name")).ToList()
+                        Columns = g.Select(p => p.Field<string>("column_name")).ToList()
                     }).ToList();
             }
 
             PrimaryKeyDescriptor BuildPrimaryKey(TableDescriptor tableDescriptor)
             {
-               var primaryKeyRows =  primaryKeyColumns.Where(p => TableFilter(p, databaseName, tableDescriptor.Schema, tableDescriptor.Name))
-                    .ToList();
-               if (primaryKeyRows.Count > 0)
-               {
-                   return new PrimaryKeyDescriptor
-                   {
+                var primaryKeyRows = primaryKeyColumns.Where(p => TableFilter(p, databaseName, tableDescriptor.Schema, tableDescriptor.Name))
+                     .ToList();
+                if (primaryKeyRows.Count > 0)
+                {
+                    return new PrimaryKeyDescriptor
+                    {
                         Schema = primaryKeyRows.First().Field<string>("constraint_schema"),
                         Name = primaryKeyRows.First().Field<string>("constraint_name"),
-                        Columns = primaryKeyRows.Select(p=> p.Field<string>("column_name")).ToList()
-                   };
-               }
-               return null;
+                        Columns = primaryKeyRows.Select(p => p.Field<string>("column_name")).ToList()
+                    };
+                }
+                return null;
             }
 
             List<ForeignKeyDescriptor> BuildForeignKeys(TableDescriptor tb)
             {
                 string primaryKeyConstraintName = tb.PrimaryKey?.Name;
 
-                return null;
+                return new List<ForeignKeyDescriptor>();
             }
 
             List<ColumnDescriptor> BuildColumns(DataTable data, string dbname, string schemeName, string tableName)
@@ -103,8 +115,8 @@ namespace ChangeDB.Agent.Postgres
                      {
                          Name = p.Field<string>("column_name"),
                          DbType = CreateDbTypeDesc(p),
-                         AllowNull = "YES".Equals(p.Field<string>("is_nullable"), StringComparison.InvariantCultureIgnoreCase),
-                         DefaultValue = p.Field<string>("column_default"),
+                         IsNullable = "YES".Equals(p.Field<string>("is_nullable"), StringComparison.InvariantCultureIgnoreCase),
+                         DefaultValueSql = p.Field<string>("column_default"),
                      }).ToList();
                 //columnList.ForEach(col => { col.IsPrimaryKey = primaryKeyColumns.Any(p => TableFilter(p, dbname, schemeName, tableName) && p.Field<string>("column_name") == col.Name); });
 
@@ -127,6 +139,21 @@ namespace ChangeDB.Agent.Postgres
             }
         }
 
+        private Task<DatabaseModel> GetDataBaseModelFromEFCore(DbConnection dbConnection)
+        {
+            var loggerFactory = new LoggerFactory();
+            var databaseModelFactory = new NpgsqlDatabaseModelFactory(
+                   new DiagnosticsLogger<DbLoggerCategory.Scaffolding>(
+                       loggerFactory,
+                       new LoggingOptions(),
+                       new DiagnosticListener("postgres"),
+                       new NpgsqlLoggingDefinitions(),
+                       new NullDbContextLogger()));
+            var options = new DatabaseModelFactoryOptions();
+
+            var model = databaseModelFactory.Create(dbConnection, options);
+            return Task.FromResult(model);
+        }
 
         public Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
         {
@@ -154,7 +181,7 @@ namespace ChangeDB.Agent.Postgres
         }
         private static void CreateTargetSchemas(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
         {
-            foreach (var schema in databaseDescriptor.Schemas??Enumerable.Empty<string>())
+            foreach (var schema in databaseDescriptor.Schemas ?? Enumerable.Empty<string>())
             {
                 dbConnection.ExecuteNonQuery($"CREATE SCHEMA IF NOT EXISTS {PostgresUtils.IdentityName(schema)};");
             }
@@ -172,14 +199,14 @@ namespace ChangeDB.Agent.Postgres
 
                 if (table.PrimaryKey?.Columns?.Count > 0)
                 {
-                    var primaryColumns = string.Join(",", table.PrimaryKey?.Columns.Select(p=>PostgresUtils.IdentityName(p)));
+                    var primaryColumns = string.Join(",", table.PrimaryKey?.Columns.Select(p => PostgresUtils.IdentityName(p)));
                     if (string.IsNullOrEmpty(table.PrimaryKey.Name))
                     {
                         dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD PRIMARY KEY ({primaryColumns})");
                     }
                     else
                     {
-                        dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD constraint {PostgresUtils.IdentityName(table.PrimaryKey.Schema,table.PrimaryKey.Name)} PRIMARY KEY ({primaryColumns})");
+                        dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD constraint {PostgresUtils.IdentityName(table.PrimaryKey.Schema, table.PrimaryKey.Name)} PRIMARY KEY ({primaryColumns})");
                     }
                 }
 
@@ -195,11 +222,11 @@ namespace ChangeDB.Agent.Postgres
             // default value
             foreach (var table in databaseDescriptor.Tables ?? Enumerable.Empty<TableDescriptor>())
             {
-                foreach (var column in table.Columns??Enumerable.Empty<ColumnDescriptor>())
+                foreach (var column in table.Columns ?? Enumerable.Empty<ColumnDescriptor>())
                 {
-                    if (!column.AllowNull)
+                    if (!column.IsNullable)
                     {
-                        dbConnection.ExecuteNonQuery($"alter table {PostgresUtils.IdentityName(table.Schema,table.Name)} alter column {PostgresUtils.IdentityName(column.Name)} set not null;");
+                        dbConnection.ExecuteNonQuery($"alter table {PostgresUtils.IdentityName(table.Schema, table.Name)} alter column {PostgresUtils.IdentityName(column.Name)} set not null;");
                     }
                 }
             }
