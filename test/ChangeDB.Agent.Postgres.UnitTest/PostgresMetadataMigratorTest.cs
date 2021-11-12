@@ -24,34 +24,103 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection = new NpgsqlConnection($"Server=127.0.0.1;Port=5432;Database={TestUtils.RandomDatabaseName()};User Id=postgres;Password=mypassword;");
         }
         [Fact]
-        public async Task ShouldSuccessWhenGetTableDescription()
+        public async Task ShouldReturnEmptyDescriptorWhenGetDatabaseDescriptionAndGivenEmptyDatabase()
+        {
+            _dbConnection.ReCreateDatabase();
+          
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Should().BeEquivalentTo(new DatabaseDescriptor
+            {
+                Tables = new List<TableDescriptor>(),
+                Schemas = new List<string>(),
+            });
+        }
+        [Fact]
+        public async Task ShouldIncludeTableInfoWhenGetDatabaseDescription()
         {
             _dbConnection.ReCreateDatabase();
             _dbConnection.ExecuteNonQuery(
                "create schema ts",
-               "create table ts.table1(id int primary key,nm varchar(64));");
+               "create table ts.table1(id int ,nm varchar(64));");
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Schemas.Should().Contain("ts");
+            databaseDesc.Tables.Should().HaveCount(1);
+            databaseDesc.Tables.First().Should().Match<TableDescriptor>(p => p.Schema == "ts" && p.Name == "table1");
+        }
+        
+        [Fact]
+        public async Task ShouldIncludePrimaryKeyWhenGetDatabaseDescription()
+        {
+            _dbConnection.ReCreateDatabase();
+            _dbConnection.ExecuteNonQuery(
+                "create table table1(id int primary key,nm varchar(64));");
 
-            var tableDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
-            tableDesc.Should().NotBeNull();
-            tableDesc.Should().BeEquivalentTo(new DatabaseDescriptor
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Tables.Should().HaveCount(1);
+            databaseDesc.Tables.First().PrimaryKey.Should()
+                .Match<PrimaryKeyDescriptor>(p => p.Schema == "public" && p.Name != null)
+                .And
+                .Match<PrimaryKeyDescriptor>(p => p.Columns.Count == 1 && p.Columns[0] == "id");
+        }
+        [Fact]
+        public async Task ShouldIncludeMultiplePrimaryKeyWhenGetDatabaseDescription()
+        {
+            _dbConnection.ReCreateDatabase();
+            _dbConnection.ExecuteNonQuery(
+                "create table table1(id int,nm varchar(64),primary key(id,nm));");
+
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Tables.Should().HaveCount(1);
+            databaseDesc.Tables.First().PrimaryKey.Should()
+                .Match<PrimaryKeyDescriptor>(p => p.Schema == "public" && p.Name != null)
+                .And
+                .Match<PrimaryKeyDescriptor>(p => p.Columns.Count == 2 && p.Columns[0]=="id" && p.Columns[1] == "nm");
+        }
+
+        [Fact]
+        public async Task ShouldIncludeIndexesWhenGetDatabaseDescription()
+        {
+            _dbConnection.ReCreateDatabase();
+            _dbConnection.ExecuteNonQuery(
+                "create table table1(id int,nm varchar(64));",
+                "create index nm_index ON table1 (nm);");
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Tables.First().Indexes.Should().BeEquivalentTo(new List<IndexDescriptor>
             {
-                Schemas = new List<string> { "ts" },
-                Tables = new List<TableDescriptor>
-                   {
-                        new TableDescriptor
-                        {
-                            Name="table1",
-                            Schema="ts",
-                            Columns = new List<ColumnDescriptor>
-                            {
-                              new ColumnDescriptor{ Name ="id",IsPrimaryKey =true,AllowNull = false,DbType  = new DBTypeDescriptor{ DbType= DBType.Int } },
-                              new ColumnDescriptor{ Name ="nm",IsPrimaryKey =false,AllowNull =true,DbType  = new DBTypeDescriptor{ DbType= DBType.NVarchar, Length=64 }}
-                            }
-                        }
-                   }
+                new IndexDescriptor{ Schema = "public", Name = "nm_index", Columns = new List<string>{"nm"}}
+            });
+        }
+        [Fact]
+        public async Task ShouldExcludePrimaryIndexesWhenGetDatabaseDescription()
+        {
+            _dbConnection.ReCreateDatabase();
+            _dbConnection.ExecuteNonQuery(
+                "create table table1(id int primary key,nm varchar(64));",
+                "create index nm_index ON table1 (nm);");
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Tables.First().Indexes.Should().BeEquivalentTo(new List<IndexDescriptor>
+            {
+                new IndexDescriptor{ Schema = "public", Name = "nm_index", Columns = new List<string>{"nm"}}
             });
         }
 
+        
+        [Fact]
+        public async Task ShouldIncludeForeignKeyWhenGetDatabaseDescription()
+        {
+            _dbConnection.ReCreateDatabase();
+            _dbConnection.ExecuteNonQuery(
+                "create table table1(id int primary key,nm varchar(64));",
+                "create table table2(id int, id1 int references table1(id));");
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Tables.First().ForeignKeys.Should().HaveCount(1);
+            var forginKey = databaseDesc.Tables.First().ForeignKeys.First();
+            forginKey.Should().Match<ForeignKeyDescriptor>(p => p.Schema == "public" && p.Name != null
+                && p.ColumnName == "id1" && p.ParentSchema == "public" && p.ParentTable == "table1" &&
+                p.ParentName == "id");
+        }
+        
+        
         [Fact]
         public async Task ShouldCreateSchemasWhenPreMigrate()
         {
@@ -75,8 +144,8 @@ namespace ChangeDB.Agent.Postgres
                             Schema="ts",
                             Columns = new List<ColumnDescriptor>
                             {
-                              new ColumnDescriptor{ Name ="id",IsPrimaryKey =true,AllowNull = false,DbType  = new DBTypeDescriptor{ DbType= DBType.Int } },
-                              new ColumnDescriptor{ Name ="nm",IsPrimaryKey =false,AllowNull =true,DbType  = new DBTypeDescriptor{ DbType= DBType.NVarchar, Length=64 }}
+                              new ColumnDescriptor{ Name ="id",AllowNull = false,DbType  = new DBTypeDescriptor{ DbType= DBType.Int } },
+                              new ColumnDescriptor{ Name ="nm",AllowNull =true,DbType  = new DBTypeDescriptor{ DbType= DBType.NVarchar, Length=64 }}
                             }
                         }
                    }

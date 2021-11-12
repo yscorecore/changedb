@@ -4,12 +4,16 @@ namespace ChangeDB
 {
     public class ForeignKeyDescriptor
     {
-        public List<string> ColumnNames { get; set; }
+        public string Schema { get; set; }
+        
+        public string Name { get; set; }
+        
+        public string ColumnName { get; set; }
         
         public string ParentSchema { get; set; }
         
         public string ParentTable { get; set; }
         
-        public List<string> ParentNames { get; set; }
+        public string ParentName { get; set; }
     }
 }
