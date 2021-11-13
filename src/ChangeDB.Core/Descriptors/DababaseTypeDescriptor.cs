@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace ChangeDB
 {
-    public class DBTypeDescriptor
+    public class DatabaseTypeDescriptor
     {
-        public DBType DbType { get; set; }
+        public CommonDatabaseType DbType { get; set; }
         public int? Length { get; set; }
         public int? Accuracy { get; set; }
         public override string ToString()
@@ -32,10 +32,10 @@ namespace ChangeDB
 
 
 
-        private string Type2String(DBType dbType) => $"{dbType.ToString().ToUpperInvariant().Replace("__", " ")}";
+        private string Type2String(CommonDatabaseType dbType) => $"{dbType.ToString().ToUpperInvariant().Replace("__", " ")}";
     }
 
-    public enum DBType
+    public enum CommonDatabaseType
     {
         // int32
         Int,

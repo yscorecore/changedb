@@ -4,10 +4,8 @@ namespace ChangeDB
 {
     public class IndexDescriptor
     {
-        public string Schema { get; set; }
         public string Name { get; set; }
         public bool IsUnique { get; set; }
-
         public string Filter { get; set; }
         public List<string> Columns { get; set; }
     }

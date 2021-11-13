@@ -21,7 +21,6 @@ namespace ChangeDB
         {
             return connection.ExecuteNonQuery(sql, default(IDictionary<string, object>));
         }
-
         public static int ExecuteNonQuery(this IDbConnection connection, string sql, IDictionary<string, object> args)
         {
             _ = sql ?? throw new ArgumentNullException(nameof(sql));
@@ -50,7 +49,10 @@ namespace ChangeDB
                 );
             }
         }
-
+        public static void ExecuteSqlFiles(this IDbConnection connection, string[] sqlFiles, string sqlSplit)
+        { 
+            
+        }
         public static DataTable ExecuteReaderAsTable(this IDbConnection connection, string sql)
         {
             AlterOpen(connection);

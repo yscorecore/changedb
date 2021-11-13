@@ -4,13 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChangeDB
+namespace ChangeDB.Migration
 {
     public enum NameStyle
     {
-        Same,
+        Original,
         Lower,
         Upper,
-
     }
 }

@@ -6,9 +6,10 @@ namespace ChangeDB
     public class TableDescriptor
     {
         public string Name { get; set; }
-        public string Description { get; set; }
+        public string Comment { get; set; }
         public string Schema { get; set; }
-        public List<ColumnDescriptor> Columns { get; set; }
+
+        public List<ColumnDescriptor> Columns { get; set; } = new List<ColumnDescriptor>();
 
         public PrimaryKeyDescriptor PrimaryKey { get; set; }
 

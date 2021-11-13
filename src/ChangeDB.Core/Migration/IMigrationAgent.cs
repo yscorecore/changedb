@@ -9,5 +9,6 @@ namespace ChangeDB.Migration
         DbConnection CreateConnection(string connectionString);
         IDataMigrator DataMigrator { get; }
         IMetadataMigrator MetadataMigrator { get; }
+        IDatabaseTypeMapper DatabaseTypeMapper { get; }
     }
 }
