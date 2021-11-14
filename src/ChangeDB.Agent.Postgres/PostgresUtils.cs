@@ -9,16 +9,21 @@ using ChangeDB.Migration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
 using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 using Microsoft.Extensions.Logging;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Diagnostics.Internal;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata.Internal;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Scaffolding.Internal;
 
 namespace ChangeDB.Agent.Postgres
 {
     static class PostgresUtils
     {
+        public const string IdentityNumbersToCache = "Npgsql::IdentityNumbersToCache";
+        public const string IdentityType = "Npgsql::IdentityType";
         public static string IdentityName(string objectName)
         {
             _ = objectName ?? throw new ArgumentNullException(nameof(objectName));
@@ -37,6 +42,17 @@ namespace ChangeDB.Agent.Postgres
                 return $"{IdentityName(schema)}.{IdentityName(objectName)}";
             }
         }
+        public static string IdentityName(string schema, string objectName,string subObjectName)
+        {
+            if (string.IsNullOrEmpty(schema))
+            {
+                return IdentityName(objectName,subObjectName);
+            }
+            else
+            {
+                return $"{IdentityName(schema)}.{IdentityName(objectName)}.{IdentityName(subObjectName)}";
+            }
+        }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
@@ -51,10 +67,11 @@ namespace ChangeDB.Agent.Postgres
                        new NullDbContextLogger()));
             var options = new DatabaseModelFactoryOptions();
             var model = databaseModelFactory.Create(dbConnection, options);
-            return FromDatabaseModel(model);
+            return FromDatabaseModel(model, dbConnection);
         }
 
-        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
+        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection)
         {
             return new DatabaseDescriptor
             {
@@ -105,9 +122,10 @@ namespace ChangeDB.Agent.Postgres
 
                 };
             }
+            //https://github.com/npgsql/efcore.pg/blob/176fae2e08087ad43b9650768b7296a336d4f3f2/src/EFCore.PG/Scaffolding/Internal/NpgsqlDatabaseModelFactory.cs#L454
             ColumnDescriptor FromColumnModel(DatabaseColumn column)
             {
-                return new ColumnDescriptor
+                var baseColumnDesc = new ColumnDescriptor
                 {
                     Collation = column.Collation,
                     Comment = column.Comment,
@@ -117,8 +135,72 @@ namespace ChangeDB.Agent.Postgres
                     IsStored = column.IsStored,
                     IsNullable = column.IsNullable,
                     StoreType = column.StoreType,
-                    ValueGenerated = (ValueGenerated?)(int?)column.ValueGenerated,
                 };
+
+                if (column.ValueGenerated == ValueGenerated.OnAdd)
+                {
+                    var valueStrategy = (NpgsqlValueGenerationStrategy)column[NpgsqlAnnotationNames.ValueGenerationStrategy];
+
+                    if (IsIdentityType(valueStrategy, out var identityType))
+                    {
+                        baseColumnDesc.IsIdentity = true;
+                        baseColumnDesc.IdentityInfo = FromNpgSqlIdentityData(GetNpgsqlIdentityData(column));
+                        baseColumnDesc.IdentityInfo.Values[IdentityType] = identityType;
+                    }
+                    else
+                    {
+                        baseColumnDesc.IsIdentity = false;
+                        baseColumnDesc.IdentityInfo = FromNpgSqlIdentityData(IdentitySequenceOptionsData.Empty);
+                    }
+                }
+                return baseColumnDesc;
+            }
+            IdentitySequenceOptionsData GetNpgsqlIdentityData(DatabaseColumn column)
+            {
+                var sequenceData = column[NpgsqlAnnotationNames.IdentityOptions];
+                if (sequenceData != null)
+                {
+                    return IdentitySequenceOptionsData.Deserialize(sequenceData as string);
+                }
+                else
+                {
+                    return IdentitySequenceOptionsData.Empty;
+                }
+            }
+            bool IsIdentityType(NpgsqlValueGenerationStrategy npgsqlIdentityStrategy,out string identityType)
+            {
+                identityType = string.Empty;
+                if (npgsqlIdentityStrategy == NpgsqlValueGenerationStrategy.IdentityAlwaysColumn)
+                {
+                    identityType = "ALWAYS";
+                    return true;
+                }
+                else if (npgsqlIdentityStrategy == NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+                {
+                    identityType = "BY DEFAULT";
+                    return true;
+                }
+                else
+                {
+                    identityType = string.Empty;
+                    return false;
+                }
+            }
+            IdentityDescriptor FromNpgSqlIdentityData(IdentitySequenceOptionsData data)
+            {
+                var identity = new IdentityDescriptor
+                {
+                    IncrementBy = data.IncrementBy == 1 ? default(int?) : (int)data.IncrementBy,
+                    MaxValue = data.MaxValue,
+                    MinValue = data.MinValue,
+                    IsCyclic = data.IsCyclic,
+                    StartValue = data.StartValue
+                };
+                if (data.NumbersToCache != IdentitySequenceOptionsData.Empty.NumbersToCache)
+                {
+                    identity.Values[IdentityNumbersToCache] = data.NumbersToCache;
+                }
+                return identity;
             }
             ForeignKeyDescriptor FromForeignKeyModel(DatabaseForeignKey foreignKey)
             {

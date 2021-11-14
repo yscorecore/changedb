@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 
@@ -110,30 +111,127 @@ namespace ChangeDB.Agent.Postgres
         public Task PostMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
         {
             AlterNotnullColumns();
-            AlterIdentityColumn();
-            AddDefaultValue();
+            AlterIdentityColumns();
+            AddDefaultValues();
             AddForeignKeys();
             void AlterNotnullColumns()
             {
                 foreach (var table in databaseDescriptor.Tables)
                 {
+                    var tableFullName = PostgresUtils.IdentityName(table.Schema, table.Name);
                     foreach (var column in table.Columns)
                     {
                         if (!column.IsNullable)
                         {
-                            dbConnection.ExecuteNonQuery($"alter table {PostgresUtils.IdentityName(table.Schema, table.Name)} alter column {PostgresUtils.IdentityName(column.Name)} set not null;");
+                            var columnName = PostgresUtils.IdentityName(column.Name);
+                            dbConnection.ExecuteNonQuery($"alter table {tableFullName} alter column {columnName} set not null;");
                         }
                     }
                 }
             }
-            void AlterIdentityColumn()
+            void AlterIdentityColumns()
             {
-                // TODO
+                foreach (var table in databaseDescriptor.Tables)
+                {
+                    var tableFullName = PostgresUtils.IdentityName(table.Schema, table.Name);
+                    foreach (var column in table.Columns)
+                    {
+                        if (column.IdentityInfo != null)
+                        {
+                            var columnName = PostgresUtils.IdentityName(column.Name);
+                            if (column.IsIdentity)
+                            {
+                                AlterIdentityColumn(column.IdentityInfo, tableFullName, columnName);
+                            }
+                            else
+                            {
+                                var sequenceName = $"{table.Name}_{column.Name}_seq";
+                                var sequenceFullName = PostgresUtils.IdentityName(table.Schema, sequenceName);
+                                var columnFullName = PostgresUtils.IdentityName(table.Schema, table.Name, column.Name);
+                                var nextValueExpression = $"nextval('{sequenceFullName}'::regclass)";
+                                var sequenceDetails = BuildIdentitySequenceDetails(column.IdentityInfo, false, columnFullName);
+                                dbConnection.ExecuteNonQuery($"CREATE SEQUENCE IF NOT EXISTS {sequenceFullName} {sequenceDetails};");
+                                dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} SET DEFAULT {nextValueExpression};");
+                            }
+                        }
+                    }
+                }
+
 
             }
-            void AddDefaultValue()
+            void AlterIdentityColumn(IdentityDescriptor desc, string tableFullName, string columnName)
             {
-                // 
+                var identityType = "ALWAYS";
+                if (desc != null && desc.Values != null && desc.Values.TryGetValue(PostgresUtils.IdentityType, out var type))
+                {
+                    identityType = Convert.ToString(type);
+                }
+
+                var identityDetails = string.Empty;
+                if (desc != null)
+                {
+                    identityDetails = BuildIdentitySequenceDetails(desc);
+                }
+
+                var identityFullDesc = $"GENERATED {identityType} AS IDENTITY{identityDetails}";
+                dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER {columnName} ADD {identityFullDesc};");
+            }
+            //https://www.postgresql.org/docs/current/sql-altersequence.html
+            string BuildIdentitySequenceDetails(IdentityDescriptor desc, bool includeBrackets = true, string ownedBy = default)
+            {
+                var items = new List<string>();
+                if (desc.IncrementBy != null)
+                {
+                    items.Add($"INCREMENT BY {desc.IncrementBy}");
+                }
+                if (desc.MinValue != null)
+                {
+                    items.Add($"MINVALUE {desc.MinValue}");
+                }
+                if (desc.MaxValue != null)
+                {
+                    items.Add($"MAXVALUE {desc.MaxValue}");
+                }
+                if (desc.StartValue != null)
+                {
+                    items.Add($"START WITH {desc.StartValue}");
+                }
+                if (desc.IsCyclic == true)
+                {
+                    items.Add("CYCLE");
+                }
+                if (desc.Values.TryGetValue(PostgresUtils.IdentityNumbersToCache, out var cache))
+                {
+                    items.Add($"CACHE {cache}");
+                }
+                if (!string.IsNullOrEmpty(ownedBy))
+                {
+                    items.Add($"OWNED BY {ownedBy}");
+                }
+                if (items.Count > 0)
+                {
+                    return includeBrackets ? $"({string.Join(" ", items)})" : string.Join(" ", items);
+                }
+                else
+                {
+                    return string.Empty;
+                }
+            }
+
+            void AddDefaultValues()
+            {
+                foreach (var table in databaseDescriptor.Tables)
+                {
+                    var tableFullName = PostgresUtils.IdentityName(table.Schema, table.Name);
+                    foreach (var column in table.Columns)
+                    {
+                        if (!string.IsNullOrEmpty(column.DefaultValueSql))
+                        {
+                            var columnName = PostgresUtils.IdentityName(column.Name);
+                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} SET DEFAULT {column.DefaultValueSql};");
+                        }
+                    }
+                }
             }
             void AddForeignKeys()
             {

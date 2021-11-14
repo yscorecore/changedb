@@ -65,7 +65,6 @@ namespace ChangeDB.Agent.Postgres
                 CommonDatabaseType.NText => "text",
                 CommonDatabaseType.Varbinary => "bytea",
                 CommonDatabaseType.Blob => "bytea",
-                CommonDatabaseType.RowVersion => "bytea",
                 CommonDatabaseType.Decimal => "numeric",
                 CommonDatabaseType.Date => "date",
                 CommonDatabaseType.Time => "TIME WITHOUT TIME ZONE",

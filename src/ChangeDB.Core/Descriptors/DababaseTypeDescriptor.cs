@@ -61,7 +61,6 @@ namespace ChangeDB
         Blob,
 
         Uuid,
-        RowVersion,
 
         Double,
         Float,
