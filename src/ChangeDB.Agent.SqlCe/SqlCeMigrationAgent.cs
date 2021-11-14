@@ -1,4 +1,5 @@
 ﻿using System.Data.Common;
+using System.Data.SqlServerCe;
 using ChangeDB.Migration;
 using YS.Knife;
 
@@ -15,8 +16,7 @@ namespace ChangeDB.Agent.SqlCe
 
         public DbConnection CreateConnection(string connectionString)
         {
-            return null;
-           // return new Npgsql.NpgsqlConnection(connectionString);
+           return new SqlCeConnection(connectionString);
         }
     }
 }

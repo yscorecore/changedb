@@ -15,20 +15,7 @@ namespace ChangeDB.Agent.SqlCe
 
         public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression)
         {
-            if (sqlExpression.Function.HasValue)
-            {
-                return sqlExpression.Function.Value switch
-                {
-                     Function.Uuid=> "gen_random_uuid()",
-                     Function.Now=> "current_timestamp()",
-                     _=>string.Empty,
-                };
-            }
-            else
-            {
-                // TODO handle expression
-                return sqlExpression.Expression;            
-            }
+            throw new NotImplementedException();
 
         }
 

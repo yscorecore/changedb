@@ -41,18 +41,17 @@ namespace ChangeDB.Agent.SqlCe
                 var rowData = GetRowData(row, table);
                 dbConnection.ExecuteNonQuery(insertSql, rowData);
             }
-
             return Task.CompletedTask;
         }
 
         private string BuildTableName(TableDescriptor table)
         {
-            return $"\"{table.Schema}\".\"{table.Name}\"";
+            return $"[{table.Schema}].[{table.Name}]";
         }
 
         private string BuildColumnNames(TableDescriptor table)
         {
-            return string.Join(",", table.Columns.Select(p => $"\"{p.Name}\""));
+            return string.Join(",", table.Columns.Select(p => $"[{p.Name}]"));
         }
 
         private string BuildParameterValueNames(TableDescriptor table)

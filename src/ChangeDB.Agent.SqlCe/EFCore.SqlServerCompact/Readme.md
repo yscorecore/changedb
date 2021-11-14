@@ -1,0 +1,1 @@
+﻿code from https://github.com/ErikEJ/EntityFramework.SqlServerCompact

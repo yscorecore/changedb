@@ -29,7 +29,7 @@ namespace ChangeDB.Agent.SqlCe
 
         public Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection dbConnection, MigrationSetting migrationSetting)
         {
-            var databaseDescriptor = PostgresUtils.GetDataBaseDescriptorByEFCore(dbConnection);
+            var databaseDescriptor = SqlCeUtils.GetDataBaseDescriptorByEFCore(dbConnection);
             return Task.FromResult(databaseDescriptor);
         }
         public Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
