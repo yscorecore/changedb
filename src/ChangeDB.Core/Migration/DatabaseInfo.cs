@@ -1,6 +1,6 @@
 ﻿using System.Data.Common;
 
-namespace ChangeDB
+namespace ChangeDB.Migration
 {
     public class DatabaseInfo
     {

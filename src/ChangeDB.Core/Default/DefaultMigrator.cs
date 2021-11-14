@@ -63,16 +63,17 @@ namespace ChangeDB.Default
 
         private DatabaseDescriptor ConvertToTargetDatabaseDescriptor(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext, IMigrationAgent sourceAgent, IMigrationAgent targetAgent)
         {
+            var sameDatabaseType = string.Equals(migrationContext.SourceDatabase?.Type, migrationContext.TargetDatabase?.Type, StringComparison.InvariantCultureIgnoreCase);
             var clonedDescriptor = databaseDescriptor.DeepClone();
             // TODO apply filter
             ApplyNamingRules();
             ConvertDataTypes();
-
+            TranslateSqlExpressions();
             return clonedDescriptor;
 
             void ConvertDataTypes()
             {
-                if (!string.Equals(migrationContext.SourceDatabase?.Type, migrationContext.TargetDatabase?.Type, StringComparison.InvariantCultureIgnoreCase))
+                if (!sameDatabaseType)
                 {
                     clonedDescriptor.Tables.SelectMany(p => p.Columns).Foreach(column =>
                     {
@@ -111,7 +112,7 @@ namespace ChangeDB.Default
                     {
                         table.PrimaryKey.Name = primaryKeyConvertFunc(table.PrimaryKey.Name);
                     }
-                    table.PrimaryKey.DoIfNotNull(primaryKey => 
+                    table.PrimaryKey.DoIfNotNull(primaryKey =>
                     {
                         primaryKey.Name = primaryKeyConvertFunc(primaryKey.Name);
                         primaryKey.Columns = primaryKey.Columns.Select(columnConvertFunc).ToList();
@@ -142,6 +143,27 @@ namespace ChangeDB.Default
                     sequence.Name = sequenceConvertFunc(sequence.Name);
                 }
 
+            }
+
+            void TranslateSqlExpressions()
+            {
+                if (!sameDatabaseType)
+                {
+                    clonedDescriptor.Tables.SelectMany(p => p.Columns)
+                        .Foreach(column =>
+                    {
+                        if (!string.IsNullOrEmpty(column.DefaultValueSql))
+                        {
+                            var commonExpression = sourceAgent.ExpressionTranslator.ToCommonSqlExpression(column.DefaultValueSql);
+                            column.DefaultValueSql = targetAgent.ExpressionTranslator.FromCommonSqlExpression(commonExpression);
+                        }
+                        if (!string.IsNullOrEmpty(column.ComputedColumnSql))
+                        {
+                            var commonExpression = sourceAgent.ExpressionTranslator.ToCommonSqlExpression(column.ComputedColumnSql);
+                            column.ComputedColumnSql = targetAgent.ExpressionTranslator.FromCommonSqlExpression(commonExpression);
+                        }
+                    });
+                }
             }
         }
 

@@ -13,7 +13,8 @@ namespace ChangeDB.Agent.Postgres
         public static readonly PostgresDatabaseTypeMapper Default = new PostgresDatabaseTypeMapper();
         public DatabaseTypeDescriptor ToCommonDatabaseType(string storeType)
         {
-            return null;
+            throw new NotImplementedException();
+            //return null;
             //var dataType = row.Field<string>("data_type");
             //var characterMaximumLength = row.Field<int?>("character_maximum_length");
             //var characterOctetLength = row.Field<int?>("character_octet_length");
@@ -48,11 +49,11 @@ namespace ChangeDB.Agent.Postgres
         {
             return dataType.DbType switch
             {
-                CommonDatabaseType.Boolean => "bool",
+                CommonDatabaseType.Boolean => "boolean",
                 CommonDatabaseType.Varchar => $"varchar({dataType.Length})",
-                CommonDatabaseType.Char => "char",
+                CommonDatabaseType.Char => $"char({dataType.Length})",
                 CommonDatabaseType.NVarchar => $"varchar({dataType.Length})",
-                CommonDatabaseType.NChar => "varchar",
+                CommonDatabaseType.NChar => $"varchar({dataType.Length})",
                 CommonDatabaseType.Uuid => "uuid",
                 CommonDatabaseType.Float => "real",
                 CommonDatabaseType.Double => "float",
@@ -65,13 +66,21 @@ namespace ChangeDB.Agent.Postgres
                 CommonDatabaseType.NText => "text",
                 CommonDatabaseType.Varbinary => "bytea",
                 CommonDatabaseType.Blob => "bytea",
-                CommonDatabaseType.Decimal => "numeric",
+                CommonDatabaseType.Decimal => CreateDecimalType(),
                 CommonDatabaseType.Date => "date",
                 CommonDatabaseType.Time => "TIME WITHOUT TIME ZONE",
                 CommonDatabaseType.DateTime => "TIMESTAMP WITHOUT TIME ZONE",
                 CommonDatabaseType.DateTimeOffset => "TIMESTAMP WITH TIME ZONE",
                 _ => throw new ArgumentOutOfRangeException()
             };
+            string CreateDecimalType()
+            {
+                if (dataType.Length.HasValue)
+                {
+                    return dataType.Accuracy.HasValue ? $"numeric({dataType.Length},{dataType.Accuracy})" : $"numeric({dataType.Length})";
+                }
+                return "numeric";
+            }
         }
     }
 }
