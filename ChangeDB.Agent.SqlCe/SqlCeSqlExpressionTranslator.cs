@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 using ChangeDB.Descriptors;
 using ChangeDB.Migration;
 
-namespace ChangeDB.Agent.Postgres
+namespace ChangeDB.Agent.SqlCe
 {
-    public class PostgresSqlExpressionTranslator : ISqlExpressionTranslator
+    public class SqlCeSqlExpressionTranslator : ISqlExpressionTranslator
     {
 
-        public static readonly ISqlExpressionTranslator Default = new PostgresSqlExpressionTranslator();
+        public static readonly ISqlExpressionTranslator Default = new SqlCeSqlExpressionTranslator();
 
         public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression)
         {
