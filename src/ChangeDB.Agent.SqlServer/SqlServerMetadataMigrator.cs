@@ -22,13 +22,13 @@ namespace ChangeDB.Agent.SqlServer
         public Task DropDatabaseIfExists(DbConnection connection, MigrationSetting migrationSetting)
         {
             connection.DropDatabaseIfExists();
-            return  Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
         public Task CreateDatabase(DbConnection connection, MigrationSetting migrationSetting)
         {
             connection.CreateDatabase();
-            return  Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
         public Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection connection, MigrationSetting migrationSetting)

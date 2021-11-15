@@ -1,4 +1,5 @@
-﻿using System.Data.Common;
+﻿using System;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,36 @@ namespace ChangeDB.Agent.SqlServer
 {
     public class SqlServerUtils
     {
+        public static string IdentityName(string objectName)
+        {
+            _ = objectName ?? throw new ArgumentNullException(nameof(objectName));
+
+            return $"[{objectName}]";
+
+        }
+        public static string IdentityName(string schema, string objectName)
+        {
+            if (string.IsNullOrEmpty(schema))
+            {
+                return IdentityName(objectName);
+            }
+            else
+            {
+                return $"{IdentityName(schema)}.{IdentityName(objectName)}";
+            }
+        }
+        public static string IdentityName(string schema, string objectName, string subObjectName)
+        {
+            if (string.IsNullOrEmpty(schema))
+            {
+                return IdentityName(objectName, subObjectName);
+            }
+            else
+            {
+                return $"{IdentityName(schema)}.{IdentityName(objectName)}.{IdentityName(subObjectName)}";
+            }
+        }
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
         {
@@ -30,9 +61,9 @@ namespace ChangeDB.Agent.SqlServer
             var model = databaseModelFactory.Create(dbConnection, options);
             return FromDatabaseModel(model, dbConnection);
         }
-        
-        
-               [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
+
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
         private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection)
         {
             return new DatabaseDescriptor
@@ -84,7 +115,7 @@ namespace ChangeDB.Agent.SqlServer
 
                 };
             }
-            //https://github.com/npgsql/efcore.pg/blob/176fae2e08087ad43b9650768b7296a336d4f3f2/src/EFCore.PG/Scaffolding/Internal/NpgsqlDatabaseModelFactory.cs#L454
+            //https://github.com/dotnet/efcore/blob/252ece7a6bdf14139d90525a4dd0099616a82b4c/src/EFCore.SqlServer/Scaffolding/Internal/SqlServerDatabaseModelFactory.cs
             ColumnDescriptor FromColumnModel(DatabaseColumn column)
             {
                 var baseColumnDesc = new ColumnDescriptor
@@ -94,30 +125,28 @@ namespace ChangeDB.Agent.SqlServer
                     ComputedColumnSql = column.ComputedColumnSql,
                     DefaultValueSql = column.DefaultValueSql,
                     Name = column.Name,
-                    IsStored = column.IsStored,
+                    IsStored = column.IsStored ?? false,
                     IsNullable = column.IsNullable,
                     StoreType = column.StoreType,
                 };
 
                 if (column.ValueGenerated == ValueGenerated.OnAdd)
                 {
-                    // var valueStrategy = (NpgsqlValueGenerationStrategy)column[NpgsqlAnnotationNames.ValueGenerationStrategy];
-                    //
-                    // if (IsIdentityType(valueStrategy, out var identityType))
-                    // {
-                    //     baseColumnDesc.IsIdentity = true;
-                    //     baseColumnDesc.IdentityInfo = FromNpgSqlIdentityData(GetNpgsqlIdentityData(column));
-                    //     baseColumnDesc.IdentityInfo.Values[IdentityType] = identityType;
-                    // }
-                    // else
-                    // {
-                    //     baseColumnDesc.IsIdentity = false;
-                    //     baseColumnDesc.IdentityInfo = FromNpgSqlIdentityData(IdentitySequenceOptionsData.Empty);
-                    // }
+                    var tableFullName = IdentityName(column.Table.Schema, column.Table.Name);
+                    baseColumnDesc.IsIdentity = true;
+                    baseColumnDesc.IdentityInfo = new IdentityDescriptor
+                    {
+                        IsCyclic = false,
+                        StartValue = dbConnection.ExecuteScalar<long>($"SELECT IDENT_SEED('{tableFullName}')"),
+                        IncrementBy = dbConnection.ExecuteScalar<int>($"SELECT IDENT_INCR('{tableFullName}')"),
+                        CurrentValue = dbConnection.ExecuteScalar<long?>($"SELECT IDENT_CURRENT('{tableFullName}') WHERE EXISTS (select top 1 * from {tableFullName});"),
+                    };
+
+
                 }
                 return baseColumnDesc;
             }
-            
+
             ForeignKeyDescriptor FromForeignKeyModel(DatabaseForeignKey foreignKey)
             {
                 return new ForeignKeyDescriptor

@@ -10,16 +10,17 @@ using Xunit;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlServerMetadataMigratorTest
+    public class SqlServerMetadataMigratorTest:IDisposable
     {
-                private readonly IMetadataMigrator _metadataMigrator = SqlServerMetadataMigrator.Default;
+        private readonly IMetadataMigrator _metadataMigrator = SqlServerMetadataMigrator.Default;
         private readonly MigrationSetting _migrationSetting = new MigrationSetting { DropTargetDatabaseIfExists = true };
         private readonly DbConnection _dbConnection;
+        private readonly string _connectionString;
 
         public SqlServerMetadataMigratorTest()
         {
-            _dbConnection = new SqlConnection($"Server=127.0.0.1,1433;Database={TestUtils.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;");
-
+            _connectionString = $"Server=127.0.0.1,1433;Database={TestUtils.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;";
+            _dbConnection = new SqlConnection(_connectionString);
             _dbConnection.CreateDatabase();
         }
         #region DropAndCreate
@@ -186,38 +187,22 @@ namespace ChangeDB.Agent.SqlServer
                 });
         }
 
-        [Fact]
-        public async Task ShouldIncludeMultipleColumnForeignKeyWhenGetDatabaseDescription()
-        {
-            _dbConnection.ExecuteNonQuery(
-                "create table table1(id int primary key,nm varchar(64));",
-                "create table table2(id int, id1 int references table1(id));");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
-            databaseDesc.Tables.Where(p => p.Name == "table2").Single().ForeignKeys.Should()
-                .ContainSingle().And.ContainEquivalentOf(new ForeignKeyDescriptor
-                {
-                    Name = "table2_id1_fkey",
-                    OnDelete = ReferentialAction.NoAction,
-                    PrincipalTable = "table1",
-                    PrincipalSchema = "public",
-                    ColumnNames = new List<string> { "id1" },
-                    PrincipalNames = new List<string> { "id" }
-                });
-        }
+
         [Fact]
         public async Task ShouldIncludeForeignKeyWhenGetDatabaseDescription()
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64));",
-                "create table table2(id int, id1 int references table1(id));");
+                "create table table2(id int, id1 int);",
+                "alter table table2 add constraint table2_id1_fkey foreign key(id1) references table1(id);");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table2").Single().ForeignKeys.Should()
-                .ContainSingle().And.ContainEquivalentOf(new ForeignKeyDescriptor
+                .ContainSingle().And.BeEquivalentTo(new ForeignKeyDescriptor
                 {
                     Name = "table2_id1_fkey",
                     OnDelete = ReferentialAction.NoAction,
                     PrincipalTable = "table1",
-                    PrincipalSchema = "public",
+                    PrincipalSchema = "dbo",
                     ColumnNames = new List<string> { "id1" },
                     PrincipalNames = new List<string> { "id" }
                 });
@@ -228,7 +213,8 @@ namespace ChangeDB.Agent.SqlServer
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm int,primary key(id,nm));",
-                "create table table2(id2 int, nm2 int, foreign key (id2, nm2) references table1 (id, nm));");
+                "create table table2(id2 int, nm2 int);",
+                "alter table table2 add constraint table2_id2_nm2_fkey foreign key(id2, nm2) references table1(id, nm);");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table2").Single().ForeignKeys.Should()
                 .ContainSingle().And.ContainEquivalentOf(new ForeignKeyDescriptor
@@ -236,7 +222,7 @@ namespace ChangeDB.Agent.SqlServer
                     Name = "table2_id2_nm2_fkey",
                     OnDelete = ReferentialAction.NoAction,
                     PrincipalTable = "table1",
-                    PrincipalSchema = "public",
+                    PrincipalSchema = "dbo",
                     ColumnNames = new List<string> { "id2", "nm2" },
                     PrincipalNames = new List<string> { "id", "nm" }
                 });
@@ -250,11 +236,7 @@ namespace ChangeDB.Agent.SqlServer
                 "create table table1(id int primary key,nm varchar(64) unique);");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Single().Uniques.Should()
-                .ContainSingle().And.ContainEquivalentOf(new UniqueDescriptor
-                {
-                    Name = "table1_nm_key",
-                    Columns = new List<string> { "nm" }
-                });
+                .ContainSingle().Which.Columns.Should().BeEquivalentTo(new List<string> { "nm" });
         }
 
         [Fact]
@@ -264,111 +246,83 @@ namespace ChangeDB.Agent.SqlServer
                 "create table table1(id int,nm int,unique(id,nm));");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Single().Uniques.Should()
-                .ContainSingle().And.ContainEquivalentOf(new UniqueDescriptor
-                {
-                    Name = "table1_id_nm_key",
-                    Columns = new List<string> { "id", "nm" }
-                });
+                .ContainSingle().Which.Columns.Should().BeEquivalentTo(new List<string> { "id", "nm" });
         }
         [Fact]
-        public async Task ShouldIncludeIdentityAlwaysColumnWhenGetDatabaseDescription()
+        public async Task ShouldIncludeIdentityDescriptorWhenGetDatabaseDescription()
         {
             _dbConnection.ExecuteNonQuery(
-                   "create table table1(id integer generated always as identity);");
+                   "create table table1(id integer identity(2,5));");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
                     Name = "table1",
-                    Schema = "public",
+                    Schema = "dbo",
                     Columns = new List<ColumnDescriptor>
                     {
                        new ColumnDescriptor
                        {
-                            Name="id", StoreType = "integer", IsIdentity =true,
+                            Name="id", StoreType = "int", IsIdentity =true,IsStored= false,
                             IdentityInfo = new IdentityDescriptor
                             {
                                 IsCyclic =false,
-                                Values = new Dictionary<string, object>
-                                {
-                                   // [PostgresUtils.IdentityType]="ALWAYS",
-                                }
-                            }
-                       }
-                    }
-                });
-        }
-
-        [Fact]
-        public async Task ShouldIncludeIdentityByDefaultColumnWhenGetDatabaseDescription()
-        {
-            _dbConnection.ExecuteNonQuery(
-                   "create table table1(id bigint generated by default as identity);");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
-            databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
-                .BeEquivalentTo(new TableDescriptor
-                {
-                    Name = "table1",
-                    Schema = "public",
-                    Columns = new List<ColumnDescriptor>
-                    {
-                       new ColumnDescriptor
-                       {
-                            Name="id", StoreType = "bigint", IsIdentity =true,
-                            IdentityInfo = new IdentityDescriptor
-                            {
-                                IsCyclic =false,
-                                Values = new Dictionary<string, object>
-                                {
-                                   // [PostgresUtils.IdentityType]="BY DEFAULT",
-                                }
+                                StartValue=2,
+                                IncrementBy=5
                             }
                        }
                     }
                 });
         }
         [Fact]
-        public async Task ShouldIncludeSerialColumnWhenGetDatabaseDescription()
+        public async Task ShouldIncludeIdentityDescriptorWithCurrentValueWhenGetDatabaseDescription()
         {
             _dbConnection.ExecuteNonQuery(
-                   "create table table1(id serial);");
+                   "create table table1(id integer identity(2,5),val int);",
+                   "insert into table1(val) values(123)",
+                   "insert into table1(val) values(123)"
+                   );
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
                     Name = "table1",
-                    Schema = "public",
+                    Schema = "dbo",
                     Columns = new List<ColumnDescriptor>
                     {
                        new ColumnDescriptor
                        {
-                            Name="id", StoreType = "integer", IsIdentity =false,
+                            Name="id", StoreType = "int", IsIdentity =true,IsStored= false,IsNullable= false,
                             IdentityInfo = new IdentityDescriptor
                             {
                                 IsCyclic =false,
-                                Values = new Dictionary<string, object>
-                                {
-                                    //[PostgresUtils.IdentityNumbersToCache]=1
-                                }
+                                StartValue=2,
+                                IncrementBy=5,
+                                CurrentValue =7
                             }
+                       },
+                       new ColumnDescriptor
+                       {
+                            Name="val", StoreType = "int", IsIdentity =false,IsStored= false,IsNullable =true
                        }
                     }
                 });
         }
+       
         [Fact]
         public async Task ShouldIncludeUuidColumnWhenGetDatabaseDescription()
         {
             _dbConnection.ExecuteNonQuery(
-                   "create table table1(abc uuid default gen_random_uuid());");
+                   "create table table1(abc uniqueidentifier default newid());");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
                     Name = "table1",
-                    Schema = "public",
+                    Schema = "dbo",
                     Columns = new List<ColumnDescriptor>
                     {
-                       new ColumnDescriptor{ Name="abc", IsNullable=true, StoreType = "uuid",DefaultValueSql="gen_random_uuid()" }
+                       new ColumnDescriptor{ Name="abc", IsNullable=true, StoreType = "uniqueidentifier",DefaultValueSql="(newid())" }
                     }
                 });
         }
@@ -376,18 +330,27 @@ namespace ChangeDB.Agent.SqlServer
         public async Task ShouldIncludeTimestampColumnWhenGetDatabaseDescription()
         {
             _dbConnection.ExecuteNonQuery(
-                   "create table table1(id TIMESTAMP(3) WITHOUT TIME ZONE default current_timestamp(3));");
+                   "create table table1(id datetime default getdate());");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
                     Name = "table1",
-                    Schema = "public",
+                    Schema = "dbo",
                     Columns = new List<ColumnDescriptor>
                     {
-                       new ColumnDescriptor{ Name="id", IsNullable=true, StoreType = "timestamp(3) without time zone", DefaultValueSql="CURRENT_TIMESTAMP(3)"}
+                       new ColumnDescriptor{ Name="id", IsNullable=true, StoreType = "datetime", DefaultValueSql="(getdate())"}
                     }
                 });
+        }
+
+        public void Dispose()
+        {
+            if (_dbConnection.State == System.Data.ConnectionState.Open)
+            {
+                _dbConnection.Close();
+            }
+
         }
         //dbConnection
         #endregion

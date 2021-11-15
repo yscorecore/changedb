@@ -11,9 +11,8 @@
 
         #region Computed
         public string ComputedColumnSql { get; set; }
-        public virtual bool? IsStored { get; set; }
+        public bool IsStored { get; set; }
         #endregion
-       // public virtual ValueGenerated? ValueGenerated { get; set; }
 
         #region Identity
         public bool IsIdentity { get; set; }

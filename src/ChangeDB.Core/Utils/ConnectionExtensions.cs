@@ -15,7 +15,18 @@ namespace ChangeDB
             var command = connection.CreateCommand();
             command.CommandText = sql;
             command.CommandType = CommandType.Text;
-            return (T)Convert.ChangeType(command.ExecuteScalar(), typeof(T));
+            var result = command.ExecuteScalar();
+            
+            if (result == null || result == DBNull.Value)
+            {
+                return default(T);
+            }
+            else
+            {
+                var valType = Nullable.GetUnderlyingType(typeof(T));
+                return (T)Convert.ChangeType(result, valType??typeof(T));
+            }
+            
         }
         public static int ExecuteNonQuery(this IDbConnection connection, string sql)
         {

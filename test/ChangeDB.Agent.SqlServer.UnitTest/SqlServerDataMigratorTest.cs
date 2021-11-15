@@ -94,6 +94,7 @@ namespace ChangeDB.Agent.SqlServer
         public void Dispose()
         {
             _dbConnection?.Dispose();
+            _dbConnection?.DropDatabaseIfExists();
         }
     }
 }

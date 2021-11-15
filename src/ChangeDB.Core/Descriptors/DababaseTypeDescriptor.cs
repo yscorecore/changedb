@@ -8,31 +8,21 @@ namespace ChangeDB
 {
     public class DatabaseTypeDescriptor
     {
+
+
         public CommonDatabaseType DbType { get; set; }
-        public int? Length { get; set; }
-        public int? Accuracy { get; set; }
-        public override string ToString()
+        public int? Size { get; set; }
+        public int? Scale { get; set; }
+      
+        public static DatabaseTypeDescriptor Create(CommonDatabaseType commonDatabaseType, int? length = null, int? accuracy = null)
         {
-            if (Length is null)
+            return new DatabaseTypeDescriptor
             {
-                return Type2String(DbType);
-            }
-            else
-            {
-                if (Accuracy is null)
-                {
-                    return $"{Type2String(DbType)}({Length})";
-                }
-                else
-                {
-                    return $"{Type2String(DbType)}({Length},{Accuracy})";
-                }
-            }
+                DbType = commonDatabaseType,
+                Size = length,
+                Scale = accuracy,
+            };
         }
-
-
-
-        private string Type2String(CommonDatabaseType dbType) => $"{dbType.ToString().ToUpperInvariant().Replace("__", " ")}";
     }
 
     public enum CommonDatabaseType

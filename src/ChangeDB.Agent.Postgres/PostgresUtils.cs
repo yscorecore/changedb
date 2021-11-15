@@ -42,11 +42,11 @@ namespace ChangeDB.Agent.Postgres
                 return $"{IdentityName(schema)}.{IdentityName(objectName)}";
             }
         }
-        public static string IdentityName(string schema, string objectName,string subObjectName)
+        public static string IdentityName(string schema, string objectName, string subObjectName)
         {
             if (string.IsNullOrEmpty(schema))
             {
-                return IdentityName(objectName,subObjectName);
+                return IdentityName(objectName, subObjectName);
             }
             else
             {
@@ -132,7 +132,7 @@ namespace ChangeDB.Agent.Postgres
                     ComputedColumnSql = column.ComputedColumnSql,
                     DefaultValueSql = column.DefaultValueSql,
                     Name = column.Name,
-                    IsStored = column.IsStored,
+                    IsStored = column.IsStored ?? false,
                     IsNullable = column.IsNullable,
                     StoreType = column.StoreType,
                 };
@@ -167,7 +167,7 @@ namespace ChangeDB.Agent.Postgres
                     return IdentitySequenceOptionsData.Empty;
                 }
             }
-            bool IsIdentityType(NpgsqlValueGenerationStrategy npgsqlIdentityStrategy,out string identityType)
+            bool IsIdentityType(NpgsqlValueGenerationStrategy npgsqlIdentityStrategy, out string identityType)
             {
                 identityType = string.Empty;
                 if (npgsqlIdentityStrategy == NpgsqlValueGenerationStrategy.IdentityAlwaysColumn)
@@ -190,11 +190,11 @@ namespace ChangeDB.Agent.Postgres
             {
                 var identity = new IdentityDescriptor
                 {
-                    IncrementBy = data.IncrementBy == 1 ? default(int?) : (int)data.IncrementBy,
+                    IncrementBy = (int)data.IncrementBy,
                     MaxValue = data.MaxValue,
                     MinValue = data.MinValue,
                     IsCyclic = data.IsCyclic,
-                    StartValue = data.StartValue
+                    StartValue = data.StartValue.HasValue ? data.StartValue.Value : 1,
                 };
                 if (data.NumbersToCache != IdentitySequenceOptionsData.Empty.NumbersToCache)
                 {
