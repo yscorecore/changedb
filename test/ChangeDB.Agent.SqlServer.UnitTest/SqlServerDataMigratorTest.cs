@@ -53,7 +53,7 @@ namespace ChangeDB.Agent.SqlServer
                "insert into ts.table1(id,nm) values(3,'name3');"
            );
 
-            var table = await _dataMigrator.ReadTableData(new TableDescriptor { Name = "table1", Schema = "ts", },
+            var table = await _dataMigrator.ReadTableData(new TableDescriptor { Name = "table1", Schema = "ts", PrimaryKey = new PrimaryKeyDescriptor{ Columns = new List<string>{"id"}}},
                 new PageInfo() { Limit = 1, Offset = 1 }, _dbConnection, _migrationSetting);
             table.Rows.Count.Should().Be(1);
             table.Rows[0]["id"].Should().Be(2);
