@@ -8,8 +8,10 @@ namespace ChangeDB.Agent.SqlServer
         public static ISqlExpressionTranslator Default = new SqlServerSqlExpressionTranslator();
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression)
         {
+            
             throw new System.NotImplementedException();
         }
+        
 
         public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression)
         {

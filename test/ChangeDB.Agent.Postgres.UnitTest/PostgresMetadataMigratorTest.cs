@@ -31,7 +31,7 @@ namespace ChangeDB.Agent.Postgres
             await _metadataMigrator.DropDatabaseIfExists(_dbConnection, _migrationSetting);
             Action action = () =>
             {
-                _dbConnection.ExecuteScalar<string>("select current_database()");
+                _dbConnection.Open();
             };
             action.Should().Throw<Npgsql.PostgresException>()
                 .WithMessage("3D000: database \"*\" does not exist");

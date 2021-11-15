@@ -17,16 +17,16 @@ namespace ChangeDB.Agent.SqlServer
         //             );
         //     }
         // }
-        // public static int DropDatabaseIfExists(this DbConnection connection)
-        // {
-        //     using (var newConnection = CreateNoDatabaseConnection(connection))
-        //     {
-        //         var connectionInfo = new NpgsqlConnectionStringBuilder(connection.ConnectionString);
-        //         return newConnection.ExecuteNonQuery(
-        //              $"drop database if exists {connectionInfo.Database}"
-        //              );
-        //     }
-        // }
+        public static int DropDatabaseIfExists(this DbConnection connection)
+        {
+            using (var newConnection = CreateNoDatabaseConnection(connection))
+            {
+                var connectionInfo = new SqlConnectionStringBuilder(connection.ConnectionString);
+                return newConnection.ExecuteNonQuery(
+                     $" drop database  if exists [{connectionInfo.InitialCatalog}]"
+                     );
+            }
+        }
         public static int CreateDatabase(this DbConnection connection)
         {
             using (var newConnection = CreateNoDatabaseConnection(connection))

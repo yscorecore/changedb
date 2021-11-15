@@ -10,7 +10,8 @@ namespace ChangeDB.Agent.SqlServer
 
         public Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection connection, MigrationSetting migrationSetting)
         {
-            throw new System.NotImplementedException();
+            var databaseDescriptor = SqlServerUtils.GetDataBaseDescriptorByEFCore(connection);
+            return Task.FromResult(databaseDescriptor);
         }
 
         public Task PostMigrate(DatabaseDescriptor databaseDescriptor, DbConnection connection, MigrationSetting migrationSetting)
@@ -20,12 +21,14 @@ namespace ChangeDB.Agent.SqlServer
 
         public Task DropDatabaseIfExists(DbConnection connection, MigrationSetting migrationSetting)
         {
-            throw new System.NotImplementedException();
+            connection.DropDatabaseIfExists();
+            return  Task.CompletedTask;
         }
 
         public Task CreateDatabase(DbConnection connection, MigrationSetting migrationSetting)
         {
-            throw new System.NotImplementedException();
+            connection.CreateDatabase();
+            return  Task.CompletedTask;
         }
 
         public Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection connection, MigrationSetting migrationSetting)
