@@ -20,7 +20,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Scaffolding.Internal;
 
 namespace ChangeDB.Agent.Postgres
 {
-    static class PostgresUtils
+    public static class PostgresUtils
     {
         public const string IdentityNumbersToCache = "Npgsql::IdentityNumbersToCache";
         public const string IdentityType = "Npgsql::IdentityType";

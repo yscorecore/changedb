@@ -29,11 +29,10 @@ namespace ChangeDB.Agent.SqlCe.UnitTest
         public async Task ShouldReturnTableRowCountWhenCountTable()
         {
             _dbConnection.ExecuteNonQuery(
-                "create schema ts",
-                "create table ts.table1(id int primary key,nm varchar(64));",
-                "insert into ts.table1(id,nm) values(1,'name1');",
-                "insert into ts.table1(id,nm) values(2,'name2');",
-                "insert into ts.table1(id,nm) values(3,'name3');"
+                "create table table1(id int primary key,nm varchar(64));",
+                "insert into table1(id,nm) values(1,'name1');",
+                "insert into table1(id,nm) values(2,'name2');",
+                "insert into table1(id,nm) values(3,'name3');"
             );
 
             var rows = await _dataMigrator.CountTable(new TableDescriptor

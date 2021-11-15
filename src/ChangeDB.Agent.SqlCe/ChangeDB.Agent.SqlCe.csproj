@@ -1,17 +1,25 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net5</TargetFramework>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.12" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.12" />
-    <PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.12" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.12" />
+        <PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1">
 
-  <ItemGroup>
-    <ProjectReference Include="..\src\ChangeDB.Core\ChangeDB.Core.csproj" />
-  </ItemGroup>
+          
+        </PackageReference>
+        <PackageReference Include="System.Security.Permissions" Version="5.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\ChangeDB.Core\ChangeDB.Core.csproj" />
+    </ItemGroup>
+
+    
+
+
 
 </Project>

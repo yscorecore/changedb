@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net5</TargetFramework>
 
     <IsPackable>false</IsPackable>
+      <Platforms>x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +22,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ChangeDB.Agent.SqlCe\ChangeDB.Agent.SqlCe.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Data.SqlServerCe">
+      <HintPath>..\..\src\ChangeDB.Agent.SqlCe\libs\System.Data.SqlServerCe.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
