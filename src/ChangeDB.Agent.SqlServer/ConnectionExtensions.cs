@@ -35,11 +35,7 @@ namespace ChangeDB.Agent.SqlServer
                 return newConnection.ExecuteNonQuery($"create database {connectionInfo.InitialCatalog}");
             }
         }
-        // public static string ExtractDatabaseName(this DbConnection connection)
-        // {
-        //     var connectionInfo = new NpgsqlConnectionStringBuilder(connection.ConnectionString);
-        //     return connectionInfo.Database;
-        // }
+
 
         private static DbConnection CreateNoDatabaseConnection(IDbConnection connection)
         {
