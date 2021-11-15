@@ -1,5 +1,6 @@
 ﻿using System.Data.Common;
 using ChangeDB.Migration;
+using Microsoft.Data.SqlClient;
 using YS.Knife;
 
 namespace ChangeDB.Agent.SqlServer
@@ -10,10 +11,12 @@ namespace ChangeDB.Agent.SqlServer
     {
         public IDataMigrator DataMigrator { get => SqlServerDataMigrator.Default; }
         public IMetadataMigrator MetadataMigrator { get => SqlServerMetadataMigrator.Default; }
+        public IDatabaseTypeMapper DatabaseTypeMapper { get=>SqlServerDatabaseTypeMapper.Default; }
+        public ISqlExpressionTranslator ExpressionTranslator { get=>SqlServerSqlExpressionTranslator.Default; }
 
         public DbConnection CreateConnection(string connectionString)
         {
-            throw new System.NotImplementedException();
+            return new SqlConnection(connectionString);
         }
     }
 }

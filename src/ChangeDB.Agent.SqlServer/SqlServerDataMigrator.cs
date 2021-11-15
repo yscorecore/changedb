@@ -7,7 +7,7 @@ namespace ChangeDB.Agent.SqlServer
 {
     public class SqlServerDataMigrator : IDataMigrator
     {
-        public static readonly SqlServerDataMigrator Default = new SqlServerDataMigrator();
+        public static readonly IDataMigrator Default = new SqlServerDataMigrator();
 
         public Task<long> CountTable(TableDescriptor table, DbConnection connection, MigrationSetting migrationSetting)
         {

@@ -18,6 +18,16 @@ namespace ChangeDB.Agent.SqlServer
             throw new System.NotImplementedException();
         }
 
+        public Task DropDatabaseIfExists(DbConnection connection, MigrationSetting migrationSetting)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task CreateDatabase(DbConnection connection, MigrationSetting migrationSetting)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection connection, MigrationSetting migrationSetting)
         {
             throw new System.NotImplementedException();
