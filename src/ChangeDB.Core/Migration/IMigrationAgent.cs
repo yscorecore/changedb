@@ -11,5 +11,6 @@ namespace ChangeDB.Migration
         IMetadataMigrator MetadataMigrator { get; }
         IDatabaseTypeMapper DatabaseTypeMapper { get; }
         ISqlExpressionTranslator ExpressionTranslator { get; }
+        IDatabaseManager DatabaseManger { get; }
     }
 }

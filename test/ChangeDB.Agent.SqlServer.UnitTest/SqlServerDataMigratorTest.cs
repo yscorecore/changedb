@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Threading.Tasks;
@@ -9,30 +10,33 @@ using Xunit;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlServerDataMigratorTest
+    [Collection(nameof(DatabaseEnvironment))]
+    public class SqlServerDataMigratorTest : IDisposable
     {
-          private readonly IDataMigrator _dataMigrator =SqlServerDataMigrator.Default;
+        private readonly IDataMigrator _dataMigrator = SqlServerDataMigrator.Default;
         private readonly MigrationSetting _migrationSetting = new MigrationSetting();
         private readonly DbConnection _dbConnection;
 
 
-        public SqlServerDataMigratorTest()
+        public SqlServerDataMigratorTest(DatabaseEnvironment databaseEnvironment)
         {
-            _dbConnection = new SqlConnection($"Server=127.0.0.1,1433;Database={TestUtils.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;");
-
-            _dbConnection.CreateDatabase();
+            _dbConnection = databaseEnvironment.DbConnection;
+            _dbConnection.ExecuteNonQuery(
+               "create schema ts",
+               "create table ts.table1(id int primary key,nm varchar(64));",
+               "insert into ts.table1(id,nm) values(1,'name1');",
+               "insert into ts.table1(id,nm) values(2,'name2');",
+               "insert into ts.table1(id,nm) values(3,'name3');"
+           );
         }
-
+        public void Dispose()
+        {
+            _dbConnection.ClearDatabase(); 
+        }
         [Fact]
         public async Task ShouldReturnTableRowCountWhenCountTable()
         {
-            _dbConnection.ExecuteNonQuery(
-                "create schema ts",
-                "create table ts.table1(id int primary key,nm varchar(64));",
-                "insert into ts.table1(id,nm) values(1,'name1');",
-                "insert into ts.table1(id,nm) values(2,'name2');",
-                "insert into ts.table1(id,nm) values(3,'name3');"
-            );
+           
 
             var rows = await _dataMigrator.CountTable(new TableDescriptor
             {
@@ -45,15 +49,9 @@ namespace ChangeDB.Agent.SqlServer
         [Fact]
         public async Task ShouldReturnDataTableWhenReadTableData()
         {
-            _dbConnection.ExecuteNonQuery(
-               "create schema ts",
-               "create table ts.table1(id int primary key,nm varchar(64));",
-               "insert into ts.table1(id,nm) values(1,'name1');",
-               "insert into ts.table1(id,nm) values(2,'name2');",
-               "insert into ts.table1(id,nm) values(3,'name3');"
-           );
+           
 
-            var table = await _dataMigrator.ReadTableData(new TableDescriptor { Name = "table1", Schema = "ts", PrimaryKey = new PrimaryKeyDescriptor{ Columns = new List<string>{"id"}}},
+            var table = await _dataMigrator.ReadTableData(new TableDescriptor { Name = "table1", Schema = "ts", PrimaryKey = new PrimaryKeyDescriptor { Columns = new List<string> { "id" } } },
                 new PageInfo() { Limit = 1, Offset = 1 }, _dbConnection, _migrationSetting);
             table.Rows.Count.Should().Be(1);
             table.Rows[0]["id"].Should().Be(2);
@@ -63,13 +61,7 @@ namespace ChangeDB.Agent.SqlServer
         public async Task ShouldSuccessWhenWriteTableData()
         {
 
-            _dbConnection.ExecuteNonQuery(
-              "create schema ts",
-              "create table ts.table1(id int primary key,nm varchar(64));",
-              "insert into ts.table1(id,nm) values(1,'name1');",
-              "insert into ts.table1(id,nm) values(2,'name2');",
-              "insert into ts.table1(id,nm) values(3,'name3');"
-          );
+
             var table = new DataTable();
             table.Columns.Add("id", typeof(int));
             table.Columns.Add("nm", typeof(string));
@@ -91,10 +83,6 @@ namespace ChangeDB.Agent.SqlServer
             var totalRows = await _dataMigrator.CountTable(tableDescriptor, _dbConnection, _migrationSetting);
             totalRows.Should().Be(4);
         }
-        public void Dispose()
-        {
-            _dbConnection?.Dispose();
-            _dbConnection?.DropDatabaseIfExists();
-        }
+       
     }
 }

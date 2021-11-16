@@ -11,19 +11,22 @@ using Xunit;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlServerDatabaseTypeMapperTest
+    [Collection(nameof(DatabaseEnvironment))]
+    public class SqlServerDatabaseTypeMapperTest:IDisposable
     {
         private readonly IMetadataMigrator _metadataMigrator = SqlServerMetadataMigrator.Default;
         private readonly IDatabaseTypeMapper _databaseTypeMapper=SqlServerDatabaseTypeMapper.Default;
         private readonly MigrationSetting _migrationSetting = new MigrationSetting { DropTargetDatabaseIfExists = true };
         private readonly DbConnection _dbConnection;
-        private readonly string _connectionString;
 
-        public SqlServerDatabaseTypeMapperTest()
+        public SqlServerDatabaseTypeMapperTest(DatabaseEnvironment databaseEnvironment)
         {
-            _connectionString = $"Server=127.0.0.1,1433;Database={TestUtils.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;";
-            _dbConnection = new SqlConnection(_connectionString);
-            _dbConnection.CreateDatabase();
+            _dbConnection = databaseEnvironment.DbConnection;
+        }
+        public void Dispose()
+        {
+            _dbConnection.ClearDatabase();
+
         }
 
         [Theory]
