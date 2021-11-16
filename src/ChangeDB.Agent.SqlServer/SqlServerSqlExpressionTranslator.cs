@@ -31,11 +31,20 @@ namespace ChangeDB.Agent.SqlServer
         private string TrimBrackets(string sqlExpression)
         {
             if (sqlExpression == null) return null;
-            var trimmedExpression = sqlExpression.Trim();
-            if (trimmedExpression.StartsWith('(') && trimmedExpression.EndsWith(')'))
+            var trimmedExpression =sqlExpression;
+            do
             {
-                return trimmedExpression[1..^2];
-            }
+                trimmedExpression = trimmedExpression.Trim();
+                if (trimmedExpression.StartsWith('(') && trimmedExpression.EndsWith(')'))
+                {
+                    trimmedExpression= trimmedExpression[1..^1];
+                }
+                else
+                {
+                    break;
+                }
+            } while (true);
+           
             return trimmedExpression;
         }
         private bool IsEmptyArgumentFunction(string expression,out string functionName)
@@ -63,7 +72,7 @@ namespace ChangeDB.Agent.SqlServer
             }
             else
             {
-                if (KeywordMapper.TryGetValue(sqlExpression.Expression, out var mappedExpression))
+                if (KeywordMapper.TryGetValue(sqlExpression.Expression??string.Empty, out var mappedExpression))
                 {
                     return mappedExpression;
                 }
