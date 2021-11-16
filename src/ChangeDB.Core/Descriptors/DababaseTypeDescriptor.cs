@@ -12,8 +12,8 @@ namespace ChangeDB
 
 
         public CommonDatabaseType DbType { get; set; }
-        public int? Size { get; set; }
-        public int? Scale { get; set; }
+        public int? Arg1 { get; set; }
+        public int? Arg2 { get; set; }
       
         [Obsolete()]
         public static DatabaseTypeDescriptor Create(CommonDatabaseType commonDatabaseType, int? size = null, int? scale = null)
@@ -21,8 +21,8 @@ namespace ChangeDB
             return new DatabaseTypeDescriptor
             {
                 DbType = commonDatabaseType,
-                Size = size,
-                Scale = scale,
+                Arg1 = size,
+                Arg2 = scale,
             };
         }
         public static DatabaseTypeDescriptor Boolean() => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Boolean};
@@ -35,21 +35,21 @@ namespace ChangeDB
         public static DatabaseTypeDescriptor NText() => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.NText};
         public static DatabaseTypeDescriptor Blob() => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Blob};
         public static DatabaseTypeDescriptor Float() => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Float};
-        public static DatabaseTypeDescriptor Double(int scale) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Double, Size = scale};
-        public static DatabaseTypeDescriptor Decimal(int size, int scale) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Decimal, Size = size, Scale = scale};
-        public static DatabaseTypeDescriptor Char(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Char, Size = length};
-        public static DatabaseTypeDescriptor NChar(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.NChar, Size = length};
-        public static DatabaseTypeDescriptor Varchar(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Varchar, Size = length};
-        public static DatabaseTypeDescriptor NVarchar(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.NVarchar, Size = length};
-        public static DatabaseTypeDescriptor Binary(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Binary, Size = length};
-        public static DatabaseTypeDescriptor Varbinary(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Varbinary, Size = length};
+        public static DatabaseTypeDescriptor Double(int scale) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Double, Arg1 = scale};
+        public static DatabaseTypeDescriptor Decimal(int size, int scale) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Decimal, Arg1 = size, Arg2 = scale};
+        public static DatabaseTypeDescriptor Char(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Char, Arg1 = length};
+        public static DatabaseTypeDescriptor NChar(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.NChar, Arg1 = length};
+        public static DatabaseTypeDescriptor Varchar(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Varchar, Arg1 = length};
+        public static DatabaseTypeDescriptor NVarchar(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.NVarchar, Arg1 = length};
+        public static DatabaseTypeDescriptor Binary(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Binary, Arg1 = length};
+        public static DatabaseTypeDescriptor Varbinary(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Varbinary, Arg1 = length};
 
         public static DatabaseTypeDescriptor Date() => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Date};
 
-        public static DatabaseTypeDescriptor Time(int scale) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Time,Size = scale};
-        public static DatabaseTypeDescriptor DateTime(int scale) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.DateTime,Size = scale};
+        public static DatabaseTypeDescriptor Time(int scale) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Time,Arg1 = scale};
+        public static DatabaseTypeDescriptor DateTime(int scale) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.DateTime,Arg1 = scale};
         
-        public static DatabaseTypeDescriptor DateTimeOffset(int scale) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.DateTimeOffset,Size = scale};
+        public static DatabaseTypeDescriptor DateTimeOffset(int scale) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.DateTimeOffset,Arg1 = scale};
     }
 
     public enum CommonDatabaseType

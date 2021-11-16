@@ -196,7 +196,7 @@ namespace ChangeDB.Agent.SqlServer
                 "create table table2(id int, id1 int);",
                 "alter table table2 add constraint table2_id1_fkey foreign key(id1) references table1(id);");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
-            databaseDesc.Tables.Where(p => p.Name == "table2").Single().ForeignKeys.Should()
+            databaseDesc.Tables.Single(p => p.Name == "table2").ForeignKeys.Should()
                 .ContainSingle().And.BeEquivalentTo(new ForeignKeyDescriptor
                 {
                     Name = "table2_id1_fkey",

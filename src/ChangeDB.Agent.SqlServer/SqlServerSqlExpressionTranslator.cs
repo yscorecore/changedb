@@ -2,55 +2,74 @@
 using ChangeDB.Descriptors;
 using ChangeDB.Migration;
 using System;
+using System.Collections.Generic;
 
 namespace ChangeDB.Agent.SqlServer
 {
     public class SqlServerSqlExpressionTranslator : ISqlExpressionTranslator
     {
-        public static ISqlExpressionTranslator Default = new SqlServerSqlExpressionTranslator();
+        public static readonly ISqlExpressionTranslator Default = new SqlServerSqlExpressionTranslator();
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression)
         {
-            var trimedExpression = TrimBrackets(sqlExpression);
-            if (string.IsNullOrEmpty(trimedExpression))
+            var trimmedExpression = TrimBrackets(sqlExpression);
+            if (string.IsNullOrEmpty(trimmedExpression))
             {
                 return null;
             }
-            var (matched, function) = IsEmptyArgumentFunction(trimedExpression);
-            if (matched)
+            if (IsEmptyArgumentFunction(trimmedExpression,out var function))
             {
                 return function.ToLower() switch
                 {
                     "getdate" => new SqlExpressionDescriptor { Function = Function.Now },
                     "newid" => new SqlExpressionDescriptor { Function = Function.Uuid },
-                    _=> throw new NotSupportedException($"not supportd function {function}")
+                    _=> new SqlExpressionDescriptor { Expression = trimmedExpression }
                 };
             }
-            else
-            {
-                // TODO handle 
-                return new SqlExpressionDescriptor { Expression = trimedExpression };
-            }
+            return new SqlExpressionDescriptor { Expression = trimmedExpression };
         }
 
         private string TrimBrackets(string sqlExpression)
         {
             if (sqlExpression == null) return null;
-            var trimedExpression = sqlExpression.Trim();
-            if (trimedExpression.StartsWith('(') && trimedExpression.EndsWith(')'))
+            var trimmedExpression = sqlExpression.Trim();
+            if (trimmedExpression.StartsWith('(') && trimmedExpression.EndsWith(')'))
             {
-                return trimedExpression[1..-2];
+                return trimmedExpression[1..^2];
             }
-            return trimedExpression;
+            return trimmedExpression;
         }
-        private (bool Success, string Name) IsEmptyArgumentFunction(string expression)
+        private bool IsEmptyArgumentFunction(string expression,out string functionName)
         {
             var match = Regex.Match(expression, @"^(?<func>\w+)\(\s*\)$");
-            return (match.Success, match.Groups["func"].Value);
+            functionName = match.Groups["func"].Value;
+            return match.Success;
         }
 
+        private static readonly Dictionary<string, string> KeywordMapper = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
+        {
+            ["true"]="1",
+            ["false"]="0"
+        };
         public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression)
         {
-            throw new System.NotImplementedException();
+            if (sqlExpression.Function != null)
+            {
+                return sqlExpression.Function.Value switch
+                {
+                    Function.Now => "getdate()",
+                    Function.Uuid => "newid()",
+                    _=>throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
+                };
+            }
+            else
+            {
+                if (KeywordMapper.TryGetValue(sqlExpression.Expression, out var mappedExpression))
+                {
+                    return mappedExpression;
+                }
+                // TODO Need to handle complex expression
+                return sqlExpression.Expression;
+            }
         }
     }
 }

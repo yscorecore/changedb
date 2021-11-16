@@ -50,10 +50,10 @@ namespace ChangeDB.Agent.Postgres
             return dataType.DbType switch
             {
                 CommonDatabaseType.Boolean => "boolean",
-                CommonDatabaseType.Varchar => $"varchar({dataType.Size})",
-                CommonDatabaseType.Char => $"char({dataType.Size})",
-                CommonDatabaseType.NVarchar => $"varchar({dataType.Size})",
-                CommonDatabaseType.NChar => $"varchar({dataType.Size})",
+                CommonDatabaseType.Varchar => $"varchar({dataType.Arg1})",
+                CommonDatabaseType.Char => $"char({dataType.Arg1})",
+                CommonDatabaseType.NVarchar => $"varchar({dataType.Arg1})",
+                CommonDatabaseType.NChar => $"varchar({dataType.Arg1})",
                 CommonDatabaseType.Uuid => "uuid",
                 CommonDatabaseType.Float => "real",
                 CommonDatabaseType.Double => "float",
@@ -75,9 +75,9 @@ namespace ChangeDB.Agent.Postgres
             };
             string CreateDecimalType()
             {
-                if (dataType.Size.HasValue)
+                if (dataType.Arg1.HasValue)
                 {
-                    return dataType.Scale.HasValue ? $"numeric({dataType.Size},{dataType.Scale})" : $"numeric({dataType.Size})";
+                    return dataType.Arg2.HasValue ? $"numeric({dataType.Arg1},{dataType.Arg2})" : $"numeric({dataType.Arg1})";
                 }
                 return "numeric";
             }
