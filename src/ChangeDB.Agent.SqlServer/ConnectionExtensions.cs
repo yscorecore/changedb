@@ -27,13 +27,13 @@ namespace ChangeDB.Agent.SqlServer
             }
         }
 
-       
+
 
 
         public static void ClearDatabase(this DbConnection connection)
         {
-           connection.DropAllForeignConstraints();
-           connection.DropAllSchemas();
+            connection.DropAllForeignConstraints();
+            connection.DropAllSchemas();
         }
         private static void DropAllForeignConstraints(this DbConnection connection)
         {

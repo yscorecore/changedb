@@ -748,7 +748,8 @@ namespace ChangeDB.Agent.Postgres
                             new ColumnDescriptor { Name="used", StoreType="boolean", DefaultValueSql="true"},
                             new ColumnDescriptor {Name="rid", StoreType="uuid", DefaultValueSql="gen_random_uuid()"},
                             new ColumnDescriptor { Name="createtime", StoreType="timestamp without time zone", DefaultValueSql="CURRENT_TIMESTAMP"},
-                        }
+                        },
+                        PrimaryKey = new PrimaryKeyDescriptor{  Name="pk_ts_table1", Columns = new List<string>{ "id"} }
                     }
                 }
             };

@@ -36,10 +36,18 @@ namespace ChangeDB.Agent.SqlServer
                 foreach (var table in databaseDescriptor.Tables)
                 {
                     var tableFullName = SqlServerUtils.IdentityName(table.Schema, table.Name);
-                    var columnDefines = string.Join(",", table.Columns.Select(p => $"{SqlServerUtils.IdentityName(p.Name)} {p.StoreType}"));
+                    var columnDefines = string.Join(",", table.Columns.Select(p => $"{BuildColumnBasicDesc(p)}"));
                     dbConnection.ExecuteNonQuery($"CREATE TABLE {tableFullName} ({columnDefines});");
                 }
-
+                string BuildColumnBasicDesc(ColumnDescriptor column)
+                {
+                    var columnName = SqlServerUtils.IdentityName(column.Name);
+                    var dataType = column.StoreType;
+                    var identityInfo = column.IsIdentity && column.IdentityInfo != null
+                        ? $"identity({column.IdentityInfo.StartValue},{column.IdentityInfo.IncrementBy})"
+                        : string.Empty;
+                    return $"{columnName} {dataType} {identityInfo}";
+                }
             }
             void CreatePrimaryKeys()
             {
@@ -50,12 +58,17 @@ namespace ChangeDB.Agent.SqlServer
                     var primaryColumns = string.Join(",", table.PrimaryKey?.Columns.Select(p => SqlServerUtils.IdentityName(p)));
 
                     // set primary key columns not null and with default value
-                    foreach (var primaryKeyColumn in table.PrimaryKey?.Columns ?? Enumerable.Empty<string>())
+                    foreach (var column in table.PrimaryKey?.Columns ?? Enumerable.Empty<string>())
                     {
-                        var primaryKeyColumnDesc = table.Columns.Single(p => p.Name == primaryKeyColumn);
-                        dbConnection.ExecuteNonQuery($"alter table {tableFullName} alter column {BuildColumnInfo(primaryKeyColumnDesc)};");
+                        var columnName = SqlServerUtils.IdentityName(column);
+                        var columnDesc = table.Columns.Single(p => p.Name == column);
+                        dbConnection.ExecuteNonQuery($"alter table {tableFullName} alter column {columnName} {columnDesc.StoreType} not null;");
+                        if (!string.IsNullOrEmpty(columnDesc.DefaultValueSql))
+                        {
+                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD CONSTRAINT DF_DEFAULT_{table.Schema}_{table.Name}_{column} DEFAULT ({columnDesc.DefaultValueSql}) FOR {columnName};");
+                        }
                     }
-                   
+
                     if (string.IsNullOrEmpty(table.PrimaryKey.Name) && table.PrimaryKey.Columns?.Count > 0)
                     {
                         dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD PRIMARY KEY ({primaryColumns})");
@@ -68,25 +81,26 @@ namespace ChangeDB.Agent.SqlServer
             }
 
         }
-        
-       public Task PostMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
+
+        public Task PostMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
         {
-            ReAlterColumnInfos();
+            AlterNotNullColumns();
             AddDefaultValues();
             CreateUniques();
             CreateIndexs();
             AddForeignKeys();
-            void ReAlterColumnInfos()
+            void AlterNotNullColumns()
             {
                 foreach (var table in databaseDescriptor.Tables)
                 {
                     var tableFullName = SqlServerUtils.IdentityName(table.Schema, table.Name);
                     foreach (var column in table.Columns)
                     {
-                        var isPrimaryKey = table.PrimaryKey?.Columns?.Contains(column.Name)??false;
+                        var columnName = SqlServerUtils.IdentityName(column.Name);
+                        var isPrimaryKey = table.PrimaryKey?.Columns?.Contains(column.Name) ?? false;
                         if (!column.IsNullable && !isPrimaryKey)
                         {
-                            dbConnection.ExecuteNonQuery($"alter table {tableFullName} alter column {BuildColumnInfo(column)}");
+                            dbConnection.ExecuteNonQuery($"alter table {tableFullName} alter column {columnName} {column.StoreType} not null");
                         }
                     }
                 }
@@ -133,10 +147,11 @@ namespace ChangeDB.Agent.SqlServer
                     var tableFullName = SqlServerUtils.IdentityName(table.Schema, table.Name);
                     foreach (var column in table.Columns)
                     {
-                        if (!string.IsNullOrEmpty(column.DefaultValueSql))
+                        var isPrimaryKey = table.PrimaryKey?.Columns?.Contains(column.Name) ?? false;
+                        if (!string.IsNullOrEmpty(column.DefaultValueSql) && !isPrimaryKey)
                         {
                             var columnName = SqlServerUtils.IdentityName(column.Name);
-                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} SET DEFAULT {column.DefaultValueSql};");
+                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD CONSTRAINT DF_DEFAULT_{table.Name}_{column.Name} DEFAULT ({column.DefaultValueSql}) FOR {columnName};");
                         }
                     }
                 }
@@ -160,17 +175,5 @@ namespace ChangeDB.Agent.SqlServer
             return Task.CompletedTask;
         }
 
-        private static  string BuildColumnInfo(ColumnDescriptor column)
-       {
-           var columnName = SqlServerUtils.IdentityName(column.Name);
-           List<string> infos = new List<string>();
-           infos.Add($"{columnName} {column.StoreType}");
-           infos.Add(column.IsNullable?"null":"not null");
-           if (!string.IsNullOrEmpty(column.DefaultValueSql))
-           {
-               infos.Add($"default ({column.DefaultValueSql})");
-           }
-           return string.Join(" ", infos);
-       }
     }
 }

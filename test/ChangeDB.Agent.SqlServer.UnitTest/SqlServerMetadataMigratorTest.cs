@@ -24,7 +24,7 @@ namespace ChangeDB.Agent.SqlServer
 
         public void Dispose()
         {
-           _dbConnection.ClearDatabase();
+            _dbConnection.ClearDatabase();
         }
 
         #region GetDescription
@@ -325,8 +325,8 @@ namespace ChangeDB.Agent.SqlServer
                 });
         }
         #endregion
-        
-        
+
+
         #region MigrateMetaData
         [Fact]
         public async Task ShouldCreateSchemasAndTableWhenMigrateMetadata()
@@ -692,46 +692,13 @@ namespace ChangeDB.Agent.SqlServer
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="int", DefaultValueSql="1"},
-                            // new ColumnDescriptor { Name="nm", StoreType="nvarchar(10)", DefaultValueSql="'abc'"},
-                            // new ColumnDescriptor { Name="used", StoreType="bit", DefaultValueSql="true"},
-                            // new ColumnDescriptor {Name="rid", StoreType="uniqueidentifier", DefaultValueSql="newid()"},
-                            // new ColumnDescriptor { Name="createtime", StoreType="datetime2", DefaultValueSql="getdate()"},
+                            new ColumnDescriptor { Name="id", StoreType="int", DefaultValueSql="((1))"},
+                             new ColumnDescriptor { Name="nm", StoreType="nvarchar(10)", DefaultValueSql="('abc')"},
+                             new ColumnDescriptor { Name="used", StoreType="bit", DefaultValueSql="((1))"},
+                             new ColumnDescriptor {Name="rid", StoreType="uniqueidentifier", DefaultValueSql="(newid())"},
+                             new ColumnDescriptor { Name="createtime", StoreType="datetime2", DefaultValueSql="(getdate())"},
                         },
-                        PrimaryKey = new PrimaryKeyDescriptor{ Columns = new List<string>{"id"}}
-                    }
-                }
-            };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
-            actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
-        }
-        [Fact]
-        public async Task ShouldMapByDefaultIdentityWhenMigrateMetadata()
-        {
-            var databaseDesc = new DatabaseDescriptor()
-            {
-                Tables = new List<TableDescriptor>
-                {
-                    new TableDescriptor
-                    {
-                        Schema="ts",
-                        Name="table1",
-                        Columns =new List<ColumnDescriptor>
-                        {
-                           new ColumnDescriptor
-                           {
-                                Name="id", StoreType = "bigint", IsIdentity =true,
-                                IdentityInfo = new IdentityDescriptor
-                                {
-                                    IsCyclic =false,
-                                    Values = new Dictionary<string, object>
-                                    {
-                                      //  [PostgresUtils.IdentityType]="BY DEFAULT",
-                                    }
-                                }
-                           }
-                        }
+                        PrimaryKey = new PrimaryKeyDescriptor{ Name="pk_table1_id", Columns = new List<string>{"id"}}
                     }
                 }
             };
@@ -740,8 +707,9 @@ namespace ChangeDB.Agent.SqlServer
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
+
         [Fact]
-        public async Task ShouldMapAlwaysIdentityWhenMigrateMetadata()
+        public async Task ShouldMapIdentityWhenMigrateMetadata()
         {
             var databaseDesc = new DatabaseDescriptor()
             {
@@ -755,14 +723,10 @@ namespace ChangeDB.Agent.SqlServer
                         {
                            new ColumnDescriptor
                            {
-                                Name="id", StoreType = "bigint", IsIdentity =true,
+                                Name="id", StoreType = "int", IsIdentity =true,
                                 IdentityInfo = new IdentityDescriptor
                                 {
-                                    IsCyclic =false,
-                                    Values = new Dictionary<string, object>
-                                    {
-                                       // [PostgresUtils.IdentityType]="ALWAYS",
-                                    }
+
                                 }
                            }
                         }
@@ -791,16 +755,8 @@ namespace ChangeDB.Agent.SqlServer
                                 Name="id", StoreType = "bigint", IsIdentity =true,
                                 IdentityInfo = new IdentityDescriptor
                                 {
-                                    IsCyclic =true,
-                                    MinValue=0,
-                                    StartValue=1,
+                                    StartValue=2,
                                     IncrementBy=5,
-                                    MaxValue=1000,
-                                    Values = new Dictionary<string, object>
-                                    {
-                                        //[PostgresUtils.IdentityType]="ALWAYS",
-                                        //[PostgresUtils.IdentityNumbersToCache]=50,
-                                    }
                                 }
                            }
                         }
@@ -811,80 +767,9 @@ namespace ChangeDB.Agent.SqlServer
             var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
-        [Fact]
-        public async Task ShouldMapToAlwaysIdentityWhenMigrateMetadataAndIdentityTypeIsEmpty()
-        {
-            var databaseDesc = new DatabaseDescriptor()
-            {
-                Tables = new List<TableDescriptor>
-                {
-                    new TableDescriptor
-                    {
-                        Schema="ts",
-                        Name="table1",
-                        Columns =new List<ColumnDescriptor>
-                        {
-                           new ColumnDescriptor
-                           {
-                                Name="id", StoreType = "smallint", IsIdentity =true,
-                                IdentityInfo = new IdentityDescriptor
-                                {
-                                    IsCyclic =false,
-                                    Values = new Dictionary<string, object>
-                                    {
 
-                                    }
-                                }
-                           }
-                        }
-                    }
-                }
-            };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
-            var expectedDatabaseDesc = databaseDesc.DeepCloneAndSet(desc =>
-            {
-                desc.Tables.SelectMany(p => p.Columns).Select(p => p.IdentityInfo.Values).ForEach(dic =>
-                {
-                    //dic[PostgresUtils.IdentityType] = "ALWAYS";
-                });
-            });
-            actualDatabaseDesc.Should().BeEquivalentTo(expectedDatabaseDesc);
-        }
 
-        [Fact]
-        public async Task ShouldMapSerialColumnWhenMigrateMetadata()
-        {
-            var databaseDesc = new DatabaseDescriptor()
-            {
-                Tables = new List<TableDescriptor>
-                {
-                    new TableDescriptor
-                    {
-                        Schema="ts",
-                        Name="table1",
-                        Columns =new List<ColumnDescriptor>
-                        {
-                           new ColumnDescriptor
-                           {
-                                Name="id", IsNullable=false, StoreType = "int", IsIdentity = false,
-                                IdentityInfo = new IdentityDescriptor
-                                {
-                                    IsCyclic = false,
-                                    Values = new Dictionary<string, object>
-                                    {
 
-                                    }
-                                }
-                           }
-                        }
-                    }
-                }
-            };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
-            actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
-        }
         #endregion
 
 
