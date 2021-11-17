@@ -1,19 +1,30 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace ChangeDB.Migration
 {
     public class MigrationSetting
     {
-        public bool IncludeMeta { get; set; } = true;
-        public bool IncludeData { get; set; } = true;
-
         public int MaxPageSize { get; set; } = 10000;
-
-        public bool DropTargetDatabaseIfExists { get; set; } = false;
+        public MigrationType MigrationType { get; set; } = MigrationType.All;
+        public bool DropTargetDatabaseIfExists { get; set; } = true;
         public SourceFilter SourceFilter { get; set; } = new SourceFilter();
         public CustomSqlScripts PostScripts { get; set; } = new CustomSqlScripts();
         public TargetNameStyle TargetNameStyle { get; set; } = new TargetNameStyle();
+
+        public bool IncludeMeta { get => MigrationType.HasFlag(MigrationType.MetaData); }
+        public bool IncludeData { get => MigrationType.HasFlag(MigrationType.MetaData); }
     }
+
+    [Flags]
+    public enum MigrationType
+    {
+        MetaData = 1,
+        Data = 2,
+        All = MetaData | Data,
+    }
+
 
     public class CustomSqlScripts
     {
@@ -29,6 +40,11 @@ namespace ChangeDB.Migration
     }
     public class TargetNameStyle
     {
+        static Random Random = new Random();
+        static Func<string, string> Lower = p => p?.ToLowerInvariant();
+        static Func<string, string> Upper = p => p?.ToUpperInvariant();
+        static Func<string, string> Origin = p => p;
+
         public NameStyle NameStyle { get; set; }
         public NameStyle? SchemaNameStyle { get; set; }
         public NameStyle? TableNameStyle { get; set; }
@@ -36,5 +52,49 @@ namespace ChangeDB.Migration
         public NameStyle? IndexNameStyle { get; set; }
         public NameStyle? ForeignKeyNameStyle { get; set; }
         public NameStyle? UniqueNameStyle { get; set; }
+        public NameStyle? SequenceNameStyle { get; set; }
+        public NameStyle? PrimaryKeyNameStyle { get; set; }
+
+        public bool KeepOriginalConstraintName { get; set; }
+
+        public Func<string, string> SchemaNameFunc { get => NameStyleToFunc(SchemaNameStyle ?? NameStyle); }
+        public Func<string, string> TableNameFunc { get => NameStyleToFunc(TableNameStyle ?? NameStyle); }
+        public Func<string, string> ColumnNameFunc { get => NameStyleToFunc(ColumnNameStyle ?? NameStyle); }
+        public Func<string, string> SequenceNameFunc { get => NameStyleToFunc(SequenceNameStyle ?? NameStyle); }
+
+        public Func<string, string> IndexNameFunc { get => NameStyleToFunc(IndexNameStyle ?? NameStyle).Then(AppendRandomNumbers); }
+        public Func<string, string> ForeignKeyNameFunc { get => NameStyleToFunc(ForeignKeyNameStyle ?? NameStyle).Then(AppendRandomNumbers); }
+        public Func<string, string> UniqueNameFunc { get => NameStyleToFunc(UniqueNameStyle ?? NameStyle).Then(AppendRandomNumbers); }
+        public Func<string, string> PrimaryKeyNameFunc { get => NameStyleToFunc(PrimaryKeyNameStyle ?? NameStyle).Then(AppendRandomNumbers); }
+
+        private static Func<string, string> NameStyleToFunc(NameStyle nameStyle)
+        {
+            return nameStyle switch
+            {
+                NameStyle.Lower => Lower,
+                NameStyle.Upper => Upper,
+                _ => Origin
+            };
+        }
+
+        private string AppendRandomNumbers(string name)
+        {
+            if (KeepOriginalConstraintName)
+            {
+                return name;
+            }
+            if (!Regex.IsMatch(name, @"\d{5}$"))
+            {
+                return $"{name}_{Random.Next(99999):d5}";
+            }
+            return name;
+        }
+    }
+    public static class DelegateExtensions
+    {
+        public static Func<T, T> Then<T>(this Func<T, T> first, Func<T, T> second)
+        {
+            return p => second(first(p));
+        }
     }
 }

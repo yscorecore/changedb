@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
+using Microsoft.Extensions.Logging;
 using YS.Knife;
 
 namespace ChangeDB.Default
@@ -14,9 +15,11 @@ namespace ChangeDB.Default
     {
         private readonly IAgentFactory _agentFactory;
 
-        public DefaultMigrator(IAgentFactory agentFactory)
+        private readonly ILogger<DefaultMigrator> _logger;
+        public DefaultMigrator(IAgentFactory agentFactory, ILogger<DefaultMigrator> logger)
         {
             _agentFactory = agentFactory;
+            _logger = logger;
         }
         public async Task MigrateDatabase(MigrationContext context)
         {
@@ -25,39 +28,43 @@ namespace ChangeDB.Default
             using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
             using var targetConnection = targetAgent.CreateConnection(context.TargetDatabase.ConnectionString);
 
-
+            _logger.LogInformation("start geting source database metadata.");
             var sourceDatabaseDescriptor =
                 await sourceAgent.MetadataMigrator.GetDatabaseDescriptor(sourceConnection, context.Setting);
-
             var targetDatabaseDescriptor = ConvertToTargetDatabaseDescriptor(sourceDatabaseDescriptor, context, sourceAgent, targetAgent);
-
             // do migrate
             await CreateEmptyTargetDatabase(context, targetAgent, targetConnection);
 
             if (context.Setting.IncludeMeta)
             {
+                _logger.LogInformation("Start pre migration metadata.");
                 await targetAgent.MetadataMigrator.PreMigrate(targetDatabaseDescriptor, targetConnection, context.Setting);
             }
 
             if (context.Setting.IncludeData)
             {
+                _logger.LogInformation("start migrating data.");
                 await MigrationData(sourceAgent, targetAgent, sourceDatabaseDescriptor, context, sourceConnection, targetConnection);
+                _logger.LogInformation("all data migration completed.");
             }
 
             if (context.Setting.IncludeMeta)
             {
+                _logger.LogInformation("Start post migration metadata.");
                 await targetAgent.MetadataMigrator.PostMigrate(targetDatabaseDescriptor, targetConnection, context.Setting);
 
             }
+            _logger.LogInformation("migration succeeded.");
         }
 
         private async Task CreateEmptyTargetDatabase(MigrationContext context, IMigrationAgent targetAgent, DbConnection targetConnection)
         {
             if (context.Setting.DropTargetDatabaseIfExists)
             {
+                _logger.LogInformation("dropping target database if exists.");
                 await targetAgent.DatabaseManger.DropDatabaseIfExists(targetConnection, context.Setting);
             }
-
+            _logger.LogInformation("creating target database.");
             await targetAgent.DatabaseManger.CreateDatabase(targetConnection, context.Setting);
         }
 
@@ -91,14 +98,15 @@ namespace ChangeDB.Default
 
             void ApplyNamingRules()
             {
-                Func<string, string> columnConvertFunc = (p) => p;
-                Func<string, string> tableConvertFunc = (p) => p;
-                Func<string, string> schemaConvertFunc = (p) => p;
-                Func<string, string> sequenceConvertFunc = (p) => p;
-                Func<string, string> indexConvertFunc = (p) => p;
-                Func<string, string> uniqueConvertFunc = (p) => p;
-                Func<string, string> foreignKeyConvertFunc = (p) => p;
-                Func<string, string> primaryKeyConvertFunc = (p) => p;
+                var nameStyle = migrationContext.Setting.TargetNameStyle;
+                Func<string, string> columnConvertFunc = nameStyle.ColumnNameFunc;
+                Func<string, string> tableConvertFunc = nameStyle.TableNameFunc;
+                Func<string, string> schemaConvertFunc = nameStyle.SchemaNameFunc;
+                Func<string, string> sequenceConvertFunc = nameStyle.SequenceNameFunc;
+                Func<string, string> indexConvertFunc = nameStyle.IndexNameFunc;
+                Func<string, string> uniqueConvertFunc = nameStyle.UniqueNameFunc;
+                Func<string, string> foreignKeyConvertFunc = nameStyle.ForeignKeyNameFunc;
+                Func<string, string> primaryKeyConvertFunc = nameStyle.PrimaryKeyNameFunc;
                 foreach (var table in clonedDescriptor.Tables)
                 {
                     table.Schema = schemaConvertFunc(table.Schema);
@@ -107,10 +115,6 @@ namespace ChangeDB.Default
                     foreach (var column in table.Columns)
                     {
                         column.Name = columnConvertFunc(column.Name);
-                    }
-                    if (table.PrimaryKey != null)
-                    {
-                        table.PrimaryKey.Name = primaryKeyConvertFunc(table.PrimaryKey.Name);
                     }
                     table.PrimaryKey.DoIfNotNull(primaryKey =>
                     {
@@ -170,15 +174,18 @@ namespace ChangeDB.Default
 
         protected virtual async Task MigrationData(IMigrationAgent source, IMigrationAgent target, DatabaseDescriptor database, MigrationContext context, DbConnection sourceConnection, DbConnection targetConnection)
         {
-            foreach (var tableDescriptor in database.Tables)
+            
+            foreach (var tableDesc in database.Tables)
             {
-                var totalCount = await source.DataMigrator.CountTable(tableDescriptor, sourceConnection, context.Setting);
+                var tableName = string.IsNullOrEmpty(tableDesc.Schema) ? tableDesc.Name : $"{tableDesc.Schema}.{tableDesc.Name}";
+                _logger.LogInformation($"migrating data of table {tableName}.");
+                var totalCount = await source.DataMigrator.CountTable(tableDesc, sourceConnection, context.Setting);
                 var migratedCount = 0;
                 while (true)
                 {
                     var pageInfo = new PageInfo { Offset = migratedCount, Limit = context.Setting.MaxPageSize };
-                    var sourceTableData = await source.DataMigrator.ReadTableData(tableDescriptor, pageInfo, sourceConnection, context.Setting);
-                    await target.DataMigrator.WriteTableData(sourceTableData, tableDescriptor, targetConnection, context.Setting);
+                    var sourceTableData = await source.DataMigrator.ReadTableData(tableDesc, pageInfo, sourceConnection, context.Setting);
+                    await target.DataMigrator.WriteTableData(sourceTableData, tableDesc, targetConnection, context.Setting);
                     if (sourceTableData.Rows.Count < context.Setting.MaxPageSize)
                     {
                         // end of table
