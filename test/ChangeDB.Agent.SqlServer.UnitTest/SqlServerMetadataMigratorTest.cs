@@ -26,29 +26,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             _dbConnection.ClearDatabase();
         }
-        #region DropAndCreate
-        [Fact]
-        public async Task ShouldDropCurrentDatabase()
-        {
-            await _metadataMigrator.DropDatabaseIfExists(_dbConnection, _migrationSetting);
-            Action action = () =>
-            {
-                _dbConnection.Open();
-            };
-            action.Should().Throw<SqlException>()
-                .WithMessage("Cannot open database \"*\" *");
-
-        }
-        [Fact]
-        public async Task ShouldCreateNewDatabase()
-        {
-            await _metadataMigrator.DropDatabaseIfExists(_dbConnection, _migrationSetting);
-            await _metadataMigrator.CreateDatabase(_dbConnection, _migrationSetting);
-            var currentDatabase = _dbConnection.ExecuteScalar<string>("select DB_NAME()");
-            currentDatabase.Should().NotBeEmpty();
-        }
-        #endregion
-
+   
         #region GetDescription
         [Fact]
         public async Task ShouldReturnEmptyDescriptorWhenGetDatabaseDescriptionAndGivenEmptyDatabase()

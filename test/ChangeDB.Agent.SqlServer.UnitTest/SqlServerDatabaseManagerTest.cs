@@ -16,12 +16,10 @@ namespace ChangeDB.Agent.SqlServer
         private readonly IDatabaseManager _databaseManager = SqlServerDatabaseManager.Default;
         private readonly MigrationSetting _migrationSetting = new MigrationSetting();
         private readonly DbConnection _dbConnection;
-        private readonly string _connectionString;
 
         public SqlServerDatabaseManagerTest()
         {
-            _connectionString = $"Server=127.0.0.1,1433;Database={TestUtils.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;";
-            _dbConnection = new SqlConnection(_connectionString);
+            _dbConnection = new SqlConnection($"Server=127.0.0.1,1433;Database={TestUtils.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;");
             _dbConnection.CreateDatabase();
         }
         [Fact]

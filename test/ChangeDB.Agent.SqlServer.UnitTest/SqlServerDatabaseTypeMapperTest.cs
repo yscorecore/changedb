@@ -44,10 +44,10 @@ namespace ChangeDB.Agent.SqlServer
         [InlineData("smallmoney",CommonDatabaseType.Decimal,10,4)]
         [InlineData("money",CommonDatabaseType.Decimal,19,4)]
         [InlineData("real",CommonDatabaseType.Float,null,null)]
-        [InlineData("float",CommonDatabaseType.Double,0,null)]
+        [InlineData("float",CommonDatabaseType.Double,null,null)]
         [InlineData("float(24)",CommonDatabaseType.Float,null,null)]
-        [InlineData("float(25)",CommonDatabaseType.Double,25,null)]
-        
+        [InlineData("float(25)",CommonDatabaseType.Double,null,null)]
+        [InlineData("float(53)",CommonDatabaseType.Double,null,null)]
         [InlineData("char(10)",CommonDatabaseType.Char,10,null)]
         [InlineData("char",CommonDatabaseType.Char,1,null)]
         [InlineData("varchar",CommonDatabaseType.Varchar,1,null)]
@@ -93,9 +93,9 @@ namespace ChangeDB.Agent.SqlServer
         [InlineData("smallint",CommonDatabaseType.SmallInt,null,null)]
         [InlineData("int",CommonDatabaseType.Int,null,null)]
         [InlineData("bigint",CommonDatabaseType.BigInt,null,null)]
-        [InlineData("decimal(20,4)",CommonDatabaseType.Decimal,20,4)]
+        [InlineData("decimal(20, 4)",CommonDatabaseType.Decimal,20,4)]
         [InlineData("real",CommonDatabaseType.Float,null,null)]
-        [InlineData("float(25)",CommonDatabaseType.Double,25,null)]
+        [InlineData("float",CommonDatabaseType.Double,null,null)]
         
         [InlineData("char(10)",CommonDatabaseType.Char,10,null)]
 
@@ -119,10 +119,9 @@ namespace ChangeDB.Agent.SqlServer
         {
             var databaseTypeDescriptor = new DatabaseTypeDescriptor {DbType = commonDbType, Arg1 = size, Arg2 = scale};
             var targetType = _databaseTypeMapper.ToDatabaseStoreType(databaseTypeDescriptor);
-            _dbConnection.ExecuteNonQuery($"create table table1(id {targetStoreType});");
+            _dbConnection.ExecuteNonQuery($"create table table1(id {targetType});");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             var targetTypeInDatabase =  databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).First();
-            targetType.Should().Be(targetStoreType);
             targetTypeInDatabase.Should().Be(targetStoreType);
         }
     }

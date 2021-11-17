@@ -35,7 +35,7 @@ namespace ChangeDB
         public static DatabaseTypeDescriptor NText() => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.NText};
         public static DatabaseTypeDescriptor Blob() => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Blob};
         public static DatabaseTypeDescriptor Float() => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Float};
-        public static DatabaseTypeDescriptor Double(int scale) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Double, Arg1 = scale};
+        public static DatabaseTypeDescriptor Double() => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Double};
         public static DatabaseTypeDescriptor Decimal(int size, int scale) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Decimal, Arg1 = size, Arg2 = scale};
         public static DatabaseTypeDescriptor Char(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.Char, Arg1 = length};
         public static DatabaseTypeDescriptor NChar(int length) => new DatabaseTypeDescriptor {DbType = CommonDatabaseType.NChar, Arg1 = length};
