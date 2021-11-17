@@ -48,7 +48,7 @@ namespace ChangeDB.Agent.Postgres
         [Fact]
         public async Task ShouldReturnDataTableWhenReadTableData()
         {
-          
+
             var table = await _dataMigrator.ReadTableData(new TableDescriptor { Name = "table1", Schema = "ts", },
                 new PageInfo { Limit = 1, Offset = 1 }, _dbConnection, _migrationSetting);
             table.Rows.Count.Should().Be(1);
@@ -79,6 +79,6 @@ namespace ChangeDB.Agent.Postgres
             var totalRows = await _dataMigrator.CountTable(tableDescriptor, _dbConnection, _migrationSetting);
             totalRows.Should().Be(4);
         }
-       
+
     }
 }

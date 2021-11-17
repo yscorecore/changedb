@@ -10,14 +10,14 @@ namespace ChangeDB.Agent.SqlServer
     public class SqlServerDataMigrator : IDataMigrator
     {
         public static readonly IDataMigrator Default = new SqlServerDataMigrator();
-        private static string BuildTableName(TableDescriptor table)=>$"[{table.Schema}].[{table.Name}]";
-        private static string BuildColumnNames(IEnumerable<string> names)=>string.Join(",",names.Select(p=>$"[{p}]"));
+        private static string BuildTableName(TableDescriptor table) => $"[{table.Schema}].[{table.Name}]";
+        private static string BuildColumnNames(IEnumerable<string> names) => string.Join(",", names.Select(p => $"[{p}]"));
         private static string BuildColumnNames(TableDescriptor table) =>
             BuildColumnNames(table.Columns.Select(p => p.Name));
-        private string BuildParameterValueNames(TableDescriptor table)=>string.Join(",",table.Columns.Select(p=>$"@{p.Name}"));
+        private string BuildParameterValueNames(TableDescriptor table) => string.Join(",", table.Columns.Select(p => $"@{p.Name}"));
         private static string BuildPrimaryKeyColumnNames(TableDescriptor table)
         {
-            if (table.PrimaryKey?.Columns?.Count>0)
+            if (table.PrimaryKey?.Columns?.Count > 0)
             {
                 return BuildColumnNames(table.PrimaryKey?.Columns.ToArray());
             }
@@ -52,7 +52,7 @@ namespace ChangeDB.Agent.SqlServer
             }
             return Task.CompletedTask;
         }
-        
+
         private IDictionary<string, object> GetRowData(DataRow row, TableDescriptor tableDescriptor)
         {
             var dic = new Dictionary<string, object>();

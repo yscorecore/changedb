@@ -18,35 +18,35 @@ namespace ChangeDB.Agent.Postgres
             var (type, arg1, arg2) = ParseStoreType(storeType);
             return type.ToUpperInvariant() switch
             {
-                "CHARACTER VARYING" =>arg1==null?DatabaseTypeDescriptor.NText():  DatabaseTypeDescriptor.NVarchar(arg1.Value),
+                "CHARACTER VARYING" => arg1 == null ? DatabaseTypeDescriptor.NText() : DatabaseTypeDescriptor.NVarchar(arg1.Value),
                 "CHARACTER" => DatabaseTypeDescriptor.NChar(arg1.Value),
                 "TEXT" => DatabaseTypeDescriptor.NText(),
                 "INTEGER" => DatabaseTypeDescriptor.Int(),
-                "BIGINT" =>DatabaseTypeDescriptor.BigInt(),
+                "BIGINT" => DatabaseTypeDescriptor.BigInt(),
                 "SMALLINT" => DatabaseTypeDescriptor.SmallInt(),
                 "TINYINT" => DatabaseTypeDescriptor.SmallInt(),
-                "NUMERIC" =>MapDecimalType(arg1,arg2),
-                "MONEY" =>DatabaseTypeDescriptor.Decimal(19,2),
+                "NUMERIC" => MapDecimalType(arg1, arg2),
+                "MONEY" => DatabaseTypeDescriptor.Decimal(19, 2),
                 "REAL" => DatabaseTypeDescriptor.Float(),
-                "DOUBLE PRECISION" =>DatabaseTypeDescriptor.Double(),
-                "UUID" =>DatabaseTypeDescriptor.Uuid(),
+                "DOUBLE PRECISION" => DatabaseTypeDescriptor.Double(),
+                "UUID" => DatabaseTypeDescriptor.Uuid(),
                 "BYTEA" => DatabaseTypeDescriptor.Blob(),
                 "TIMESTAMP WITHOUT TIME ZONE" => DatabaseTypeDescriptor.DateTime(arg1 ?? 6),
                 "TIMESTAMP WITH TIME ZONE" => DatabaseTypeDescriptor.DateTimeOffset(arg1 ?? 6),
-                "DATE" =>DatabaseTypeDescriptor.Date(),
-                "TIME WITHOUT TIME ZONE" =>DatabaseTypeDescriptor.Time(arg1 ?? 6),
+                "DATE" => DatabaseTypeDescriptor.Date(),
+                "TIME WITHOUT TIME ZONE" => DatabaseTypeDescriptor.Time(arg1 ?? 6),
                 _ => throw new NotSupportedException($"the data type '{storeType}' not supported.")
             };
 
             DatabaseTypeDescriptor MapDecimalType(int? precision, int? scale)
             {
                 // postgres support 1000 precision 
-                if (precision ==null || precision>38)
+                if (precision == null || precision > 38)
                 {
                     return DatabaseTypeDescriptor.Decimal(38, 4);
                 }
-                return DatabaseTypeDescriptor.Decimal(precision.Value,Convert.ToInt32(scale));
-                
+                return DatabaseTypeDescriptor.Decimal(precision.Value, Convert.ToInt32(scale));
+
             }
         }
 
@@ -56,20 +56,20 @@ namespace ChangeDB.Agent.Postgres
             var index2 = storeType.IndexOf(')');
             if (index1 > 0 && index2 > 0)
             {
-                var type = storeType[..index1] + storeType.Substring(index2+1);
+                var type = storeType[..index1] + storeType.Substring(index2 + 1);
                 var index3 = storeType.IndexOf(',', index1);
                 if (index3 > 0)
                 {
-                    return (type, int.Parse(storeType.Substring(index1+1,index3-index1-1).Trim()), 
-                        int.Parse(storeType.Substring(index3+1,index2-index3-1).Trim()));
+                    return (type, int.Parse(storeType.Substring(index1 + 1, index3 - index1 - 1).Trim()),
+                        int.Parse(storeType.Substring(index3 + 1, index2 - index3 - 1).Trim()));
                 }
                 else
                 {
-                    return (type, int.Parse(storeType.Substring(index1+1,index2-index1-1).Trim()), null);
+                    return (type, int.Parse(storeType.Substring(index1 + 1, index2 - index1 - 1).Trim()), null);
                 }
             }
 
-            return (storeType.ToLower(),null,null);
+            return (storeType.ToLower(), null, null);
         }
 
         public string ToDatabaseStoreType(DatabaseTypeDescriptor dataType)

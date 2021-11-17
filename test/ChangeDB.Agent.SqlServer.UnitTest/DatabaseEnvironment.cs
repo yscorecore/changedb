@@ -27,10 +27,10 @@ namespace ChangeDB.Agent.SqlServer
 
         public void Dispose()
         {
-           
+
         }
 
-       
+
 
 
     }

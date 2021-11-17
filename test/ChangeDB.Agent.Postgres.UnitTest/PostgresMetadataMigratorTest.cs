@@ -24,10 +24,10 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection = databaseEnvironment.DbConnection;
         }
-        
+
         public void Dispose()
         {
-           _dbConnection.ClearDatabase();
+            _dbConnection.ClearDatabase();
         }
         #region GetDescription
         [Fact]
@@ -938,6 +938,6 @@ namespace ChangeDB.Agent.Postgres
 
 
 
-       
+
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace ChangeDB
 {
-    public class ColumnDescriptor: ExtensionObject
+    public class ColumnDescriptor : ExtensionObject
     {
         public string Name { get; set; }
         public string Comment { get; set; }

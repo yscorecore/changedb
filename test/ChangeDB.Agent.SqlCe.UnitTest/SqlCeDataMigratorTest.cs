@@ -11,7 +11,7 @@ using Xunit;
 
 namespace ChangeDB.Agent.SqlCe.UnitTest
 {
-   public  class SqlCeDataMigratorTest
+    public class SqlCeDataMigratorTest
     {
         private readonly SqlCeDataMigrator _dataMigrator = SqlCeDataMigrator.Default;
         private readonly MigrationSetting _migrationSetting = new MigrationSetting();

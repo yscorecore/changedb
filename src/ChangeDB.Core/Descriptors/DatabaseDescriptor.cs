@@ -15,6 +15,6 @@ namespace ChangeDB
 
         public List<SequenceDescriptor> Sequences { get; set; } = new List<SequenceDescriptor>();
 
-      
+
     }
 }

@@ -14,7 +14,7 @@ namespace ChangeDB.Agent.SqlCe
         public DatabaseTypeDescriptor ToCommonDatabaseType(string storeType)
         {
             throw new NotImplementedException();
-           
+
         }
 
         public string ToDatabaseStoreType(DatabaseTypeDescriptor dataType)

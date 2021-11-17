@@ -41,12 +41,12 @@ namespace ChangeDB.Agent.Postgres
         public static void ClearDatabase(this DbConnection connection)
         {
             connection.DropAllForeignConstraints();
-           connection.DropAllSchemas();
+            connection.DropAllSchemas();
         }
 
         private static void DropAllForeignConstraints(this DbConnection connection)
         {
-            var allForeignConstraints = connection.ExecuteReaderAsList<string,string,string>($"SELECT TABLE_NAME ,CONSTRAINT_NAME,TABLE_SCHEMA from INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc where tc.CONSTRAINT_TYPE ='FOREIGN KEY'");
+            var allForeignConstraints = connection.ExecuteReaderAsList<string, string, string>($"SELECT TABLE_NAME ,CONSTRAINT_NAME,TABLE_SCHEMA from INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc where tc.CONSTRAINT_TYPE ='FOREIGN KEY'");
             allForeignConstraints.ForEach(p => connection.ExecuteNonQuery($"alter table \"{p.Item3}\".\"{p.Item1}\" drop constraint \"{p.Item2}\";"));
         }
 
@@ -54,7 +54,7 @@ namespace ChangeDB.Agent.Postgres
         {
             static bool IsSystemSchema(string schema) => schema.StartsWith("pg_") || schema == "information_schema";
             var allSchemas = connection.ExecuteReaderAsList<string>("select schema_name from information_schema.schemata");
-            allSchemas.Where(p=>!IsSystemSchema(p)).ForEach(p => connection.DropSchemaIfExists(p, p != "public"));
+            allSchemas.Where(p => !IsSystemSchema(p)).ForEach(p => connection.DropSchemaIfExists(p, p != "public"));
         }
 
         private static void DropSchemaIfExists(this DbConnection connection, string schema, bool dropSchema = true)

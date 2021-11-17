@@ -42,7 +42,7 @@ namespace ChangeDB.Agent.SqlServer
         }
         public static void DropSchemaIfExists(this DbConnection connection, string schema, bool dropSchema = true)
         {
-            var allForeignConstraints = connection.ExecuteReaderAsList<string,string>($"SELECT TABLE_NAME ,CONSTRAINT_NAME from INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc where tc.CONSTRAINT_TYPE ='FOREIGN KEY' and TABLE_SCHEMA ='{schema}'");
+            var allForeignConstraints = connection.ExecuteReaderAsList<string, string>($"SELECT TABLE_NAME ,CONSTRAINT_NAME from INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc where tc.CONSTRAINT_TYPE ='FOREIGN KEY' and TABLE_SCHEMA ='{schema}'");
 
             allForeignConstraints.ForEach(p => connection.ExecuteNonQuery($"alter table [{schema}].[{p.Item1}] drop constraint {p.Item2};"));
 

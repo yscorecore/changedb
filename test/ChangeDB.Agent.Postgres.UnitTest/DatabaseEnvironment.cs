@@ -20,7 +20,7 @@ namespace ChangeDB.Agent.Postgres
         }
 
         public DbConnection DbConnection => _dbConnection;
-        
+
         public void Dispose()
         {
         }

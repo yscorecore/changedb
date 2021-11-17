@@ -20,15 +20,15 @@ namespace ChangeDB.Agent.Postgres
             {
                 return sqlExpression.Function.Value switch
                 {
-                     Function.Uuid=> "gen_random_uuid()",
-                     Function.Now=> "now()",
+                    Function.Uuid => "gen_random_uuid()",
+                    Function.Now => "now()",
                 };
             }
             else
             {
-                
+
                 // TODO handle expression
-                return sqlExpression.Expression;            
+                return sqlExpression.Expression;
             }
 
         }
@@ -36,28 +36,28 @@ namespace ChangeDB.Agent.Postgres
         {
             if (string.IsNullOrEmpty(sqlExpression))
             {
-                return new SqlExpressionDescriptor {Expression = sqlExpression};
+                return new SqlExpressionDescriptor { Expression = sqlExpression };
             }
 
             sqlExpression = sqlExpression.Trim();
             if (Regex.IsMatch(sqlExpression, @"CURRENT_TIMESTAMP(\(\d\))?", RegexOptions.IgnoreCase))
             {
-                return new SqlExpressionDescriptor {Function = Function.Now};
+                return new SqlExpressionDescriptor { Function = Function.Now };
             }
 
-            if (IsEmptyArgumentFunction(sqlExpression,out var function))
+            if (IsEmptyArgumentFunction(sqlExpression, out var function))
             {
                 return function.ToLowerInvariant() switch
                 {
-                    "now" => new SqlExpressionDescriptor{ Function = Function.Now},
-                    "gen_random_uuid"=> new SqlExpressionDescriptor{Function =Function.Uuid},
-                    _=> new SqlExpressionDescriptor{ Expression = sqlExpression}
+                    "now" => new SqlExpressionDescriptor { Function = Function.Now },
+                    "gen_random_uuid" => new SqlExpressionDescriptor { Function = Function.Uuid },
+                    _ => new SqlExpressionDescriptor { Expression = sqlExpression }
                 };
             }
 
-            return new SqlExpressionDescriptor {Expression = sqlExpression};
+            return new SqlExpressionDescriptor { Expression = sqlExpression };
         }
-        private bool IsEmptyArgumentFunction(string expression,out string functionName)
+        private bool IsEmptyArgumentFunction(string expression, out string functionName)
         {
             if (string.IsNullOrEmpty(expression))
             {

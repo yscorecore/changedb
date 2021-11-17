@@ -19,7 +19,7 @@ namespace ChangeDB.Agent.SqlCe
         }
         public static void DropDatabaseIfExists(this DbConnection connection)
         {
-            SqlCeConnectionStringBuilder builder= new SqlCeConnectionStringBuilder(connection.ConnectionString);
+            SqlCeConnectionStringBuilder builder = new SqlCeConnectionStringBuilder(connection.ConnectionString);
             var fileName = builder.DataSource;
             if (File.Exists(fileName))
             {

@@ -11,7 +11,7 @@ using Xunit;
 namespace ChangeDB.Agent.Postgres
 {
     [Collection(nameof(DatabaseEnvironment))]
-    public class PostgresDatabaseTypeMapperTest:IDisposable
+    public class PostgresDatabaseTypeMapperTest : IDisposable
     {
         private readonly IDataTypeMapper _dataTypeMapper = PostgresDataTypeMapper.Default;
         private readonly IMetadataMigrator _metadataMigrator = PostgresMetadataMigrator.Default;
@@ -26,7 +26,7 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection.ClearDatabase();
         }
-        
+
         [Theory]
         [InlineData("varchar(12)", CommonDatabaseType.NVarchar, 12, null)]
         [InlineData("character varying(12)", CommonDatabaseType.NVarchar, 12, null)]
@@ -78,7 +78,7 @@ namespace ChangeDB.Agent.Postgres
             var databaseDescriptor = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             var columnStoreType = databaseDescriptor.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).Single();
             var commonDataType = _dataTypeMapper.ToCommonDatabaseType(columnStoreType);
-            commonDataType.Should().BeEquivalentTo( new DatabaseTypeDescriptor{DbType = commonDbType,Arg1 = arg1,Arg2 = arg2});
+            commonDataType.Should().BeEquivalentTo(new DatabaseTypeDescriptor { DbType = commonDbType, Arg1 = arg1, Arg2 = arg2 });
 
         }
         [Theory]
@@ -88,48 +88,48 @@ namespace ChangeDB.Agent.Postgres
             var targetType = _dataTypeMapper.ToDatabaseStoreType(databaseTypeDescriptor);
             _dbConnection.ExecuteNonQuery($"create table table1(id {targetType});");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
-            var targetTypeInDatabase =  databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).First();
+            var targetTypeInDatabase = databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).First();
             targetTypeInDatabase.Should().Be(targetStoreType);
         }
 
 
-        class MapToTargetDataTypeTestData:List<object[]>
+        class MapToTargetDataTypeTestData : List<object[]>
         {
             public MapToTargetDataTypeTestData()
             {
-              
-               Add(DatabaseTypeDescriptor.Boolean(),"boolean" );
-               Add(DatabaseTypeDescriptor.TinyInt(),"smallint" );
-               Add(DatabaseTypeDescriptor.SmallInt(),"smallint" );
-               Add(DatabaseTypeDescriptor.Int(),"integer" );
-               Add(DatabaseTypeDescriptor.BigInt(),"bigint" );
+
+                Add(DatabaseTypeDescriptor.Boolean(), "boolean");
+                Add(DatabaseTypeDescriptor.TinyInt(), "smallint");
+                Add(DatabaseTypeDescriptor.SmallInt(), "smallint");
+                Add(DatabaseTypeDescriptor.Int(), "integer");
+                Add(DatabaseTypeDescriptor.BigInt(), "bigint");
 
 
-               Add(DatabaseTypeDescriptor.Uuid(),"uuid" );
-               Add(DatabaseTypeDescriptor.Text(),"text" );
-               Add(DatabaseTypeDescriptor.NText(),"text" );
-               Add(DatabaseTypeDescriptor.Blob(),"bytea" );
-               Add(DatabaseTypeDescriptor.Float(),"real" );
-               Add(DatabaseTypeDescriptor.Double(),"double precision" );
-               Add(DatabaseTypeDescriptor.Decimal(20,4),"numeric(20,4)" );
-               
-               Add(DatabaseTypeDescriptor.Char(2),"character(2)" );
-               Add(DatabaseTypeDescriptor.NChar(2),"character(2)" );
-               Add(DatabaseTypeDescriptor.Varchar(2),"character varying(2)" );
-               Add(DatabaseTypeDescriptor.NVarchar(2),"character varying(2)" );
-               
-               Add(DatabaseTypeDescriptor.Binary(1),"bytea" );
-               Add(DatabaseTypeDescriptor.Varbinary(10),"bytea" );
-               
-               Add(DatabaseTypeDescriptor.Date(),"date" );
-               Add(DatabaseTypeDescriptor.Time(2),"time(2) without time zone" );
-               Add(DatabaseTypeDescriptor.DateTime(2),"timestamp(2) without time zone" );
-               Add(DatabaseTypeDescriptor.DateTimeOffset(2),"timestamp(2) with time zone" );
+                Add(DatabaseTypeDescriptor.Uuid(), "uuid");
+                Add(DatabaseTypeDescriptor.Text(), "text");
+                Add(DatabaseTypeDescriptor.NText(), "text");
+                Add(DatabaseTypeDescriptor.Blob(), "bytea");
+                Add(DatabaseTypeDescriptor.Float(), "real");
+                Add(DatabaseTypeDescriptor.Double(), "double precision");
+                Add(DatabaseTypeDescriptor.Decimal(20, 4), "numeric(20,4)");
+
+                Add(DatabaseTypeDescriptor.Char(2), "character(2)");
+                Add(DatabaseTypeDescriptor.NChar(2), "character(2)");
+                Add(DatabaseTypeDescriptor.Varchar(2), "character varying(2)");
+                Add(DatabaseTypeDescriptor.NVarchar(2), "character varying(2)");
+
+                Add(DatabaseTypeDescriptor.Binary(1), "bytea");
+                Add(DatabaseTypeDescriptor.Varbinary(10), "bytea");
+
+                Add(DatabaseTypeDescriptor.Date(), "date");
+                Add(DatabaseTypeDescriptor.Time(2), "time(2) without time zone");
+                Add(DatabaseTypeDescriptor.DateTime(2), "timestamp(2) without time zone");
+                Add(DatabaseTypeDescriptor.DateTimeOffset(2), "timestamp(2) with time zone");
             }
 
             private void Add(DatabaseTypeDescriptor descriptor, string targetStoreType)
             {
-                this.Add(new Object []{descriptor, targetStoreType});
+                this.Add(new Object[] { descriptor, targetStoreType });
             }
         }
     }

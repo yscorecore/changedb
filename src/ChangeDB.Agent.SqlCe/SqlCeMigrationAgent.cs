@@ -14,9 +14,13 @@ namespace ChangeDB.Agent.SqlCe
         public IDatabaseTypeMapper DatabaseTypeMapper { get => SqlCeDatabaseTypeMapper.Default; }
         public ISqlExpressionTranslator ExpressionTranslator { get => SqlCeSqlExpressionTranslator.Default; }
 
+        public IDataTypeMapper DataTypeMapper => throw new System.NotImplementedException();
+
+        public IDatabaseManager DatabaseManger => throw new System.NotImplementedException();
+
         public DbConnection CreateConnection(string connectionString)
         {
-           return new SqlCeConnection(connectionString);
+            return new SqlCeConnection(connectionString);
         }
     }
 }

@@ -11,7 +11,7 @@ using Xunit;
 namespace ChangeDB.Agent.SqlServer
 {
     [Collection(nameof(DatabaseEnvironment))]
-    public class SqlServerMetadataMigratorTest:IDisposable
+    public class SqlServerMetadataMigratorTest : IDisposable
     {
         private readonly IMetadataMigrator _metadataMigrator = SqlServerMetadataMigrator.Default;
         private readonly MigrationSetting _migrationSetting = new MigrationSetting { DropTargetDatabaseIfExists = true };
@@ -26,7 +26,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             _dbConnection.ClearDatabase();
         }
-   
+
         #region GetDescription
         [Fact]
         public async Task ShouldReturnEmptyDescriptorWhenGetDatabaseDescriptionAndGivenEmptyDatabase()
@@ -289,7 +289,7 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 });
         }
-       
+
         [Fact]
         public async Task ShouldIncludeUuidColumnWhenGetDatabaseDescription()
         {

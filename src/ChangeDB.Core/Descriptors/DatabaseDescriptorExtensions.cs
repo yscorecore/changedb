@@ -16,7 +16,7 @@ namespace ChangeDB
             }
             if (databaseDescriptor.Sequences != null)
             {
-                result= result.Union(databaseDescriptor.Tables.Select(p => p.Schema));
+                result = result.Union(databaseDescriptor.Tables.Select(p => p.Schema));
             }
             return result.Where(p => !string.IsNullOrEmpty(p)).Distinct();
         }

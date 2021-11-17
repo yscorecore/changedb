@@ -45,13 +45,13 @@ datetimeoffset	34	10	datetimeoffset({0})	scale	System.DateTimeOffset
         public DatabaseTypeDescriptor ToCommonDatabaseType(string storeType)
         {
             _ = storeType ?? throw new ArgumentNullException(nameof(storeType));
-            var match =  Regex.Match(storeType.ToLowerInvariant(), @"^(?<name>\w+)(\((?<arg1>\w+)(,\s*(?<arg2>\w+))?\))?$");
+            var match = Regex.Match(storeType.ToLowerInvariant(), @"^(?<name>\w+)(\((?<arg1>\w+)(,\s*(?<arg2>\w+))?\))?$");
             var type = match.Groups["name"].Value;
-            string arg1 =match.Groups["arg1"].Value; 
-            string arg2 = match.Groups["arg2"].Value ;
+            string arg1 = match.Groups["arg1"].Value;
+            string arg2 = match.Groups["arg2"].Value;
             bool isMax = arg1 == "max";
-            int length = (isMax|| string.IsNullOrEmpty(arg1)) ? default : int.Parse(arg1);
-            int scale = string.IsNullOrEmpty(arg2)?default: int.Parse(arg2);
+            int length = (isMax || string.IsNullOrEmpty(arg1)) ? default : int.Parse(arg1);
+            int scale = string.IsNullOrEmpty(arg2) ? default : int.Parse(arg2);
             return type switch
             {
                 "bit" => DatabaseTypeDescriptor.Boolean(),
@@ -59,9 +59,9 @@ datetimeoffset	34	10	datetimeoffset({0})	scale	System.DateTimeOffset
                 "smallint" => DatabaseTypeDescriptor.SmallInt(),
                 "int" => DatabaseTypeDescriptor.Int(),
                 "bigint" => DatabaseTypeDescriptor.BigInt(),
-                "decimal" => DatabaseTypeDescriptor.Decimal( length, scale),
+                "decimal" => DatabaseTypeDescriptor.Decimal(length, scale),
                 "numeric" => DatabaseTypeDescriptor.Decimal(length, scale),
-                "rowversion" => DatabaseTypeDescriptor.Binary( 8),
+                "rowversion" => DatabaseTypeDescriptor.Binary(8),
                 "uniqueidentifier" => DatabaseTypeDescriptor.Uuid(),
                 "real" => DatabaseTypeDescriptor.Float(),
                 "text" => DatabaseTypeDescriptor.Text(),
@@ -71,11 +71,11 @@ datetimeoffset	34	10	datetimeoffset({0})	scale	System.DateTimeOffset
                 "smallmoney" => DatabaseTypeDescriptor.Decimal(10, 4),
                 "money" => DatabaseTypeDescriptor.Decimal(19, 4),
                 "binary" => DatabaseTypeDescriptor.Binary(length),
-                "varbinary" =>isMax?DatabaseTypeDescriptor.Blob(): DatabaseTypeDescriptor.Varbinary(length),
-                "char" =>  DatabaseTypeDescriptor.Char(length),
-                "nchar" =>  DatabaseTypeDescriptor.NChar(length),
-                "varchar" => isMax?DatabaseTypeDescriptor.Text():  DatabaseTypeDescriptor.Varchar( length),
-                "nvarchar" =>isMax?DatabaseTypeDescriptor.NText(): DatabaseTypeDescriptor.NVarchar( length),
+                "varbinary" => isMax ? DatabaseTypeDescriptor.Blob() : DatabaseTypeDescriptor.Varbinary(length),
+                "char" => DatabaseTypeDescriptor.Char(length),
+                "nchar" => DatabaseTypeDescriptor.NChar(length),
+                "varchar" => isMax ? DatabaseTypeDescriptor.Text() : DatabaseTypeDescriptor.Varchar(length),
+                "nvarchar" => isMax ? DatabaseTypeDescriptor.NText() : DatabaseTypeDescriptor.NVarchar(length),
                 "xml" => DatabaseTypeDescriptor.NText(),
                 "date" => DatabaseTypeDescriptor.Date(),
                 "time" => DatabaseTypeDescriptor.Time(length),
@@ -91,28 +91,28 @@ datetimeoffset	34	10	datetimeoffset({0})	scale	System.DateTimeOffset
         {
             return commonDatabaseType.DbType switch
             {
-                CommonDatabaseType.Boolean=>"bit",
-                CommonDatabaseType.TinyInt=>"tinyint",
-                CommonDatabaseType.SmallInt=>"smallint",
-                CommonDatabaseType.Int=>"int",
-                CommonDatabaseType.BigInt=>"bigint",
-                CommonDatabaseType.Decimal=>$"decimal({commonDatabaseType.Arg1},{commonDatabaseType.Arg2})",
-                CommonDatabaseType.Float=>"real",
-                CommonDatabaseType.Double=>"float",
-                CommonDatabaseType.Binary=>$"binary({commonDatabaseType.Arg1})",
-                CommonDatabaseType.Varbinary=>$"varbinary({commonDatabaseType.Arg1})",
-                CommonDatabaseType.Blob=>"image",
-                CommonDatabaseType.Uuid=>"uniqueidentifier",
-                CommonDatabaseType.Char=>$"char({commonDatabaseType.Arg1})",
-                CommonDatabaseType.NChar=>$"nchar({commonDatabaseType.Arg1})",
-                CommonDatabaseType.Varchar=>$"varchar({commonDatabaseType.Arg1})",
-                CommonDatabaseType.NVarchar=>$"nvarchar({commonDatabaseType.Arg1})",
-                CommonDatabaseType.Text=>"text",
-                CommonDatabaseType.NText=>"ntext",
-                CommonDatabaseType.Time=>$"time({commonDatabaseType.Arg1})",
-                CommonDatabaseType.Date=>"date",
-                CommonDatabaseType.DateTime=>$"datetime2({commonDatabaseType.Arg1})",
-                CommonDatabaseType.DateTimeOffset=>$"datetimeoffset({commonDatabaseType.Arg1})",
+                CommonDatabaseType.Boolean => "bit",
+                CommonDatabaseType.TinyInt => "tinyint",
+                CommonDatabaseType.SmallInt => "smallint",
+                CommonDatabaseType.Int => "int",
+                CommonDatabaseType.BigInt => "bigint",
+                CommonDatabaseType.Decimal => $"decimal({commonDatabaseType.Arg1},{commonDatabaseType.Arg2})",
+                CommonDatabaseType.Float => "real",
+                CommonDatabaseType.Double => "float",
+                CommonDatabaseType.Binary => $"binary({commonDatabaseType.Arg1})",
+                CommonDatabaseType.Varbinary => $"varbinary({commonDatabaseType.Arg1})",
+                CommonDatabaseType.Blob => "image",
+                CommonDatabaseType.Uuid => "uniqueidentifier",
+                CommonDatabaseType.Char => $"char({commonDatabaseType.Arg1})",
+                CommonDatabaseType.NChar => $"nchar({commonDatabaseType.Arg1})",
+                CommonDatabaseType.Varchar => $"varchar({commonDatabaseType.Arg1})",
+                CommonDatabaseType.NVarchar => $"nvarchar({commonDatabaseType.Arg1})",
+                CommonDatabaseType.Text => "text",
+                CommonDatabaseType.NText => "ntext",
+                CommonDatabaseType.Time => $"time({commonDatabaseType.Arg1})",
+                CommonDatabaseType.Date => "date",
+                CommonDatabaseType.DateTime => $"datetime2({commonDatabaseType.Arg1})",
+                CommonDatabaseType.DateTimeOffset => $"datetimeoffset({commonDatabaseType.Arg1})",
                 _ => throw new NotSupportedException($"can not convert from common database type {commonDatabaseType}")
             };
         }

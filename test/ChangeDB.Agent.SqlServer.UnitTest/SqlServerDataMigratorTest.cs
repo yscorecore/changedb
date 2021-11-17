@@ -31,12 +31,12 @@ namespace ChangeDB.Agent.SqlServer
         }
         public void Dispose()
         {
-            _dbConnection.ClearDatabase(); 
+            _dbConnection.ClearDatabase();
         }
         [Fact]
         public async Task ShouldReturnTableRowCountWhenCountTable()
         {
-           
+
 
             var rows = await _dataMigrator.CountTable(new TableDescriptor
             {
@@ -49,7 +49,7 @@ namespace ChangeDB.Agent.SqlServer
         [Fact]
         public async Task ShouldReturnDataTableWhenReadTableData()
         {
-           
+
 
             var table = await _dataMigrator.ReadTableData(new TableDescriptor { Name = "table1", Schema = "ts", PrimaryKey = new PrimaryKeyDescriptor { Columns = new List<string> { "id" } } },
                 new PageInfo() { Limit = 1, Offset = 1 }, _dbConnection, _migrationSetting);
@@ -83,6 +83,6 @@ namespace ChangeDB.Agent.SqlServer
             var totalRows = await _dataMigrator.CountTable(tableDescriptor, _dbConnection, _migrationSetting);
             totalRows.Should().Be(4);
         }
-       
+
     }
 }

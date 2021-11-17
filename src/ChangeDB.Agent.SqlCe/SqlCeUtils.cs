@@ -18,7 +18,7 @@ namespace ChangeDB.Agent.SqlCe
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
         {
             var loggerFactory = new LoggerFactory();
-            
+
             var databaseModelFactory = new SqlCeDatabaseModelFactory();
             var options = new DatabaseModelFactoryOptions();
             var model = databaseModelFactory.Create(dbConnection, options);
@@ -86,19 +86,19 @@ namespace ChangeDB.Agent.SqlCe
                     ComputedColumnSql = column.ComputedColumnSql,
                     DefaultValueSql = column.DefaultValueSql,
                     Name = column.Name,
-                    IsStored = column.IsStored,
+                    IsStored = (bool)column.IsStored,
                     IsNullable = column.IsNullable,
                     StoreType = column.StoreType,
                 };
 
                 if (column.ValueGenerated == ValueGenerated.OnAdd)
                 {
-                   
+
                 }
                 return baseColumnDesc;
             }
-           
-            
+
+
             ForeignKeyDescriptor FromForeignKeyModel(DatabaseForeignKey foreignKey)
             {
                 return new ForeignKeyDescriptor

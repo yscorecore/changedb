@@ -4,7 +4,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.Postgres
 {
-    public class PostgresDatabaseManager: IDatabaseManager
+    public class PostgresDatabaseManager : IDatabaseManager
     {
         public static readonly IDatabaseManager Default = new PostgresDatabaseManager();
         public Task DropDatabaseIfExists(DbConnection connection, MigrationSetting migrationSetting)

@@ -33,7 +33,7 @@ namespace ChangeDB.Agent.SqlCe.EFCore.SqlServerCompact
 
         public SqlCeDatabaseModelFactory()
         {
-            
+
         }
 
         //public virtual IDiagnosticsLogger<DbLoggerCategory.Scaffolding> Logger { get; }
@@ -639,7 +639,7 @@ namespace ChangeDB.Agent.SqlCe.EFCore.SqlServerCompact
 
         public DatabaseModel Create(DbConnection connection, DatabaseModelFactoryOptions options)
         {
-            return Create(connection,options.Tables,options.Schemas);
+            return Create(connection, options.Tables, options.Schemas);
         }
     }
 }
