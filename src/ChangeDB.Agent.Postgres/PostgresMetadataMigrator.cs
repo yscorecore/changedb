@@ -14,17 +14,6 @@ namespace ChangeDB.Agent.Postgres
     public class PostgresMetadataMigrator : IMetadataMigrator
     {
         public static readonly PostgresMetadataMigrator Default = new PostgresMetadataMigrator();
-        public Task DropDatabaseIfExists(DbConnection connection, MigrationSetting migrationSetting)
-        {
-            connection.DropDatabaseIfExists();
-            return Task.CompletedTask;
-        }
-
-        public Task CreateDatabase(DbConnection connection, MigrationSetting migrationSetting)
-        {
-            connection.CreateDatabase();
-            return Task.CompletedTask;
-        }
 
         public Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection dbConnection, MigrationSetting migrationSetting)
         {

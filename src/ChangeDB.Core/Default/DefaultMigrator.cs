@@ -55,10 +55,10 @@ namespace ChangeDB.Default
         {
             if (context.Setting.DropTargetDatabaseIfExists)
             {
-                await targetAgent.MetadataMigrator.DropDatabaseIfExists(targetConnection, context.Setting);
+                await targetAgent.DatabaseManger.DropDatabaseIfExists(targetConnection, context.Setting);
             }
 
-            await targetAgent.MetadataMigrator.CreateDatabase(targetConnection, context.Setting);
+            await targetAgent.DatabaseManger.CreateDatabase(targetConnection, context.Setting);
         }
 
         private DatabaseDescriptor ConvertToTargetDatabaseDescriptor(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext, IMigrationAgent sourceAgent, IMigrationAgent targetAgent)

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using Microsoft.Data.SqlClient;
 
 namespace ChangeDB.Agent.SqlServer
@@ -26,26 +27,33 @@ namespace ChangeDB.Agent.SqlServer
             }
         }
 
+       
 
+
+        public static void ClearDatabase(this DbConnection connection)
+        {
+           connection.DropAllForeignConstraints();
+           connection.DropAllSchemas();
+        }
+        private static void DropAllForeignConstraints(this DbConnection connection)
+        {
+            var allForeignConstraints = connection.ExecuteReaderAsList<string, string, string>($"SELECT TABLE_NAME ,CONSTRAINT_NAME,TABLE_SCHEMA from INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc where tc.CONSTRAINT_TYPE ='FOREIGN KEY'");
+            allForeignConstraints.ForEach(p => connection.ExecuteNonQuery($"alter table \"{p.Item3}\".\"{p.Item1}\" drop constraint \"{p.Item2}\";"));
+        }
+
+        private static void DropAllSchemas(this DbConnection connection)
+        {
+            static bool IsSystemSchema(string schema) => schema.StartsWith("pg_") || schema == "information_schema";
+            var allSchemas = connection.ExecuteReaderAsList<string>("select schema_name from information_schema.schemata where schema_owner = 'dbo'");
+            allSchemas.Where(p => !IsSystemSchema(p)).ForEach(p => connection.DropSchemaIfExists(p, p != "dbo"));
+        }
         private static DbConnection CreateNoDatabaseConnection(IDbConnection connection)
         {
             var builder = new SqlConnectionStringBuilder(connection.ConnectionString) { InitialCatalog = string.Empty };
             return new SqlConnection(builder.ConnectionString);
         }
-
-
-        public static void ClearDatabase(this DbConnection connection)
-        {
-            var systemSchemas = new List<string> { "dbo" };
-            var allSchemas = connection.ExecuteReaderAsList<string>("select schema_name from information_schema.schemata where schema_owner = 'dbo'");
-            allSchemas.ForEach(p => connection.DropSchemaIfExists(p, p != "dbo"));
-        }
         public static void DropSchemaIfExists(this DbConnection connection, string schema, bool dropSchema = true)
         {
-            var allForeignConstraints = connection.ExecuteReaderAsList<string, string>($"SELECT TABLE_NAME ,CONSTRAINT_NAME from INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc where tc.CONSTRAINT_TYPE ='FOREIGN KEY' and TABLE_SCHEMA ='{schema}'");
-
-            allForeignConstraints.ForEach(p => connection.ExecuteNonQuery($"alter table [{schema}].[{p.Item1}] drop constraint {p.Item2};"));
-
             var allTables = connection.ExecuteReaderAsList<string>($"SELECT table_name from INFORMATION_SCHEMA.TABLES t WHERE t.TABLE_SCHEMA = '{schema}'");
             allTables.ForEach(p => connection.DropTableIfExists(schema, p));
             if (dropSchema)
