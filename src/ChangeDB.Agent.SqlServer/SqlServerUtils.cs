@@ -66,13 +66,19 @@ namespace ChangeDB.Agent.SqlServer
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
         private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection)
         {
+            // exclude views
+            var allTables = dbConnection.ExecuteReaderAsList<string, string>("select table_schema ,table_name from information_schema.tables t where t.table_type ='BASE TABLE'");
             return new DatabaseDescriptor
             {
                 //Collation = databaseModel.Collation,
                 //DefaultSchema = databaseModel.DefaultSchema,
-                Tables = databaseModel.Tables.Select(FromTableModel).ToList(),
+                Tables = databaseModel.Tables.Where(IsTable).Select(FromTableModel).ToList(),
                 Sequences = databaseModel.Sequences.Select(FromSequenceModel).ToList(),
             };
+            bool IsTable(DatabaseTable table)
+            {
+                return allTables.Any(t => t.Item1 == table.Schema && t.Item2 == table.Name);
+            }
             TableDescriptor FromTableModel(DatabaseTable table)
             {
                 return new TableDescriptor
