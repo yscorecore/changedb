@@ -15,7 +15,7 @@ namespace ChangeDB.Agent.SqlServer
     public class SqlServerDatabaseTypeMapperTest:IDisposable
     {
         private readonly IMetadataMigrator _metadataMigrator = SqlServerMetadataMigrator.Default;
-        private readonly IDatabaseTypeMapper _databaseTypeMapper=SqlServerDatabaseTypeMapper.Default;
+        private readonly IDataTypeMapper _dataTypeMapper=SqlServerDataTypeMapper.Default;
         private readonly MigrationSetting _migrationSetting = new MigrationSetting { DropTargetDatabaseIfExists = true };
         private readonly DbConnection _dbConnection;
 
@@ -84,7 +84,7 @@ namespace ChangeDB.Agent.SqlServer
             _dbConnection.ExecuteNonQuery($"create table table1(id {storeType});");
             var databaseDescriptor = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             var columnStoreType = databaseDescriptor.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).Single();
-            var commonDataType = _databaseTypeMapper.ToCommonDatabaseType(columnStoreType);
+            var commonDataType = _dataTypeMapper.ToCommonDatabaseType(columnStoreType);
             commonDataType.Should().BeEquivalentTo( new DatabaseTypeDescriptor{DbType = commonDbType,Arg1 = arg1,Arg2 = arg2});
         }
         [Theory]
@@ -118,7 +118,7 @@ namespace ChangeDB.Agent.SqlServer
         public async Task ShouldMapToTargetDataType(string targetStoreType, CommonDatabaseType commonDbType, int? size, int? scale)
         {
             var databaseTypeDescriptor = new DatabaseTypeDescriptor {DbType = commonDbType, Arg1 = size, Arg2 = scale};
-            var targetType = _databaseTypeMapper.ToDatabaseStoreType(databaseTypeDescriptor);
+            var targetType = _dataTypeMapper.ToDatabaseStoreType(databaseTypeDescriptor);
             _dbConnection.ExecuteNonQuery($"create table table1(id {targetType});");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             var targetTypeInDatabase =  databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).First();

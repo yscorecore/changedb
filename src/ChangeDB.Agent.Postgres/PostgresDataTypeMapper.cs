@@ -8,10 +8,10 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.Postgres
 {
-    public class PostgresDatabaseTypeMapper : IDatabaseTypeMapper
+    public class PostgresDataTypeMapper : IDataTypeMapper
     {
 
-        public static readonly PostgresDatabaseTypeMapper Default = new PostgresDatabaseTypeMapper();
+        public static readonly PostgresDataTypeMapper Default = new PostgresDataTypeMapper();
         public DatabaseTypeDescriptor ToCommonDatabaseType(string storeType)
         {
             _ = storeType ?? throw new ArgumentNullException(nameof(storeType));

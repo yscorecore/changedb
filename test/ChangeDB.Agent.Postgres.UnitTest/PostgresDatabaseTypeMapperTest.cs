@@ -13,7 +13,7 @@ namespace ChangeDB.Agent.Postgres
     [Collection(nameof(DatabaseEnvironment))]
     public class PostgresDatabaseTypeMapperTest:IDisposable
     {
-        private readonly IDatabaseTypeMapper _databaseTypeMapper = PostgresDatabaseTypeMapper.Default;
+        private readonly IDataTypeMapper _dataTypeMapper = PostgresDataTypeMapper.Default;
         private readonly IMetadataMigrator _metadataMigrator = PostgresMetadataMigrator.Default;
         private readonly MigrationSetting _migrationSetting = new MigrationSetting();
         private readonly DbConnection _dbConnection;
@@ -77,7 +77,7 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ExecuteNonQuery($"create table table1(id {storeType});");
             var databaseDescriptor = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             var columnStoreType = databaseDescriptor.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).Single();
-            var commonDataType = _databaseTypeMapper.ToCommonDatabaseType(columnStoreType);
+            var commonDataType = _dataTypeMapper.ToCommonDatabaseType(columnStoreType);
             commonDataType.Should().BeEquivalentTo( new DatabaseTypeDescriptor{DbType = commonDbType,Arg1 = arg1,Arg2 = arg2});
 
         }
@@ -85,7 +85,7 @@ namespace ChangeDB.Agent.Postgres
         [ClassData(typeof(MapToTargetDataTypeTestData))]
         public async Task ShouldMapToTargetDataType(DatabaseTypeDescriptor databaseTypeDescriptor, string targetStoreType)
         {
-            var targetType = _databaseTypeMapper.ToDatabaseStoreType(databaseTypeDescriptor);
+            var targetType = _dataTypeMapper.ToDatabaseStoreType(databaseTypeDescriptor);
             _dbConnection.ExecuteNonQuery($"create table table1(id {targetType});");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             var targetTypeInDatabase =  databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).First();

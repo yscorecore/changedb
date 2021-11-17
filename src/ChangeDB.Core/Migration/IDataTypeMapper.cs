@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChangeDB.Migration
 {
-    public interface IDatabaseTypeMapper
+    public interface IDataTypeMapper
     {
         DatabaseTypeDescriptor ToCommonDatabaseType(string storeType);
 

@@ -77,14 +77,14 @@ namespace ChangeDB.Default
                 {
                     clonedDescriptor.Tables.SelectMany(p => p.Columns).ForEach(column =>
                     {
-                        var commonType = sourceAgent.DatabaseTypeMapper.ToCommonDatabaseType(column.StoreType);
-                        column.StoreType = targetAgent.DatabaseTypeMapper.ToDatabaseStoreType(commonType);
+                        var commonType = sourceAgent.DataTypeMapper.ToCommonDatabaseType(column.StoreType);
+                        column.StoreType = targetAgent.DataTypeMapper.ToDatabaseStoreType(commonType);
                     });
 
                     clonedDescriptor.Sequences.ForEach(sequence =>
                     {
-                        var commonType = sourceAgent.DatabaseTypeMapper.ToCommonDatabaseType(sequence.StoreType);
-                        sequence.StoreType = targetAgent.DatabaseTypeMapper.ToDatabaseStoreType(commonType);
+                        var commonType = sourceAgent.DataTypeMapper.ToCommonDatabaseType(sequence.StoreType);
+                        sequence.StoreType = targetAgent.DataTypeMapper.ToDatabaseStoreType(commonType);
                     });
                 }
             }
