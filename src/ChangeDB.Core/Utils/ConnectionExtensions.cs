@@ -9,14 +9,18 @@ namespace ChangeDB
 {
     public static class ConnectionExtensions
     {
-        public static T ExecuteScalar<T>(this IDbConnection connection, string sql)
+        public static object ExecuteScalar(this IDbConnection connection, string sql)
         {
             AlterOpen(connection);
             var command = connection.CreateCommand();
             command.CommandText = sql;
             command.CommandType = CommandType.Text;
-            var result = command.ExecuteScalar();
-            
+           return command.ExecuteScalar();
+        }
+
+        public static T ExecuteScalar<T>(this IDbConnection connection, string sql)
+        {
+            var result = connection.ExecuteScalar(sql);
             if (result == null || result == DBNull.Value)
             {
                 return default(T);

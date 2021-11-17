@@ -107,10 +107,10 @@ datetimeoffset	34	10	datetimeoffset({0})	scale	System.DateTimeOffset
                 CommonDatabaseType.NChar=>$"nchar({commonDatabaseType.Arg1})",
                 CommonDatabaseType.Varchar=>$"varchar({commonDatabaseType.Arg1})",
                 CommonDatabaseType.NVarchar=>$"nvarchar({commonDatabaseType.Arg1})",
-                CommonDatabaseType.Text=>$"text",
-                CommonDatabaseType.NText=>$"ntext",
+                CommonDatabaseType.Text=>"text",
+                CommonDatabaseType.NText=>"ntext",
                 CommonDatabaseType.Time=>$"time({commonDatabaseType.Arg1})",
-                CommonDatabaseType.Date=>$"date",
+                CommonDatabaseType.Date=>"date",
                 CommonDatabaseType.DateTime=>$"datetime2({commonDatabaseType.Arg1})",
                 CommonDatabaseType.DateTimeOffset=>$"datetimeoffset({commonDatabaseType.Arg1})",
                 _ => throw new NotSupportedException($"can not convert from common database type {commonDatabaseType}")

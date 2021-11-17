@@ -8,7 +8,7 @@ namespace ChangeDB
 {
     public static class CollectionExtensions
     {
-        public static IEnumerable<T> Foreach<T>(this IEnumerable<T> source, Action<T> action)
+        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> source, Action<T> action)
             where T : class
         {
             _ = source ?? throw new ArgumentNullException(nameof(source));

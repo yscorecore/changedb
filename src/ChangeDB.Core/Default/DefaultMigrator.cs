@@ -75,7 +75,7 @@ namespace ChangeDB.Default
             {
                 if (!sameDatabaseType)
                 {
-                    clonedDescriptor.Tables.SelectMany(p => p.Columns).Foreach(column =>
+                    clonedDescriptor.Tables.SelectMany(p => p.Columns).ForEach(column =>
                     {
                         var commonType = sourceAgent.DatabaseTypeMapper.ToCommonDatabaseType(column.StoreType);
                         column.StoreType = targetAgent.DatabaseTypeMapper.ToDatabaseStoreType(commonType);
@@ -150,7 +150,7 @@ namespace ChangeDB.Default
                 if (!sameDatabaseType)
                 {
                     clonedDescriptor.Tables.SelectMany(p => p.Columns)
-                        .Foreach(column =>
+                        .ForEach(column =>
                     {
                         if (!string.IsNullOrEmpty(column.DefaultValueSql))
                         {

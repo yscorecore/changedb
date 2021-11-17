@@ -12,6 +12,7 @@ namespace ChangeDB.Agent.Postgres
         public IMetadataMigrator MetadataMigrator { get => PostgresMetadataMigrator.Default; }
         public IDatabaseTypeMapper DatabaseTypeMapper { get => PostgresDatabaseTypeMapper.Default; }
         public ISqlExpressionTranslator ExpressionTranslator { get => PostgresSqlExpressionTranslator.Default; }
+        public IDatabaseManager DatabaseManger { get=> PostgresDatabaseManager.Default; }
 
         public DbConnection CreateConnection(string connectionString)
         {

@@ -12,6 +12,7 @@ using Xunit.Abstractions;
 
 namespace ChangeDB.Agent.Postgres
 {
+    [Collection(nameof(DatabaseEnvironment))]
     public class PostgresMetadataMigratorTest : IDisposable
 
     {
@@ -19,34 +20,15 @@ namespace ChangeDB.Agent.Postgres
         private readonly MigrationSetting _migrationSetting = new MigrationSetting { DropTargetDatabaseIfExists = true };
         private readonly DbConnection _dbConnection;
 
-        public PostgresMetadataMigratorTest()
+        public PostgresMetadataMigratorTest(DatabaseEnvironment databaseEnvironment)
         {
-            _dbConnection = new NpgsqlConnection($"Server=127.0.0.1;Port=5432;Database={TestUtils.RandomDatabaseName()};User Id=postgres;Password=mypassword;");
-            _dbConnection.CreateDatabase();
+            _dbConnection = databaseEnvironment.DbConnection;
         }
-        #region DropAndCreate
-        [Fact]
-        public async Task ShouldDropCurrentDatabase()
+        
+        public void Dispose()
         {
-            await _metadataMigrator.DropDatabaseIfExists(_dbConnection, _migrationSetting);
-            Action action = () =>
-            {
-                _dbConnection.Open();
-            };
-            action.Should().Throw<Npgsql.PostgresException>()
-                .WithMessage("3D000: database \"*\" does not exist");
-
+           _dbConnection.ClearDatabase();
         }
-        [Fact]
-        public async Task ShouldCreateNewDatabase()
-        {
-            await _metadataMigrator.DropDatabaseIfExists(_dbConnection, _migrationSetting);
-            await _metadataMigrator.CreateDatabase(_dbConnection, _migrationSetting);
-            var currentDatabase = _dbConnection.ExecuteScalar<string>("select current_database()");
-            currentDatabase.Should().NotBeEmpty();
-        }
-        #endregion
-
         #region GetDescription
         [Fact]
         public async Task ShouldReturnEmptyDescriptorWhenGetDatabaseDescriptionAndGivenEmptyDatabase()
@@ -191,7 +173,6 @@ namespace ChangeDB.Agent.Postgres
         [Fact]
         public async Task ShouldIncludeMultipleColumnForeignKeyWhenGetDatabaseDescription()
         {
-            _dbConnection.ReCreateDatabase();
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64));",
                 "create table table2(id int, id1 int references table1(id));");
@@ -210,7 +191,6 @@ namespace ChangeDB.Agent.Postgres
         [Fact]
         public async Task ShouldIncludeForeignKeyWhenGetDatabaseDescription()
         {
-            _dbConnection.ReCreateDatabase();
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64));",
                 "create table table2(id int, id1 int references table1(id));");
@@ -264,7 +244,6 @@ namespace ChangeDB.Agent.Postgres
         [Fact]
         public async Task ShouldIncludeMutilpleColumnUniqueWhenGetDatabaseDescription()
         {
-            _dbConnection.ReCreateDatabase();
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm int,unique(id,nm));");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
@@ -915,7 +894,7 @@ namespace ChangeDB.Agent.Postgres
             var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             var expectedDatabaseDesc = databaseDesc.DeepCloneAndSet(desc =>
             {
-                desc.Tables.SelectMany(p => p.Columns).Select(p => p.IdentityInfo.Values).Foreach(dic => { dic[PostgresUtils.IdentityType] = "ALWAYS"; });
+                desc.Tables.SelectMany(p => p.Columns).Select(p => p.IdentityInfo.Values).ForEach(dic => { dic[PostgresUtils.IdentityType] = "ALWAYS"; });
             });
             actualDatabaseDesc.Should().BeEquivalentTo(expectedDatabaseDesc);
         }
@@ -957,67 +936,8 @@ namespace ChangeDB.Agent.Postgres
 
 
 
-        [Theory]
-        [InlineData("varchar(12)", CommonDatabaseType.NVarchar, 12, null)]
-        //[InlineData("character varying(12)", CommonDatabaseType.NVarchar, 12, null)]
-        //[InlineData("char(12)", CommonDatabaseType.NChar, 12, null)]
-        //[InlineData("character(12)", CommonDatabaseType.NChar, 12, null)]
-        //[InlineData("text", CommonDatabaseType.NText, null, null)]
-        //[InlineData("varchar", CommonDatabaseType.NText, null, null)]
-        //[InlineData("char", CommonDatabaseType.NChar, 1, null)]
-        //[InlineData("int", CommonDatabaseType.Int, null, null)]
-        //[InlineData("integer", CommonDatabaseType.Int, null, null)]
-        //[InlineData("smallint", CommonDatabaseType.SmallInt, null, null)]
-        //[InlineData("bigint", CommonDatabaseType.BigInt, null, null)]
-
-        //[InlineData("serial", CommonDatabaseType.Int, null, null)]
-        // [InlineData("bigserial", DBType.BigInt, null, null)]
-
-        //[InlineData("decimal", CommonDatabaseType.Decimal, null, null)]
-        //[InlineData("decimal(3)", CommonDatabaseType.Decimal, 3, 0)]
-        //[InlineData("decimal(12,3)", CommonDatabaseType.Decimal, 12, 3)]
-        //[InlineData("dec", CommonDatabaseType.Decimal, null, null)]
-        //[InlineData("dec(3)", CommonDatabaseType.Decimal, 3, 0)]
-        //[InlineData("dec(12,3)", CommonDatabaseType.Decimal, 12, 3)]
-
-        //[InlineData("numeric", CommonDatabaseType.Decimal, null, null)]
-        //[InlineData("numeric(3)", CommonDatabaseType.Decimal, 3, 0)]
-        //[InlineData("numeric(12,3)", CommonDatabaseType.Decimal, 12, 3)]
-        //[InlineData("money", CommonDatabaseType.Decimal, 19, 2)]
-        //[InlineData("double precision", CommonDatabaseType.Double, null, null)]
-        //[InlineData("float", CommonDatabaseType.Double, null, null)]
-        //[InlineData("float(1)", CommonDatabaseType.Float, null, null)]
-        //[InlineData("float(24)", CommonDatabaseType.Float, null, null)]
-        //[InlineData("float(25)", CommonDatabaseType.Double, null, null)]
-        //[InlineData("real", CommonDatabaseType.Float, null, null)]
-        //[InlineData("uuid", CommonDatabaseType.Uuid, null, null)]
-        //[InlineData("date", CommonDatabaseType.Date, null, null)]
-        //[InlineData("time", CommonDatabaseType.Time, 6, null)]
-        //[InlineData("time(4)", CommonDatabaseType.Time, 4, null)]
-        //[InlineData("time(4) without time zone", CommonDatabaseType.Time, 4, null)]
-        //[InlineData("timestamp", CommonDatabaseType.DateTime, 6, null)]
-        //[InlineData("timestamp(3)", CommonDatabaseType.DateTime, 3, null)]
-        //[InlineData("timestamp without time zone", CommonDatabaseType.DateTime, 6, null)]
-        //[InlineData("timestamp with time zone", CommonDatabaseType.DateTimeOffset, 6, null)]
-        //[InlineData("timestamp(1) without time zone", CommonDatabaseType.DateTime, 1, null)]
-        //[InlineData("timestamp(1) with time zone", CommonDatabaseType.DateTimeOffset, 1, null)]
-
-        public async Task ShouldMapDataTypeTo(string postgresDataType, CommonDatabaseType commonDbType, int? length, int? accuracy)
-        {
-            _dbConnection.ReCreateDatabase();
-            _dbConnection.ExecuteNonQuery($"create table table1(col1 {postgresDataType})");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
-            var firstColumn = databaseDesc.Tables.First().Columns.First();
-            firstColumn.Should().BeEquivalentTo(
-                new ColumnDescriptor { Name = "col1", StoreType = postgresDataType, IsNullable = true });
 
 
-        }
-
-        public void Dispose()
-        {
-            //_dbConnection.DropDatabaseIfExists();
-            _dbConnection?.Dispose();
-        }
+       
     }
 }
