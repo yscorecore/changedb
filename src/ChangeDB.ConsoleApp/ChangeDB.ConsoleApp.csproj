@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net5</TargetFrameworks>
+    <TargetFramework>net5</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+      <ProjectReference Include="..\ChangeDB.Core\ChangeDB.Core.csproj" />
     <ProjectReference Include="..\ChangeDB.Agent.Postgres\ChangeDB.Agent.Postgres.csproj" />
     <ProjectReference Include="..\ChangeDB.Agent.SqlServer\ChangeDB.Agent.SqlServer.csproj" />
   </ItemGroup>
