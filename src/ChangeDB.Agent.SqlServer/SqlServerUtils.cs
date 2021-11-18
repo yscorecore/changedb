@@ -149,10 +149,13 @@ namespace ChangeDB.Agent.SqlServer
                         IsCyclic = false,
                         StartValue = dbConnection.ExecuteScalar<long>($"SELECT IDENT_SEED('{tableFullName}')"),
                         IncrementBy = dbConnection.ExecuteScalar<int>($"SELECT IDENT_INCR('{tableFullName}')"),
-                        CurrentValue = dbConnection.ExecuteScalar<long?>($"SELECT IDENT_CURRENT('{tableFullName}') WHERE EXISTS (select top 1 * from {tableFullName});"),
+                        CurrentValue = dbConnection.ExecuteScalar<long?>($"SELECT IDENT_CURRENT('{tableFullName}')"),
                     };
-
-
+                    if (baseColumnDesc.IdentityInfo.StartValue == baseColumnDesc.IdentityInfo.CurrentValue && !dbConnection.ExecuteExists($"select top 1 * from {tableFullName}"))
+                    {
+                        baseColumnDesc.IdentityInfo.CurrentValue = null;
+                    }
+                    
                 }
                 else
                 {

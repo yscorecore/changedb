@@ -161,6 +161,10 @@ namespace ChangeDB.Agent.Postgres
                         baseColumnDesc.IsIdentity = false;
                         baseColumnDesc.IdentityInfo = FromNpgSqlIdentityData(IdentitySequenceOptionsData.Empty);
                     }
+                    // read current value from database
+                    var sequenceName = dbConnection.ExecuteScalar<string>(
+                        $"select pg_get_serial_sequence('{IdentityName(column.Table.Schema,column.Table.Name)}','{column.Name}')");
+                    var sequenceInfo = dbConnection.ExecuteReaderAsTable($"select * from {sequenceName}");
                 }
                 else
                 {
@@ -192,8 +196,7 @@ namespace ChangeDB.Agent.Postgres
                 {
                     identityType = "ALWAYS";
                     return true;
-                }
-                else if (npgsqlIdentityStrategy == NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+                } if (npgsqlIdentityStrategy == NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 {
                     identityType = "BY DEFAULT";
                     return true;

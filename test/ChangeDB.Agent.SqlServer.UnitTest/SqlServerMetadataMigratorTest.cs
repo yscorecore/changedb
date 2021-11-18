@@ -256,6 +256,39 @@ namespace ChangeDB.Agent.SqlServer
                 });
         }
         [Fact]
+        public async Task ShouldIncludeIdentityDescriptorWithStartValueWhenGetDatabaseDescription()
+        {
+            _dbConnection.ExecuteNonQuery(
+                "create table table1(id int identity(2,5),val int);",
+                "insert into table1(val) values(123)"
+            );
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
+                .BeEquivalentTo(new TableDescriptor
+                {
+                    Name = "table1",
+                    Schema = "dbo",
+                    Columns = new List<ColumnDescriptor>
+                    {
+                        new ColumnDescriptor
+                        {
+                            Name="id", StoreType = "int", IsIdentity =true,IsStored= false,IsNullable= false,
+                            IdentityInfo = new IdentityDescriptor
+                            {
+                                IsCyclic =false,
+                                StartValue=2,
+                                IncrementBy=5,
+                                CurrentValue =2
+                            }
+                        },
+                        new ColumnDescriptor
+                        {
+                            Name="val", StoreType = "int", IsIdentity =false,IsStored= false,IsNullable =true
+                        }
+                    }
+                });
+        }
+        [Fact]
         public async Task ShouldIncludeIdentityDescriptorWithCurrentValueWhenGetDatabaseDescription()
         {
             _dbConnection.ExecuteNonQuery(
