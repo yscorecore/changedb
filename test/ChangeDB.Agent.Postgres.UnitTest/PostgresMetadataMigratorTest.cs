@@ -373,7 +373,25 @@ namespace ChangeDB.Agent.Postgres
                     }
                 });
         }
-        //dbConnection
+        [Fact]
+        public async Task ShouldIncludeDefaultValueWhenGetDatabaseDescription()
+        {
+            _dbConnection.ExecuteNonQuery(
+                "create table table1(id int not null default 0,nm varchar(10) default 'abc', val money default 0);");
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
+                .BeEquivalentTo(new TableDescriptor
+                {
+                    Name = "table1",
+                    Schema = "public",
+                    Columns = new List<ColumnDescriptor>
+                    {
+                        new ColumnDescriptor{ Name="id", IsNullable=false, StoreType = "integer", DefaultValueSql="0"},
+                        new ColumnDescriptor{ Name="nm", IsNullable=true, StoreType = "character varying(10)", DefaultValueSql="'abc'::character varying"},
+                        new ColumnDescriptor{ Name="val", IsNullable=true, StoreType = "money", DefaultValueSql="0"}
+                    }
+                });
+        }
         #endregion
 
 

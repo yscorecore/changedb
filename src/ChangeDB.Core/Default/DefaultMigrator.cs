@@ -174,7 +174,7 @@ namespace ChangeDB.Default
 
         protected virtual async Task MigrationData(IMigrationAgent source, IMigrationAgent target, DatabaseDescriptor database, MigrationContext context, DbConnection sourceConnection, DbConnection targetConnection)
         {
-            
+
             foreach (var tableDesc in database.Tables)
             {
                 var tableName = string.IsNullOrEmpty(tableDesc.Schema) ? tableDesc.Name : $"{tableDesc.Schema}.{tableDesc.Name}";

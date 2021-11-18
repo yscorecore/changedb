@@ -324,6 +324,25 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 });
         }
+        [Fact]
+        public async Task ShouldIncludeDefaultValueWhenGetDatabaseDescription()
+        {
+            _dbConnection.ExecuteNonQuery(
+                "create table table1(id int not null default 0,nm varchar(10) default 'abc', val money default 0);");
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
+                .BeEquivalentTo(new TableDescriptor
+                {
+                    Name = "table1",
+                    Schema = "dbo",
+                    Columns = new List<ColumnDescriptor>
+                    {
+                        new ColumnDescriptor{ Name="id", IsNullable=false, StoreType = "int", DefaultValueSql="((0))"},
+                        new ColumnDescriptor{ Name="nm", IsNullable=true, StoreType = "varchar(10)", DefaultValueSql="('abc')"},
+                        new ColumnDescriptor{ Name="val", IsNullable=true, StoreType = "money", DefaultValueSql="((0))"}
+                    }
+                });
+        }
         #endregion
 
 
