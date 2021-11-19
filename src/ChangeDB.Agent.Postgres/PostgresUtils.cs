@@ -167,7 +167,12 @@ namespace ChangeDB.Agent.Postgres
                     // read current value from database
                     var sequenceName = dbConnection.ExecuteScalar<string>(
                         $"select pg_get_serial_sequence('{IdentityName(column.Table.Schema,column.Table.Name)}','{column.Name}')");
-                    var sequenceInfo = dbConnection.ExecuteReaderAsTable($"select * from {sequenceName}");
+                    // nextval will throw exception when not called the sequence once
+                    var lastValue =
+                        dbConnection.ExecuteScalar<long?>(
+                            $"select case when is_called then last_value else null end from {sequenceName}");
+                    baseColumnDesc.IdentityInfo.CurrentValue = lastValue;
+                    //var sequenceInfo = dbConnection.ExecuteReaderAsTable($"select * from {sequenceName}");
                 }
                 else
                 {
