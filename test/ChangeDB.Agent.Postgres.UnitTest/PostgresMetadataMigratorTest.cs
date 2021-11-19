@@ -321,7 +321,7 @@ namespace ChangeDB.Agent.Postgres
                     }
                 });
         }
-        
+
         [Fact]
         public async Task ShouldIncludeIdentityAlwaysColumnWithCurrentValueWhenGetDatabaseDescription()
         {
@@ -448,7 +448,7 @@ namespace ChangeDB.Agent.Postgres
                     }
                 });
         }
-        
+
         [Fact]
         public async Task ShouldIncludeSerialColumnWithCurrentValueWhenGetDatabaseDescription()
         {
@@ -481,7 +481,7 @@ namespace ChangeDB.Agent.Postgres
                     }
                 });
         }
-        
+
         [Fact]
         public async Task ShouldIncludeUuidColumnWhenGetDatabaseDescription()
         {

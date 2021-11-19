@@ -166,7 +166,7 @@ namespace ChangeDB.Agent.Postgres
                     }
                     // read current value from database
                     var sequenceName = dbConnection.ExecuteScalar<string>(
-                        $"select pg_get_serial_sequence('{IdentityName(column.Table.Schema,column.Table.Name)}','{column.Name}')");
+                        $"select pg_get_serial_sequence('{IdentityName(column.Table.Schema, column.Table.Name)}','{column.Name}')");
                     // nextval will throw exception when not called the sequence once
                     var lastValue =
                         dbConnection.ExecuteScalar<long?>(
@@ -204,7 +204,8 @@ namespace ChangeDB.Agent.Postgres
                 {
                     identityType = IDENTITY_ALWAYS;
                     return true;
-                } if (npgsqlIdentityStrategy == NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+                }
+                if (npgsqlIdentityStrategy == NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 {
                     identityType = IDENTITY_BYDEFAULT;
                     return true;

@@ -155,7 +155,7 @@ namespace ChangeDB.Agent.SqlServer
                     {
                         baseColumnDesc.IdentityInfo.CurrentValue = null;
                     }
-                    
+
                 }
                 else
                 {

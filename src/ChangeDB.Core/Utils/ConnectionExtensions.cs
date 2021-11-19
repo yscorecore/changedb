@@ -69,7 +69,7 @@ namespace ChangeDB
 
         }
 
-        public static bool ExecuteExists(this IDbConnection connection, string sql, Func<DataRow,bool> condition=null)
+        public static bool ExecuteExists(this IDbConnection connection, string sql, Func<DataRow, bool> condition = null)
         {
             var table = connection.ExecuteReaderAsTable(sql);
             if (condition != null)

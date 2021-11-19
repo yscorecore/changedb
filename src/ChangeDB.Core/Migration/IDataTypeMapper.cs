@@ -8,8 +8,8 @@ namespace ChangeDB.Migration
 {
     public interface IDataTypeMapper
     {
-        DatabaseTypeDescriptor ToCommonDatabaseType(string storeType);
+        DataTypeDescriptor ToCommonDatabaseType(string storeType);
 
-        string ToDatabaseStoreType(DatabaseTypeDescriptor commonDatabaseType);
+        string ToDatabaseStoreType(DataTypeDescriptor commonDataType);
     }
 }
