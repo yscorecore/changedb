@@ -28,6 +28,7 @@ namespace ChangeDB.Agent.Postgres
         }
 
         [Theory]
+        [InlineData("boolean", CommonDatabaseType.Boolean, null, null)]
         [InlineData("varchar(12)", CommonDatabaseType.NVarchar, 12, null)]
         [InlineData("character varying(12)", CommonDatabaseType.NVarchar, 12, null)]
         [InlineData("char(12)", CommonDatabaseType.NChar, 12, null)]

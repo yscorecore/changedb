@@ -32,6 +32,13 @@ namespace ChangeDB.Agent.Postgres
             }
 
         }
+
+        private static readonly Dictionary<string, SqlExpressionDescriptor> KeyWordsMap =
+            new Dictionary<string, SqlExpressionDescriptor>(StringComparer.InvariantCultureIgnoreCase)
+            {
+                ["true"] = new SqlExpressionDescriptor { Expression = "1" },
+                ["false"] = new SqlExpressionDescriptor { Expression = "0" },
+            };
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression)
         {
             if (string.IsNullOrEmpty(sqlExpression))
@@ -39,7 +46,12 @@ namespace ChangeDB.Agent.Postgres
                 return new SqlExpressionDescriptor { Expression = sqlExpression };
             }
 
-            sqlExpression = sqlExpression.Trim();
+            if (KeyWordsMap.TryGetValue(sqlExpression, out var mappedDesc))
+            {
+                return mappedDesc;
+            }
+
+            sqlExpression = ReplaceTypeConvert(sqlExpression.Trim());
             if (Regex.IsMatch(sqlExpression, @"CURRENT_TIMESTAMP(\(\d\))?", RegexOptions.IgnoreCase))
             {
                 return new SqlExpressionDescriptor { Function = Function.Now };
@@ -57,6 +69,12 @@ namespace ChangeDB.Agent.Postgres
 
             return new SqlExpressionDescriptor { Expression = sqlExpression };
         }
+
+        private string ReplaceTypeConvert(string sqlExpression)
+        {
+            return Regex.Replace(sqlExpression, @"::(\w+)(\s+(\w+))*", "");
+        }
+
         private bool IsEmptyArgumentFunction(string expression, out string functionName)
         {
             if (string.IsNullOrEmpty(expression))

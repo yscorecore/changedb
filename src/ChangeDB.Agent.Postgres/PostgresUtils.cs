@@ -78,6 +78,9 @@ namespace ChangeDB.Agent.Postgres
         {
             // exclude views
             var allTables = dbConnection.ExecuteReaderAsList<string, string>("select table_schema ,table_name from information_schema.tables t where t.table_type ='BASE TABLE'");
+
+            var allDefaultValues = dbConnection.ExecuteReaderAsList<string, string, string, string>(
+                "SELECT TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,COLUMN_DEFAULT FROM INFORMATION_SCHEMA.COLUMNS");
             return new DatabaseDescriptor
             {
                 //Collation = databaseModel.Collation,
@@ -161,7 +164,20 @@ namespace ChangeDB.Agent.Postgres
                         baseColumnDesc.IsIdentity = false;
                         baseColumnDesc.IdentityInfo = FromNpgSqlIdentityData(IdentitySequenceOptionsData.Empty);
                     }
+                    // read current value from database
+                    var sequenceName = dbConnection.ExecuteScalar<string>(
+                        $"select pg_get_serial_sequence('{IdentityName(column.Table.Schema,column.Table.Name)}','{column.Name}')");
+                    var sequenceInfo = dbConnection.ExecuteReaderAsTable($"select * from {sequenceName}");
                 }
+                else
+                {
+                    // reassign defaultValue Sql, because efcore will filter clr default
+                    // https://github.com/npgsql/efcore.pg/blob/176fae2e08087ad43b9650768b7296a336d4f3f2/src/EFCore.PG/Scaffolding/Internal/NpgsqlDatabaseModelFactory.cs#L403
+                    baseColumnDesc.DefaultValueSql = allDefaultValues.Where(p =>
+                            p.Item1 == column.Table.Schema && p.Item2 == column.Table.Name && p.Item3 == column.Name)
+                        .Select(p => p.Item4).SingleOrDefault();
+                }
+
                 return baseColumnDesc;
             }
             IdentitySequenceOptionsData GetNpgsqlIdentityData(DatabaseColumn column)
@@ -183,8 +199,7 @@ namespace ChangeDB.Agent.Postgres
                 {
                     identityType = IDENTITY_ALWAYS;
                     return true;
-                }
-                else if (npgsqlIdentityStrategy == NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+                } if (npgsqlIdentityStrategy == NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 {
                     identityType = IDENTITY_BYDEFAULT;
                     return true;

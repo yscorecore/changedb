@@ -35,6 +35,7 @@ namespace ChangeDB.Agent.Postgres
                 "TIMESTAMP WITH TIME ZONE" => DatabaseTypeDescriptor.DateTimeOffset(arg1 ?? 6),
                 "DATE" => DatabaseTypeDescriptor.Date(),
                 "TIME WITHOUT TIME ZONE" => DatabaseTypeDescriptor.Time(arg1 ?? 6),
+                "BOOLEAN" => DatabaseTypeDescriptor.Boolean(),
                 _ => throw new NotSupportedException($"the data type '{storeType}' not supported.")
             };
 

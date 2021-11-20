@@ -28,6 +28,14 @@ namespace ChangeDB.Agent.Postgres
         [InlineData("null", null, "null")]
         [InlineData("NULL ", null, "NULL")]
         [InlineData("''", null, "''")]
+        [InlineData("false", null, "0")]
+        [InlineData("true", null, "1")]
+        [InlineData("'0001-01-01'::date", null, "'0001-01-01'")]
+        [InlineData("'1900-01-01 00:00:00'::timestamp without time zone ", null, "'1900-01-01 00:00:00'")]
+        [InlineData("'00:00:00'::time without time zone", null, "'00:00:00'")]
+        [InlineData("'00:00:00'::interval", null, "'00:00:00'")]
+        [InlineData("'00000000-0000-0000-0000-000000000000'::uuid", null, "'00000000-0000-0000-0000-000000000000'")]
+        [InlineData("'0'::numeric", null, "'0'")]
 
         public void ShouldMapToCommonSqlExpression(string storedSql, Function? function, string expression)
         {

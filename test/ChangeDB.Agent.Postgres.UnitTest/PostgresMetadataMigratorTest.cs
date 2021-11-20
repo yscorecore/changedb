@@ -258,7 +258,7 @@ namespace ChangeDB.Agent.Postgres
         public async Task ShouldIncludeIdentityAlwaysColumnWhenGetDatabaseDescription()
         {
             _dbConnection.ExecuteNonQuery(
-                   "create table table1(id integer generated always as identity);");
+                   "create table table1(id integer generated always as identity, val integer);");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
@@ -278,7 +278,83 @@ namespace ChangeDB.Agent.Postgres
                                     [PostgresUtils.IdentityType]="ALWAYS",
                                 }
                             }
+                       },
+                       new ColumnDescriptor
+                       {
+                           Name = "val", IsNullable = true, StoreType = "integer"
                        }
+                    }
+                });
+        }
+        [Fact]
+        public async Task ShouldIncludeIdentityAlwaysColumnWithStartValueWhenGetDatabaseDescription()
+        {
+            _dbConnection.ExecuteNonQuery(
+                "create table table1(id integer generated always as identity, val integer);",
+                    "insert into table1(val) values(1)"
+                );
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
+                .BeEquivalentTo(new TableDescriptor
+                {
+                    Name = "table1",
+                    Schema = "public",
+                    Columns = new List<ColumnDescriptor>
+                    {
+                        new ColumnDescriptor
+                        {
+                            Name="id", StoreType = "integer", IsIdentity =true,
+                            IdentityInfo = new IdentityDescriptor
+                            {
+                                IsCyclic =false,
+                                Values = new Dictionary<string, object>
+                                {
+                                    [PostgresUtils.IdentityType]="ALWAYS",
+                                },
+                                CurrentValue = 1
+                            }
+                        },
+                        new ColumnDescriptor
+                        {
+                            Name = "val", IsNullable = true, StoreType = "integer"
+                        }
+                    }
+                });
+        }
+        
+        [Fact]
+        public async Task ShouldIncludeIdentityAlwaysColumnWithCurrentValueWhenGetDatabaseDescription()
+        {
+            _dbConnection.ExecuteNonQuery(
+                "create table table1(id integer generated always as identity, val integer);",
+                "insert into table1(val) values(1)",
+                "insert into table1(val) values(1)"
+            );
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
+                .BeEquivalentTo(new TableDescriptor
+                {
+                    Name = "table1",
+                    Schema = "public",
+                    Columns = new List<ColumnDescriptor>
+                    {
+                        new ColumnDescriptor
+                        {
+                            Name="id", StoreType = "integer", IsIdentity =true,
+                            IdentityInfo = new IdentityDescriptor
+                            {
+                                IsCyclic =false,
+                                Values = new Dictionary<string, object>
+                                {
+                                    [PostgresUtils.IdentityType]="ALWAYS",
+                                },
+                                CurrentValue = 2
+                            }
+                        },
+                        new ColumnDescriptor
+                        {
+                            Name = "val", IsNullable = true, StoreType = "integer"
+                        }
                     }
                 });
         }
@@ -315,7 +391,9 @@ namespace ChangeDB.Agent.Postgres
         public async Task ShouldIncludeSerialColumnWhenGetDatabaseDescription()
         {
             _dbConnection.ExecuteNonQuery(
-                   "create table table1(id serial);");
+                "create table table1(id int, val serial);",
+                "insert into table1(id) values(1);"
+            );
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
@@ -324,21 +402,85 @@ namespace ChangeDB.Agent.Postgres
                     Schema = "public",
                     Columns = new List<ColumnDescriptor>
                     {
+                        new ColumnDescriptor
+                        {
+                            Name = "id", StoreType = "integer", IsNullable = true
+                        },
                        new ColumnDescriptor
                        {
-                            Name="id", StoreType = "integer", IsIdentity =false,
+                            Name="val", StoreType = "integer", IsIdentity =false,
                             IdentityInfo = new IdentityDescriptor
                             {
-                                IsCyclic =false,
-                                Values = new Dictionary<string, object>
-                                {
-                                    //[PostgresUtils.IdentityNumbersToCache]=1
-                                }
                             }
                        }
                     }
                 });
         }
+        [Fact]
+        public async Task ShouldIncludeSerialColumnWithStartValueWhenGetDatabaseDescription()
+        {
+            _dbConnection.ExecuteNonQuery(
+                "create table table1(id int, val serial);",
+                            "insert into table1(id) values(1);"
+                );
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
+                .BeEquivalentTo(new TableDescriptor
+                {
+                    Name = "table1",
+                    Schema = "public",
+                    Columns = new List<ColumnDescriptor>
+                    {
+                        new ColumnDescriptor
+                        {
+                            Name = "id", StoreType = "integer", IsNullable = true
+                        },
+                        new ColumnDescriptor
+                        {
+                            Name="val", StoreType = "integer", IsIdentity =false,
+                            IdentityInfo = new IdentityDescriptor
+                            {
+                                IsCyclic =false,
+                                CurrentValue = 1,
+                            }
+                        }
+                    }
+                });
+        }
+        
+        [Fact]
+        public async Task ShouldIncludeSerialColumnWithCurrentValueWhenGetDatabaseDescription()
+        {
+            _dbConnection.ExecuteNonQuery(
+                "create table table1(id int, val serial);",
+                "insert into table1(id) values(1);",
+                "insert into table1(id) values(2);"
+            );
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
+                .BeEquivalentTo(new TableDescriptor
+                {
+                    Name = "table1",
+                    Schema = "public",
+                    Columns = new List<ColumnDescriptor>
+                    {
+                        new ColumnDescriptor
+                        {
+                            Name = "id", StoreType = "integer", IsNullable = true
+                        },
+                        new ColumnDescriptor
+                        {
+                            Name="val", StoreType = "integer", IsIdentity =false,
+                            IdentityInfo = new IdentityDescriptor
+                            {
+                                IsCyclic =false,
+                                CurrentValue = 2,
+                            }
+                        }
+                    }
+                });
+        }
+        
         [Fact]
         public async Task ShouldIncludeUuidColumnWhenGetDatabaseDescription()
         {
@@ -373,7 +515,25 @@ namespace ChangeDB.Agent.Postgres
                     }
                 });
         }
-        //dbConnection
+        [Fact]
+        public async Task ShouldIncludeDefaultValueWhenGetDatabaseDescription()
+        {
+            _dbConnection.ExecuteNonQuery(
+                "create table table1(id int not null default 0,nm varchar(10) default 'abc', val money default 0);");
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
+                .BeEquivalentTo(new TableDescriptor
+                {
+                    Name = "table1",
+                    Schema = "public",
+                    Columns = new List<ColumnDescriptor>
+                    {
+                        new ColumnDescriptor{ Name="id", IsNullable=false, StoreType = "integer", DefaultValueSql="0"},
+                        new ColumnDescriptor{ Name="nm", IsNullable=true, StoreType = "character varying(10)", DefaultValueSql="'abc'::character varying"},
+                        new ColumnDescriptor{ Name="val", IsNullable=true, StoreType = "money", DefaultValueSql="0"}
+                    }
+                });
+        }
         #endregion
 
 

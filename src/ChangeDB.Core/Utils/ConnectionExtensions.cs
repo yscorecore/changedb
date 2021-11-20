@@ -68,6 +68,17 @@ namespace ChangeDB
         {
 
         }
+
+        public static bool ExecuteExists(this IDbConnection connection, string sql, Func<DataRow,bool> condition=null)
+        {
+            var table = connection.ExecuteReaderAsTable(sql);
+            if (condition != null)
+            {
+                return table.AsEnumerable().Any(condition);
+            }
+            return table.AsEnumerable().Any();
+        }
+
         public static DataTable ExecuteReaderAsTable(this IDbConnection connection, string sql)
         {
             AlterOpen(connection);
