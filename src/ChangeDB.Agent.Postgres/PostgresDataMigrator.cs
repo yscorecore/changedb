@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -34,8 +35,8 @@ namespace ChangeDB.Agent.Postgres
             {
                 return Task.CompletedTask;
             }
-
-            var insertSql = $"insert into  {BuildTableName(table)}({BuildColumnNames(table)}) values ({BuildParameterValueNames(table)});";
+            var overIdentity = OverIdentityType(table);
+            var insertSql = $"insert into {BuildTableName(table)}({BuildColumnNames(table)}) {overIdentity} values ({BuildParameterValueNames(table)});";
             foreach (DataRow row in data.Rows)
             {
                 var rowData = GetRowData(row, table);
@@ -43,6 +44,27 @@ namespace ChangeDB.Agent.Postgres
             }
 
             return Task.CompletedTask;
+
+            string OverIdentityType(TableDescriptor tableDescriptor)
+            {
+                var identityInfo = tableDescriptor.Columns.Where(p => p.IsIdentity && p.IdentityInfo != null).Select(p => p.IdentityInfo).SingleOrDefault();
+                if (identityInfo == null)
+                {
+                    return string.Empty;
+                }
+                var identityType = PostgresUtils.IDENTITY_ALWAYS;
+
+                if (identityInfo.Values != null && identityInfo.Values.TryGetValue(PostgresUtils.IdentityType, out var type))
+                {
+                    identityType = Convert.ToString(type);
+                }
+                return identityType switch
+                {
+                    PostgresUtils.IDENTITY_ALWAYS => "OVERRIDING SYSTEM VALUE",
+                    PostgresUtils.IDENTITY_BYDEFAULT => "OVERRIDING USER VALUE",
+                    _ => string.Empty
+                };
+            }
         }
 
         private string BuildTableName(TableDescriptor table)
@@ -70,6 +92,24 @@ namespace ChangeDB.Agent.Postgres
             return dic;
         }
 
+        public Task BeforeWriteData(DatabaseDescriptor databaseDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        {
+            return Task.CompletedTask;
+        }
 
+        public Task AfterWriteData(DatabaseDescriptor databaseDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task BeforeWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task AfterWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        {
+            return Task.CompletedTask;
+        }
     }
 }

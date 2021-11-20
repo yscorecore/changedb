@@ -27,7 +27,11 @@ namespace ChangeDB.ConsoleApp.Commands
             var service = ServiceHost.Default.GetRequiredService<IDatabaseMigrate>();
             var task = service.MigrateDatabase(new MigrationContext
             {
-                Setting = new MigrationSetting(),
+                Setting = new MigrationSetting()
+                {
+                    DropTargetDatabaseIfExists = true,
+                    TargetNameStyle = new TargetNameStyle { NameStyle = NameStyle.Upper }
+                },
                 SourceDatabase = new DatabaseInfo { Type = SourceType, ConnectionString = SourceConnectionString },
                 TargetDatabase = new DatabaseInfo { Type = TargetType, ConnectionString = TargetConnectionString }
             });

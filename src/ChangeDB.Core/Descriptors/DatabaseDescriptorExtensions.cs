@@ -20,5 +20,9 @@ namespace ChangeDB
             }
             return result.Where(p => !string.IsNullOrEmpty(p)).Distinct();
         }
+        public static TableDescriptor GetTable(this DatabaseDescriptor databaseDescriptor, string tableName)
+        {
+            return databaseDescriptor.Tables.SingleOrDefault(p => p.Name == tableName);
+        }
     }
 }

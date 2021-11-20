@@ -27,7 +27,7 @@ namespace ChangeDB.Agent.Postgres
             {
                 _dbConnection.Open();
             };
-            action.Should().Throw<Npgsql.PostgresException>()
+            action.Should().Throw<PostgresException>()
                 .WithMessage("3D000: database \"*\" does not exist");
 
         }

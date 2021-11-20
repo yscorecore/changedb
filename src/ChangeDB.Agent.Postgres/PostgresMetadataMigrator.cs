@@ -13,6 +13,7 @@ namespace ChangeDB.Agent.Postgres
 {
     public class PostgresMetadataMigrator : IMetadataMigrator
     {
+
         public static readonly PostgresMetadataMigrator Default = new PostgresMetadataMigrator();
 
         public Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection dbConnection, MigrationSetting migrationSetting)
@@ -41,10 +42,70 @@ namespace ChangeDB.Agent.Postgres
                 foreach (var table in databaseDescriptor.Tables)
                 {
                     var tableFullName = PostgresUtils.IdentityName(table.Schema, table.Name);
-                    var columnDefines = string.Join(",", table.Columns.Select(p => $"{PostgresUtils.IdentityName(p.Name)} {p.StoreType}"));
+                    var columnDefines = string.Join(",", table.Columns.Select(p => $"{BuildColumnBasicDesc(p)}"));
                     dbConnection.ExecuteNonQuery($"CREATE TABLE {tableFullName} ({columnDefines});");
                 }
+                string BuildColumnBasicDesc(ColumnDescriptor column)
+                {
+                    var columnName = PostgresUtils.IdentityName(column.Name);
+                    var dataType = column.StoreType;
 
+                    if (column.IsIdentity && column.IdentityInfo != null)
+                    {
+                        var identityInfo = column.IdentityInfo;
+                        var identityType = PostgresUtils.IDENTITY_ALWAYS;
+
+                        if (identityInfo.Values != null && identityInfo.Values.TryGetValue(PostgresUtils.IdentityType, out var type))
+                        {
+                            identityType = Convert.ToString(type);
+                        }
+
+                        var identityDetails = $"generated {identityType} as identity {BuildIdentityDetails(column.IdentityInfo)}";
+                        return $"{columnName} {dataType} {identityDetails}";
+                    }
+                    else if (column.IdentityInfo != null)
+                    {
+                        //serial
+                        var mappedDataType = column.StoreType.ToLowerInvariant() switch
+                        {
+                            "integer" => "serial",
+                            "smallint" => "smallserial",
+                            "bigint" => "bigserial",
+                            _ => throw new ArgumentException($"not support {column.StoreType} as serial"),
+                        };
+                        return $"{columnName} {mappedDataType}";
+                    }
+                    else
+                    {
+                        return $"{columnName} {dataType}";
+                    }
+                }
+                // https://www.postgresql.org/docs/current/sql-altersequence.html
+                string BuildIdentityDetails(IdentityDescriptor desc)
+                {
+                    var items = new List<string>();
+
+                    items.Add($"START WITH {desc.StartValue}");
+                    items.Add($"INCREMENT BY {desc.IncrementBy}");
+
+                    if (desc.MinValue != null)
+                    {
+                        items.Add($"MINVALUE {desc.MinValue}");
+                    }
+                    if (desc.MaxValue != null)
+                    {
+                        items.Add($"MAXVALUE {desc.MaxValue}");
+                    }
+                    if (desc.IsCyclic == true)
+                    {
+                        items.Add("CYCLE");
+                    }
+                    if (desc.Values.TryGetValue(PostgresUtils.IdentityNumbersToCache, out var cache))
+                    {
+                        items.Add($"CACHE {cache}");
+                    }
+                    return $"({string.Join(" ", items)})";
+                }
             }
             void CreatePrimaryKeys()
             {
@@ -100,7 +161,6 @@ namespace ChangeDB.Agent.Postgres
         public Task PostMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
         {
             AlterNotnullColumns();
-            AlterIdentityColumns();
             AddDefaultValues();
             AddForeignKeys();
             void AlterNotnullColumns()
@@ -118,95 +178,6 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             }
-            void AlterIdentityColumns()
-            {
-                foreach (var table in databaseDescriptor.Tables)
-                {
-                    var tableFullName = PostgresUtils.IdentityName(table.Schema, table.Name);
-                    foreach (var column in table.Columns)
-                    {
-                        if (column.IdentityInfo != null)
-                        {
-                            var columnName = PostgresUtils.IdentityName(column.Name);
-                            if (column.IsIdentity)
-                            {
-                                AlterIdentityColumn(column.IdentityInfo, tableFullName, columnName);
-                            }
-                            else
-                            {
-                                var sequenceName = $"{table.Name}_{column.Name}_seq";
-                                var sequenceFullName = PostgresUtils.IdentityName(table.Schema, sequenceName);
-                                var columnFullName = PostgresUtils.IdentityName(table.Schema, table.Name, column.Name);
-                                var nextValueExpression = $"nextval('{sequenceFullName}'::regclass)";
-                                var sequenceDetails = BuildIdentitySequenceDetails(column.IdentityInfo, false, columnFullName);
-                                dbConnection.ExecuteNonQuery($"CREATE SEQUENCE IF NOT EXISTS {sequenceFullName} {sequenceDetails};");
-                                dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} SET DEFAULT {nextValueExpression};");
-                            }
-                        }
-                    }
-                }
-
-
-            }
-            void AlterIdentityColumn(IdentityDescriptor desc, string tableFullName, string columnName)
-            {
-                var identityType = "ALWAYS";
-                if (desc != null && desc.Values != null && desc.Values.TryGetValue(PostgresUtils.IdentityType, out var type))
-                {
-                    identityType = Convert.ToString(type);
-                }
-
-                var identityDetails = string.Empty;
-                if (desc != null)
-                {
-                    identityDetails = BuildIdentitySequenceDetails(desc);
-                }
-
-                var identityFullDesc = $"GENERATED {identityType} AS IDENTITY{identityDetails}";
-                dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER {columnName} ADD {identityFullDesc};");
-            }
-            //https://www.postgresql.org/docs/current/sql-altersequence.html
-            string BuildIdentitySequenceDetails(IdentityDescriptor desc, bool includeBrackets = true, string ownedBy = default)
-            {
-                var items = new List<string>();
-                if (desc.IncrementBy != null)
-                {
-                    items.Add($"INCREMENT BY {desc.IncrementBy}");
-                }
-                if (desc.MinValue != null)
-                {
-                    items.Add($"MINVALUE {desc.MinValue}");
-                }
-                if (desc.MaxValue != null)
-                {
-                    items.Add($"MAXVALUE {desc.MaxValue}");
-                }
-                if (desc.StartValue != null)
-                {
-                    items.Add($"START WITH {desc.StartValue}");
-                }
-                if (desc.IsCyclic == true)
-                {
-                    items.Add("CYCLE");
-                }
-                if (desc.Values.TryGetValue(PostgresUtils.IdentityNumbersToCache, out var cache))
-                {
-                    items.Add($"CACHE {cache}");
-                }
-                if (!string.IsNullOrEmpty(ownedBy))
-                {
-                    items.Add($"OWNED BY {ownedBy}");
-                }
-                if (items.Count > 0)
-                {
-                    return includeBrackets ? $"({string.Join(" ", items)})" : string.Join(" ", items);
-                }
-                else
-                {
-                    return string.Empty;
-                }
-            }
-
             void AddDefaultValues()
             {
                 foreach (var table in databaseDescriptor.Tables)

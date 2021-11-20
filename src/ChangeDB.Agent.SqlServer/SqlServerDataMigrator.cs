@@ -62,5 +62,44 @@ namespace ChangeDB.Agent.SqlServer
             }
             return dic;
         }
+
+        public Task BeforeWriteData(DatabaseDescriptor databaseDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task AfterWriteData(DatabaseDescriptor databaseDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task BeforeWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        {
+            var tableFullName = SqlServerUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
+            if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
+            {
+                connection.ExecuteNonQuery($"set identity_insert {tableFullName} off");
+
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public Task AfterWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        {
+            if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
+            {
+                var tableFullName = SqlServerUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
+                connection.ExecuteNonQuery($"set identity_insert {tableFullName} on");
+
+                tableDescriptor.Columns.Where(p => p.IdentityInfo.CurrentValue != null)
+                    .ForEach((column) =>
+                    {
+                        connection.ExecuteNonQuery($"dbcc checkident ({tableFullName}, reseed, {column.IdentityInfo.CurrentValue})");
+                    });
+            }
+
+            return Task.CompletedTask;
+        }
     }
 }

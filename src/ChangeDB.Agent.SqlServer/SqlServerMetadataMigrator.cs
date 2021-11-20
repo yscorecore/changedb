@@ -98,7 +98,8 @@ namespace ChangeDB.Agent.SqlServer
                     {
                         var columnName = SqlServerUtils.IdentityName(column.Name);
                         var isPrimaryKey = table.PrimaryKey?.Columns?.Contains(column.Name) ?? false;
-                        if (!column.IsNullable && !isPrimaryKey)
+
+                        if (column.IdentityInfo == null && !column.IsNullable && !isPrimaryKey)
                         {
                             dbConnection.ExecuteNonQuery($"alter table {tableFullName} alter column {columnName} {column.StoreType} not null");
                         }

@@ -69,6 +69,14 @@ namespace ChangeDB.Agent.SqlCe
             return dic;
         }
 
+        public Task BeforeWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        {
+            throw new System.NotImplementedException();
+        }
 
+        public Task AfterWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

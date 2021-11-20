@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
@@ -15,12 +16,11 @@ namespace ChangeDB.Default
     {
         private readonly IAgentFactory _agentFactory;
 
-        private readonly ILogger<DefaultMigrator> _logger;
-        public DefaultMigrator(IAgentFactory agentFactory, ILogger<DefaultMigrator> logger)
+        public DefaultMigrator(IAgentFactory agentFactory)
         {
             _agentFactory = agentFactory;
-            _logger = logger;
         }
+        private static Action<string> Log = Console.WriteLine;
         public async Task MigrateDatabase(MigrationContext context)
         {
             var sourceAgent = _agentFactory.CreateAgent(context.SourceDatabase.Type);
@@ -28,43 +28,60 @@ namespace ChangeDB.Default
             using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
             using var targetConnection = targetAgent.CreateConnection(context.TargetDatabase.ConnectionString);
 
-            _logger.LogInformation("start geting source database metadata.");
+            Log("start geting source database metadata.");
             var sourceDatabaseDescriptor =
                 await sourceAgent.MetadataMigrator.GetDatabaseDescriptor(sourceConnection, context.Setting);
             var targetDatabaseDescriptor = ConvertToTargetDatabaseDescriptor(sourceDatabaseDescriptor, context, sourceAgent, targetAgent);
+
+
+
+            var source = new MigrationDataInfo
+            {
+                Agent = sourceAgent,
+                Connection = sourceConnection,
+                Descriptor = sourceDatabaseDescriptor,
+            };
+            var target = new MigrationDataInfo
+            {
+                Agent = targetAgent,
+                Connection = targetConnection,
+                Descriptor = targetDatabaseDescriptor
+            };
+
             // do migrate
             await CreateEmptyTargetDatabase(context, targetAgent, targetConnection);
 
             if (context.Setting.IncludeMeta)
             {
-                _logger.LogInformation("Start pre migration metadata.");
+                Log("Start pre migration metadata.");
                 await targetAgent.MetadataMigrator.PreMigrate(targetDatabaseDescriptor, targetConnection, context.Setting);
             }
 
             if (context.Setting.IncludeData)
             {
-                _logger.LogInformation("start migrating data.");
-                await MigrationData(sourceAgent, targetAgent, sourceDatabaseDescriptor, context, sourceConnection, targetConnection);
-                _logger.LogInformation("all data migration completed.");
+                Log("start migrating data.");
+                await MigrationData(source, target, context);
+
+                Log("all data migration completed.");
             }
 
             if (context.Setting.IncludeMeta)
             {
-                _logger.LogInformation("Start post migration metadata.");
+                Log("Start post migration metadata.");
                 await targetAgent.MetadataMigrator.PostMigrate(targetDatabaseDescriptor, targetConnection, context.Setting);
 
             }
-            _logger.LogInformation("migration succeeded.");
+            Log("migration succeeded.");
         }
 
         private async Task CreateEmptyTargetDatabase(MigrationContext context, IMigrationAgent targetAgent, DbConnection targetConnection)
         {
             if (context.Setting.DropTargetDatabaseIfExists)
             {
-                _logger.LogInformation("dropping target database if exists.");
+                Log("dropping target database if exists.");
                 await targetAgent.DatabaseManger.DropDatabaseIfExists(targetConnection, context.Setting);
             }
-            _logger.LogInformation("creating target database.");
+            Log("creating target database.");
             await targetAgent.DatabaseManger.CreateDatabase(targetConnection, context.Setting);
         }
 
@@ -170,23 +187,26 @@ namespace ChangeDB.Default
                 }
             }
         }
-
-
-        protected virtual async Task MigrationData(IMigrationAgent source, IMigrationAgent target, DatabaseDescriptor database, MigrationContext context, DbConnection sourceConnection, DbConnection targetConnection)
+        protected virtual async Task MigrationData(MigrationDataInfo source, MigrationDataInfo target, MigrationContext context)
         {
-            
-            foreach (var tableDesc in database.Tables)
+            foreach (var sourceTable in source.Descriptor.Tables)
             {
-                var tableName = string.IsNullOrEmpty(tableDesc.Schema) ? tableDesc.Name : $"{tableDesc.Schema}.{tableDesc.Name}";
-                _logger.LogInformation($"migrating data of table {tableName}.");
-                var totalCount = await source.DataMigrator.CountTable(tableDesc, sourceConnection, context.Setting);
+                var targetTableName = context.Setting.TargetNameStyle.ColumnNameFunc(sourceTable.Name);
+                var targetTableDesc = target.Descriptor.GetTable(targetTableName);
+                await target.Agent.DataMigrator.BeforeWriteTableData(targetTableDesc, target.Connection, context.Setting);
+                //var tableName = string.IsNullOrEmpty(sourceTable.Schema) ? sourceTable.Name : $"{sourceTable.Schema}.{sourceTable.Name}";
+                //_logger.LogInformation($"migrating data of table {tableName}.");
+                var totalCount = await source.Agent.DataMigrator.CountTable(sourceTable, source.Connection, context.Setting);
                 var migratedCount = 0;
                 while (true)
                 {
                     var pageInfo = new PageInfo { Offset = migratedCount, Limit = context.Setting.MaxPageSize };
-                    var sourceTableData = await source.DataMigrator.ReadTableData(tableDesc, pageInfo, sourceConnection, context.Setting);
-                    await target.DataMigrator.WriteTableData(sourceTableData, tableDesc, targetConnection, context.Setting);
-                    if (sourceTableData.Rows.Count < context.Setting.MaxPageSize)
+                    var sourceTableData = await source.Agent.DataMigrator.ReadTableData(sourceTable, pageInfo, source.Connection, context.Setting);
+
+                    var targetTableData = UseNamingRules(sourceTableData, context.Setting.TargetNameStyle.ColumnNameFunc);
+
+                    await target.Agent.DataMigrator.WriteTableData(targetTableData, targetTableDesc, target.Connection, context.Setting);
+                    if (sourceTableData.Rows.Count < pageInfo.Limit)
                     {
                         // end of table
                         break;
@@ -196,7 +216,25 @@ namespace ChangeDB.Default
                         migratedCount += sourceTableData.Rows.Count;
                     }
                 }
+                await target.Agent.DataMigrator.AfterWriteTableData(targetTableDesc, target.Connection, context.Setting);
             }
+
+        }
+        private static DataTable UseNamingRules(DataTable table, Func<string, string> columnNamingFunc)
+        {
+            foreach (DataColumn column in table.Columns)
+            {
+                column.ColumnName = columnNamingFunc(column.ColumnName);
+            }
+            return table;
+        }
+
+
+        protected record MigrationDataInfo
+        {
+            public IMigrationAgent Agent { get; init; }
+            public DatabaseDescriptor Descriptor { get; init; }
+            public DbConnection Connection { get; init; }
         }
 
     }

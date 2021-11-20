@@ -24,6 +24,9 @@ namespace ChangeDB.Agent.Postgres
     {
         public const string IdentityNumbersToCache = "Npgsql::IdentityNumbersToCache";
         public const string IdentityType = "Npgsql::IdentityType";
+        public const string IDENTITY_BYDEFAULT = "BY DEFAULT";
+        public const string IDENTITY_ALWAYS = "ALWAYS";
+
         public static string IdentityName(string objectName)
         {
             _ = objectName ?? throw new ArgumentNullException(nameof(objectName));
@@ -178,12 +181,12 @@ namespace ChangeDB.Agent.Postgres
                 identityType = string.Empty;
                 if (npgsqlIdentityStrategy == NpgsqlValueGenerationStrategy.IdentityAlwaysColumn)
                 {
-                    identityType = "ALWAYS";
+                    identityType = IDENTITY_ALWAYS;
                     return true;
                 }
                 else if (npgsqlIdentityStrategy == NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 {
-                    identityType = "BY DEFAULT";
+                    identityType = IDENTITY_BYDEFAULT;
                     return true;
                 }
                 else
