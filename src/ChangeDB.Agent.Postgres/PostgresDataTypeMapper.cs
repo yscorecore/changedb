@@ -78,10 +78,10 @@ namespace ChangeDB.Agent.Postgres
             return dataType.DbType switch
             {
                 CommonDataType.Boolean => "boolean",
-                CommonDataType.Varchar => $"varchar({dataType.Arg1})",
-                CommonDataType.Char => $"char({dataType.Arg1})",
-                CommonDataType.NVarchar => $"varchar({dataType.Arg1})",
-                CommonDataType.NChar => $"char({dataType.Arg1})",
+                CommonDataType.Varchar => $"CHARACTER VARYING({dataType.Arg1})",
+                CommonDataType.Char => $"CHARACTER({dataType.Arg1})",
+                CommonDataType.NVarchar => $"CHARACTER VARYING({dataType.Arg1})",
+                CommonDataType.NChar => $"CHARACTER({dataType.Arg1})",
                 CommonDataType.Uuid => "uuid",
                 CommonDataType.Float => "real",
                 CommonDataType.Double => "float",

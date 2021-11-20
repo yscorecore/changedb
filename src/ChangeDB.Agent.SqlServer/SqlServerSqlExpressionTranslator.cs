@@ -9,7 +9,7 @@ namespace ChangeDB.Agent.SqlServer
     public class SqlServerSqlExpressionTranslator : ISqlExpressionTranslator
     {
         public static readonly ISqlExpressionTranslator Default = new SqlServerSqlExpressionTranslator();
-        public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression)
+        public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
         {
             var trimmedExpression = TrimBrackets(sqlExpression);
             if (string.IsNullOrEmpty(trimmedExpression))
@@ -24,6 +24,11 @@ namespace ChangeDB.Agent.SqlServer
                     "newid" => new SqlExpressionDescriptor { Function = Function.Uuid },
                     _ => new SqlExpressionDescriptor { Expression = trimmedExpression }
                 };
+            }
+            if (context.StoreType.ToLower() == "bit" && Regex.IsMatch(trimmedExpression, @"^\d+$"))
+            {
+                var val = Convert.ToBoolean(int.Parse(trimmedExpression));
+                return new SqlExpressionDescriptor { Expression = val.ToString().ToLowerInvariant() };
             }
             return new SqlExpressionDescriptor { Expression = trimmedExpression };
         }
@@ -59,7 +64,7 @@ namespace ChangeDB.Agent.SqlServer
             ["true"] = "1",
             ["false"] = "0"
         };
-        public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression)
+        public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
             if (sqlExpression.Function != null)
             {

@@ -36,10 +36,13 @@ namespace ChangeDB.Agent.Postgres
         [InlineData("'00:00:00'::interval", null, "'00:00:00'")]
         [InlineData("'00000000-0000-0000-0000-000000000000'::uuid", null, "'00000000-0000-0000-0000-000000000000'")]
         [InlineData("'0'::numeric", null, "'0'")]
+        [InlineData("0.0::numeric(19,4)", null, "0.0")]
+        [InlineData("0.1::numeric(19)", null, "0.1")]
+        [InlineData("'1900-01-01 00:00:00'::timestamp(3) without time zone ", null, "'1900-01-01 00:00:00'")]
 
         public void ShouldMapToCommonSqlExpression(string storedSql, Function? function, string expression)
         {
-            sqlTranslator.ToCommonSqlExpression(storedSql)
+            sqlTranslator.ToCommonSqlExpression(storedSql,new SqlExpressionTranslatorContext { })
                 .Should().BeEquivalentTo(new SqlExpressionDescriptor { Function = function, Expression = expression });
         }
         [Theory]
@@ -51,8 +54,9 @@ namespace ChangeDB.Agent.Postgres
         [InlineData(null, "'abc'", "'abc'")]
         public void ShouldMapFromCommonSqlExpression(Function? function, string expression, string storedSql)
         {
+            var sourceSqlExpression = new SqlExpressionDescriptor { Function = function, Expression = expression };
             var targetSqlExpression = sqlTranslator
-                 .FromCommonSqlExpression(new SqlExpressionDescriptor { Function = function, Expression = expression });
+                 .FromCommonSqlExpression(sourceSqlExpression,new SqlExpressionTranslatorContext { });
             targetSqlExpression.Should().Be(storedSql);
             Action executeExpression = () => _dbConnection.ExecuteScalar($"select {targetSqlExpression}");
             executeExpression.Should().NotThrow();

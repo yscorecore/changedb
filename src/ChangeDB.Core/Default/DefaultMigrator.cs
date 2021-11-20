@@ -53,7 +53,7 @@ namespace ChangeDB.Default
 
             if (context.Setting.IncludeMeta)
             {
-                Log("Start pre migration metadata.");
+                Log("start pre migration metadata.");
                 await targetAgent.MetadataMigrator.PreMigrate(targetDatabaseDescriptor, targetConnection, context.Setting);
             }
 
@@ -67,7 +67,7 @@ namespace ChangeDB.Default
 
             if (context.Setting.IncludeMeta)
             {
-                Log("Start post migration metadata.");
+                Log("start post migration metadata.");
                 await targetAgent.MetadataMigrator.PostMigrate(targetDatabaseDescriptor, targetConnection, context.Setting);
 
             }
@@ -85,32 +85,68 @@ namespace ChangeDB.Default
             await targetAgent.DatabaseManger.CreateDatabase(targetConnection, context.Setting);
         }
 
-        private DatabaseDescriptor ConvertToTargetDatabaseDescriptor(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext, IMigrationAgent sourceAgent, IMigrationAgent targetAgent)
+        private DatabaseDescriptor ConvertToTargetDatabaseDescriptor(DatabaseDescriptor sourceDatabaseDescriptor, MigrationContext migrationContext, IMigrationAgent sourceAgent, IMigrationAgent targetAgent)
         {
-            var sameDatabaseType = string.Equals(migrationContext.SourceDatabase?.Type, migrationContext.TargetDatabase?.Type, StringComparison.InvariantCultureIgnoreCase);
-            var clonedDescriptor = databaseDescriptor.DeepClone();
+            var clonedDescriptor = sourceDatabaseDescriptor.DeepClone();
             // TODO apply filter
             ApplyNamingRules();
-            ConvertDataTypes();
-            TranslateSqlExpressions();
+            ConvertDataTypeAndExpressions();
+
             return clonedDescriptor;
 
-            void ConvertDataTypes()
+            void ConvertDataTypeAndExpressions()
             {
-                if (!sameDatabaseType)
+                // the same database type
+                if (string.Equals(migrationContext.SourceDatabase?.Type, migrationContext.TargetDatabase?.Type, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    clonedDescriptor.Tables.SelectMany(p => p.Columns).ForEach(column =>
-                    {
-                        var commonType = sourceAgent.DataTypeMapper.ToCommonDatabaseType(column.StoreType);
-                        column.StoreType = targetAgent.DataTypeMapper.ToDatabaseStoreType(commonType);
-                    });
+                    return;
+                }
+                ConvertTableDataTypeAndExpression();
+                ConvertSequenceDataType();
 
-                    clonedDescriptor.Sequences.ForEach(sequence =>
+                void ConvertSequenceDataType()
+                {
+                    foreach (var sequence in clonedDescriptor.Sequences)
                     {
                         var commonType = sourceAgent.DataTypeMapper.ToCommonDatabaseType(sequence.StoreType);
                         sequence.StoreType = targetAgent.DataTypeMapper.ToDatabaseStoreType(commonType);
-                    });
+                    }
                 }
+                void ConvertTableDataTypeAndExpression()
+                {
+                    foreach (var table in clonedDescriptor.Tables)
+                    {
+                        foreach (var column in table.Columns)
+                        {
+                            var sourceDataType = column.StoreType;
+                            var commonType = sourceAgent.DataTypeMapper.ToCommonDatabaseType(sourceDataType);
+                            var targetDataType = targetAgent.DataTypeMapper.ToDatabaseStoreType(commonType);
+
+                            column.StoreType = targetDataType;
+
+                            var sourceContext = new SqlExpressionTranslatorContext
+                            {
+                                StoreType = sourceDataType
+                            };
+
+                            var targetContext = new SqlExpressionTranslatorContext
+                            {
+                                StoreType = targetDataType
+                            };
+                            if (!string.IsNullOrEmpty(column.DefaultValueSql))
+                            {
+                                var commonExpression = sourceAgent.ExpressionTranslator.ToCommonSqlExpression(column.DefaultValueSql, sourceContext);
+                                column.DefaultValueSql = targetAgent.ExpressionTranslator.FromCommonSqlExpression(commonExpression, targetContext);
+                            }
+                            if (!string.IsNullOrEmpty(column.ComputedColumnSql))
+                            {
+                                var commonExpression = sourceAgent.ExpressionTranslator.ToCommonSqlExpression(column.DefaultValueSql, sourceContext);
+                                column.ComputedColumnSql = targetAgent.ExpressionTranslator.FromCommonSqlExpression(commonExpression, targetContext);
+                            }
+                        }
+                    }
+                }
+
             }
 
             void ApplyNamingRules()
@@ -127,7 +163,7 @@ namespace ChangeDB.Default
                 foreach (var table in clonedDescriptor.Tables)
                 {
                     table.Schema = schemaConvertFunc(table.Schema);
-                    table.Name = schemaConvertFunc(table.Name);
+                    table.Name = tableConvertFunc(table.Name);
 
                     foreach (var column in table.Columns)
                     {
@@ -165,36 +201,15 @@ namespace ChangeDB.Default
                 }
 
             }
-
-            void TranslateSqlExpressions()
-            {
-                if (!sameDatabaseType)
-                {
-                    clonedDescriptor.Tables.SelectMany(p => p.Columns)
-                        .ForEach(column =>
-                    {
-                        if (!string.IsNullOrEmpty(column.DefaultValueSql))
-                        {
-                            var commonExpression = sourceAgent.ExpressionTranslator.ToCommonSqlExpression(column.DefaultValueSql);
-                            column.DefaultValueSql = targetAgent.ExpressionTranslator.FromCommonSqlExpression(commonExpression);
-                        }
-                        if (!string.IsNullOrEmpty(column.ComputedColumnSql))
-                        {
-                            var commonExpression = sourceAgent.ExpressionTranslator.ToCommonSqlExpression(column.ComputedColumnSql);
-                            column.ComputedColumnSql = targetAgent.ExpressionTranslator.FromCommonSqlExpression(commonExpression);
-                        }
-                    });
-                }
-            }
         }
         protected virtual async Task MigrationData(MigrationDataInfo source, MigrationDataInfo target, MigrationContext context)
         {
             foreach (var sourceTable in source.Descriptor.Tables)
             {
-                var targetTableName = context.Setting.TargetNameStyle.ColumnNameFunc(sourceTable.Name);
+                var targetTableName = context.Setting.TargetNameStyle.TableNameFunc(sourceTable.Name);
                 var targetTableDesc = target.Descriptor.GetTable(targetTableName);
                 await target.Agent.DataMigrator.BeforeWriteTableData(targetTableDesc, target.Connection, context.Setting);
-                //var tableName = string.IsNullOrEmpty(sourceTable.Schema) ? sourceTable.Name : $"{sourceTable.Schema}.{sourceTable.Name}";
+                var tableName = string.IsNullOrEmpty(sourceTable.Schema) ? sourceTable.Name : $"{sourceTable.Schema}.{sourceTable.Name}";
                 //_logger.LogInformation($"migrating data of table {tableName}.");
                 var totalCount = await source.Agent.DataMigrator.CountTable(sourceTable, source.Connection, context.Setting);
                 var migratedCount = 0;
@@ -206,14 +221,20 @@ namespace ChangeDB.Default
                     var targetTableData = UseNamingRules(sourceTableData, context.Setting.TargetNameStyle.ColumnNameFunc);
 
                     await target.Agent.DataMigrator.WriteTableData(targetTableData, targetTableDesc, target.Connection, context.Setting);
+                   
+
+                    migratedCount += sourceTableData.Rows.Count;
+                    Log($"migrating table [{tableName}] ......{migratedCount * 1.0 / totalCount:p2}.");
                     if (sourceTableData.Rows.Count < pageInfo.Limit)
                     {
                         // end of table
+                        Console.SetCursorPosition(0, Console.CursorTop - 1);
+                        Log($"data of table [{tableName}] migration succeeded.");
                         break;
                     }
                     else
                     {
-                        migratedCount += sourceTableData.Rows.Count;
+                        Console.SetCursorPosition(0, Console.CursorTop - 1);
                     }
                 }
                 await target.Agent.DataMigrator.AfterWriteTableData(targetTableDesc, target.Connection, context.Setting);

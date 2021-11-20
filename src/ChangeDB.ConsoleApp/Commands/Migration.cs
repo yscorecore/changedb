@@ -30,7 +30,8 @@ namespace ChangeDB.ConsoleApp.Commands
                 Setting = new MigrationSetting()
                 {
                     DropTargetDatabaseIfExists = true,
-                    TargetNameStyle = new TargetNameStyle { NameStyle = NameStyle.Upper }
+                    MaxPageSize = 50,
+                    TargetNameStyle = new TargetNameStyle { NameStyle = NameStyle.Lower, TableNameStyle = NameStyle.Original }
                 },
                 SourceDatabase = new DatabaseInfo { Type = SourceType, ConnectionString = SourceConnectionString },
                 TargetDatabase = new DatabaseInfo { Type = TargetType, ConnectionString = TargetConnectionString }

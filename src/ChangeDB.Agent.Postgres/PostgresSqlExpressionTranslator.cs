@@ -14,7 +14,14 @@ namespace ChangeDB.Agent.Postgres
 
         public static readonly ISqlExpressionTranslator Default = new PostgresSqlExpressionTranslator();
 
-        public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression)
+        private static Func<string, string, string> CastType = (expression, type) => $"({expression})::{type}";
+
+        public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
+        {
+            return FromCommonSqlExpressionInternal(sqlExpression, context);
+            //return CastType(internalExpression, context.StoreType);
+        }
+        private string FromCommonSqlExpressionInternal(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
             if (sqlExpression.Function.HasValue)
             {
@@ -22,6 +29,7 @@ namespace ChangeDB.Agent.Postgres
                 {
                     Function.Uuid => "gen_random_uuid()",
                     Function.Now => "now()",
+                    _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
                 };
             }
             else
@@ -33,13 +41,14 @@ namespace ChangeDB.Agent.Postgres
 
         }
 
+
         private static readonly Dictionary<string, SqlExpressionDescriptor> KeyWordsMap =
             new Dictionary<string, SqlExpressionDescriptor>(StringComparer.InvariantCultureIgnoreCase)
             {
                 ["true"] = new SqlExpressionDescriptor { Expression = "1" },
                 ["false"] = new SqlExpressionDescriptor { Expression = "0" },
             };
-        public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression)
+        public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
         {
             if (string.IsNullOrEmpty(sqlExpression))
             {
@@ -72,7 +81,7 @@ namespace ChangeDB.Agent.Postgres
 
         private string ReplaceTypeConvert(string sqlExpression)
         {
-            return Regex.Replace(sqlExpression, @"::(\w+)(\s+(\w+))*", "");
+            return Regex.Replace(sqlExpression, @"::(\w+)(\(\d+\)|\(\d+,\s*\d+\))?(\s+(\w+))*", "");
         }
 
         private bool IsEmptyArgumentFunction(string expression, out string functionName)
@@ -87,5 +96,7 @@ namespace ChangeDB.Agent.Postgres
             functionName = match.Groups["func"].Value;
             return match.Success;
         }
+
+
     }
 }
