@@ -19,7 +19,17 @@ namespace ChangeDB.Agent.SqlCe
 
         }
 
+        public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
+        {
+            throw new NotImplementedException();
+        }
+
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
         {
             throw new NotImplementedException();
         }

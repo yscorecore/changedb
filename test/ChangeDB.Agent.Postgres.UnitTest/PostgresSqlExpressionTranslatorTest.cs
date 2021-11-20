@@ -42,7 +42,7 @@ namespace ChangeDB.Agent.Postgres
 
         public void ShouldMapToCommonSqlExpression(string storedSql, Function? function, string expression)
         {
-            sqlTranslator.ToCommonSqlExpression(storedSql,new SqlExpressionTranslatorContext { })
+            sqlTranslator.ToCommonSqlExpression(storedSql, new SqlExpressionTranslatorContext { })
                 .Should().BeEquivalentTo(new SqlExpressionDescriptor { Function = function, Expression = expression });
         }
         [Theory]
@@ -56,7 +56,7 @@ namespace ChangeDB.Agent.Postgres
         {
             var sourceSqlExpression = new SqlExpressionDescriptor { Function = function, Expression = expression };
             var targetSqlExpression = sqlTranslator
-                 .FromCommonSqlExpression(sourceSqlExpression,new SqlExpressionTranslatorContext { });
+                 .FromCommonSqlExpression(sourceSqlExpression, new SqlExpressionTranslatorContext { });
             targetSqlExpression.Should().Be(storedSql);
             Action executeExpression = () => _dbConnection.ExecuteScalar($"select {targetSqlExpression}");
             executeExpression.Should().NotThrow();

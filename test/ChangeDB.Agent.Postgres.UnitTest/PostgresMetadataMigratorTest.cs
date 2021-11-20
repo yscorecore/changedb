@@ -1056,7 +1056,7 @@ namespace ChangeDB.Agent.Postgres
             var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             var expectedDatabaseDesc = databaseDesc.DeepCloneAndSet(desc =>
             {
-                desc.Tables.SelectMany(p => p.Columns).Select(p => p.IdentityInfo.Values).ForEach(dic => { dic[PostgresUtils.IdentityType] = "ALWAYS"; });
+                desc.Tables.SelectMany(p => p.Columns).Select(p => p.IdentityInfo.Values).Each(dic => { dic[PostgresUtils.IdentityType] = "ALWAYS"; });
             });
             actualDatabaseDesc.Should().BeEquivalentTo(expectedDatabaseDesc);
         }

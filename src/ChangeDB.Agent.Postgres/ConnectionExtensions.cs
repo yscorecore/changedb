@@ -54,7 +54,7 @@ namespace ChangeDB.Agent.Postgres
         {
             static bool IsSystemSchema(string schema) => schema.StartsWith("pg_") || schema == "information_schema";
             var allSchemas = connection.ExecuteReaderAsList<string>("select schema_name from information_schema.schemata");
-            allSchemas.Where(p => !IsSystemSchema(p)).ForEach(p => connection.DropSchemaIfExists(p, p != "public"));
+            allSchemas.Where(p => !IsSystemSchema(p)).Each(p => connection.DropSchemaIfExists(p, p != "public"));
         }
 
         private static void DropSchemaIfExists(this DbConnection connection, string schema, bool dropSchema = true)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 
@@ -152,7 +153,8 @@ namespace ChangeDB.Agent.SqlServer
                         if (!string.IsNullOrEmpty(column.DefaultValueSql) && !isPrimaryKey)
                         {
                             var columnName = SqlServerUtils.IdentityName(column.Name);
-                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD CONSTRAINT DF_DEFAULT_{table.Name}_{column.Name} DEFAULT ({column.DefaultValueSql}) FOR {columnName};");
+                            var constraintName = Regex.Replace($"DF_{table.Name}_{column.Name}", "[^a-zA-Z1-9]", "_");
+                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD CONSTRAINT {constraintName} DEFAULT ({column.DefaultValueSql}) FOR {columnName};");
                         }
                     }
                 }

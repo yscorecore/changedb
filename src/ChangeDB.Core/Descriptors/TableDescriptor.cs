@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace ChangeDB
 {
-    public class TableDescriptor
+    public class TableDescriptor : INameObject
     {
         public string Name { get; set; }
         public string Comment { get; set; }

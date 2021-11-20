@@ -2,7 +2,7 @@
 
 namespace ChangeDB
 {
-    public class ForeignKeyDescriptor
+    public class ForeignKeyDescriptor : INameObject
     {
 
         public string Name { get; set; }

@@ -62,10 +62,10 @@ namespace ChangeDB.Migration
         public Func<string, string> ColumnNameFunc { get => NameStyleToFunc(ColumnNameStyle ?? NameStyle); }
         public Func<string, string> SequenceNameFunc { get => NameStyleToFunc(SequenceNameStyle ?? NameStyle); }
 
-        public Func<string, string> IndexNameFunc { get => NameStyleToFunc(IndexNameStyle ?? NameStyle).Then(AppendRandomNumbers); }
-        public Func<string, string> ForeignKeyNameFunc { get => NameStyleToFunc(ForeignKeyNameStyle ?? NameStyle).Then(AppendRandomNumbers); }
-        public Func<string, string> UniqueNameFunc { get => NameStyleToFunc(UniqueNameStyle ?? NameStyle).Then(AppendRandomNumbers); }
-        public Func<string, string> PrimaryKeyNameFunc { get => NameStyleToFunc(PrimaryKeyNameStyle ?? NameStyle).Then(AppendRandomNumbers); }
+        public Func<string, string> IndexNameFunc { get => NameStyleToFunc(IndexNameStyle ?? NameStyle); }
+        public Func<string, string> ForeignKeyNameFunc { get => NameStyleToFunc(ForeignKeyNameStyle ?? NameStyle); }
+        public Func<string, string> UniqueNameFunc { get => NameStyleToFunc(UniqueNameStyle ?? NameStyle); }
+        public Func<string, string> PrimaryKeyNameFunc { get => NameStyleToFunc(PrimaryKeyNameStyle ?? NameStyle); }
 
         private static Func<string, string> NameStyleToFunc(NameStyle nameStyle)
         {
@@ -77,18 +77,7 @@ namespace ChangeDB.Migration
             };
         }
 
-        private string AppendRandomNumbers(string name)
-        {
-            if (KeepOriginalConstraintName)
-            {
-                return name;
-            }
-            if (!Regex.IsMatch(name, @"\d{5}$"))
-            {
-                return $"{name}_{Random.Next(99999):d5}";
-            }
-            return name;
-        }
+
     }
     public static class DelegateExtensions
     {

@@ -36,7 +36,7 @@ namespace ChangeDB.Agent.SqlServer
 
         public void ShouldMapToCommonSqlExpression(string storedSql, Function? function, string expression)
         {
-            sqlTranslator.ToCommonSqlExpression(storedSql,new SqlExpressionTranslatorContext { })
+            sqlTranslator.ToCommonSqlExpression(storedSql, new SqlExpressionTranslatorContext { })
                 .Should().BeEquivalentTo(new SqlExpressionDescriptor { Function = function, Expression = expression });
         }
         [Theory]

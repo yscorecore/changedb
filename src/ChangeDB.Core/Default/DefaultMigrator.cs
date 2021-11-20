@@ -87,8 +87,10 @@ namespace ChangeDB.Default
 
         private DatabaseDescriptor ConvertToTargetDatabaseDescriptor(DatabaseDescriptor sourceDatabaseDescriptor, MigrationContext migrationContext, IMigrationAgent sourceAgent, IMigrationAgent targetAgent)
         {
+            var isSameDbType = string.Equals(migrationContext.SourceDatabase?.Type, migrationContext.TargetDatabase?.Type, StringComparison.InvariantCultureIgnoreCase);
             var clonedDescriptor = sourceDatabaseDescriptor.DeepClone();
             // TODO apply filter
+            FixDuplicateObjectName();
             ApplyNamingRules();
             ConvertDataTypeAndExpressions();
 
@@ -97,7 +99,7 @@ namespace ChangeDB.Default
             void ConvertDataTypeAndExpressions()
             {
                 // the same database type
-                if (string.Equals(migrationContext.SourceDatabase?.Type, migrationContext.TargetDatabase?.Type, StringComparison.InvariantCultureIgnoreCase))
+                if (isSameDbType)
                 {
                     return;
                 }
@@ -146,6 +148,41 @@ namespace ChangeDB.Default
                         }
                     }
                 }
+
+            }
+
+            void FixDuplicateObjectName()
+            {
+                if (isSameDbType)
+                {
+                    return;
+                }
+                var objectDics = clonedDescriptor.Tables.ToDictionary(p => ObjectCacheName(p.Schema, p.Name), p => new List<INameObject>());
+                foreach (var table in clonedDescriptor.Tables)
+                {
+                    table.PrimaryKey.DoIfNotNull(p => AppendObject(table.Schema, p));
+                    table.Uniques.Each(p => AppendObject(table.Schema, p));
+                    table.ForeignKeys.Each(p => AppendObject(table.Schema, p));
+                    table.Indexes.Each(p => AppendObject(table.Schema, p));
+                }
+                objectDics.Values.Each(p => p.Each((t, i) => { t.Name = $"{t.Name}_{i + 1}"; }));
+                void AppendObject(string schema, INameObject nameObject)
+                {
+                    if (string.IsNullOrEmpty(nameObject?.Name))
+                    {   // don't handle empty name
+                        return;
+                    }
+                    var cacheKey = ObjectCacheName(schema, nameObject.Name);
+                    if (objectDics.ContainsKey(cacheKey))
+                    {
+                        objectDics[cacheKey].Add(nameObject);
+                    }
+                    else
+                    {
+                        objectDics[cacheKey] = new List<INameObject>();
+                    }
+                }
+                string ObjectCacheName(string schema, string name) => $"{schema}___{name}";
 
             }
 
@@ -221,7 +258,7 @@ namespace ChangeDB.Default
                     var targetTableData = UseNamingRules(sourceTableData, context.Setting.TargetNameStyle.ColumnNameFunc);
 
                     await target.Agent.DataMigrator.WriteTableData(targetTableData, targetTableDesc, target.Connection, context.Setting);
-                   
+
 
                     migratedCount += sourceTableData.Rows.Count;
                     Log($"migrating table [{tableName}] ......{migratedCount * 1.0 / totalCount:p2}.");

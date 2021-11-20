@@ -92,16 +92,6 @@ namespace ChangeDB.Agent.Postgres
             return dic;
         }
 
-        public Task BeforeWriteData(DatabaseDescriptor databaseDescriptor, DbConnection connection, MigrationSetting migrationSetting)
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task AfterWriteData(DatabaseDescriptor databaseDescriptor, DbConnection connection, MigrationSetting migrationSetting)
-        {
-            return Task.CompletedTask;
-        }
-
         public Task BeforeWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationSetting migrationSetting)
         {
             return Task.CompletedTask;

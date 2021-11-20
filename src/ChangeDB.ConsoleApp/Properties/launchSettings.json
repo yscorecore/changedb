@@ -1,8 +1,16 @@
 {
-  "profiles": {
-    "ChangeDB.ConsoleApp": {
-      "commandName": "Project",
-      "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" "
+    "profiles": {
+        "mssql_postgres": {
+            "commandName": "Project",
+            "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" "
+        },
+        "mssql_mssql": {
+            "commandName": "Project",
+            "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" sqlserver \"Server=127.0.0.1,1433;Database=Northwind2;User Id=sa;Password=myStrong(!)Password;\""
+        },
+        "postgres_mssql": {
+            "commandName": "Project",
+            "commandLineArgs": "migration postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" sqlserver \"Server=127.0.0.1,1433;Database=Northwind3;User Id=sa;Password=myStrong(!)Password;\""
+        }
     }
-  }
 }

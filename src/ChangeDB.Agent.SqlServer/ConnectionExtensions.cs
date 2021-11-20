@@ -45,7 +45,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             static bool IsSystemSchema(string schema) => schema.StartsWith("pg_") || schema == "information_schema";
             var allSchemas = connection.ExecuteReaderAsList<string>("select schema_name from information_schema.schemata where schema_owner = 'dbo'");
-            allSchemas.Where(p => !IsSystemSchema(p)).ForEach(p => connection.DropSchemaIfExists(p, p != "dbo"));
+            allSchemas.Where(p => !IsSystemSchema(p)).Each(p => connection.DropSchemaIfExists(p, p != "dbo"));
         }
         private static DbConnection CreateNoDatabaseConnection(IDbConnection connection)
         {

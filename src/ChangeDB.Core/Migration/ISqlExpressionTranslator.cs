@@ -17,7 +17,7 @@ namespace ChangeDB.Migration
     {
         public string StoreType { get; set; }
 
-        public string DatabaseVersion { get;set; }
-        
+        public string DatabaseVersion { get; set; }
+
     }
 }
