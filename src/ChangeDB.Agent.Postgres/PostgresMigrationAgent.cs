@@ -1,11 +1,9 @@
 ﻿using System.Data.Common;
 using ChangeDB.Migration;
-using YS.Knife;
 
 namespace ChangeDB.Agent.Postgres
 {
-    [DictionaryKey("postgres")]
-    [Service]
+    [Service(typeof(IMigrationAgent), Name = "postgres")]
     public class PostgresMigrationAgent : IMigrationAgent
     {
         public IDataMigrator DataMigrator { get => PostgresDataMigrator.Default; }

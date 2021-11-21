@@ -6,12 +6,12 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ChangeDB.Core\ChangeDB.Core.csproj" />
+      <ProjectReference Include="..\ChangeDB.Frame\ChangeDB.Frame.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Npgsql" Version="5.0.10" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.10" />
-      <PackageReference Include="YS.Knife.Core" Version="2.0.2" />
     </ItemGroup>
 
 </Project>

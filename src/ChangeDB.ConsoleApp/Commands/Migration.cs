@@ -14,11 +14,13 @@ namespace ChangeDB.ConsoleApp.Commands
     {
         [Value(1, MetaName = "source-dbtype", Required = true, HelpText = "source database type.")]
         public string SourceType { get; set; }
+
         [Value(2, MetaName = "source-connection", Required = true, HelpText = "source database connection strings")]
         public string SourceConnectionString { get; set; }
 
         [Value(3, MetaName = "target-dbtype", Required = true, HelpText = "target database type.")]
         public string TargetType { get; set; }
+
         [Value(4, MetaName = "target-connection", Required = true, HelpText = "target database connection strings")]
         public string TargetConnectionString { get; set; }
 
@@ -33,7 +35,9 @@ namespace ChangeDB.ConsoleApp.Commands
         public NameStyle TableNameStyle { get; set; } = NameStyle.Original;
         public int Run()
         {
-            var service = ServiceHost.Default.GetRequiredService<IDatabaseMigrate>();
+            var serviceHost = ServiceHost.Default;
+            var serviceProvider = serviceHost.ServiceCollection.BuildServiceProvider();
+            var service = serviceProvider.GetService<IDatabaseMigrate>();
             var task = service.MigrateDatabase(new MigrationContext
             {
                 Setting = new MigrationSetting()

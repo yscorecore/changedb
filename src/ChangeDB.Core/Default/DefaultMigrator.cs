@@ -7,15 +7,14 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
-using Microsoft.Extensions.Logging;
-using YS.Knife;
+
 
 namespace ChangeDB.Default
 {
-    [Service]
+    [Service(typeof(IDatabaseMigrate))]
     public class DefaultMigrator : IDatabaseMigrate
     {
-        
+
         private readonly IAgentFactory _agentFactory;
 
         public DefaultMigrator(IAgentFactory agentFactory)
@@ -263,7 +262,7 @@ namespace ChangeDB.Default
                     await target.Agent.DataMigrator.WriteTableData(targetTableData, targetTableDesc, target.Connection, context.Setting);
 
                     fetchCount = CalcNextFetchCount(targetTableData, fetchCount);
-                   
+
                     migratedCount += sourceTableData.Rows.Count;
                     Log($"migrating table {tableName} ......{migratedCount * 1.0 / totalCount:p2}.");
                     if (sourceTableData.Rows.Count < pageInfo.Limit)
@@ -296,10 +295,10 @@ namespace ChangeDB.Default
                 }
                 return (int)Math.Floor(avgFetchCount);
             }
-          
-            
 
-           
+
+
+
 
         }
         private static DataTable UseNamingRules(DataTable table, Func<string, string> columnNamingFunc)

@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
-using YS.Knife;
 
 namespace ChangeDB.Default
 {
-    [Service]
+    [Service(typeof(IAgentFactory))]
     public class DefaultAgentFactory : IAgentFactory
     {
         private readonly IDictionary<string, IMigrationAgent> allMigrators;

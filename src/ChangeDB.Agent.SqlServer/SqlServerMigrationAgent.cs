@@ -1,12 +1,11 @@
 ﻿using System.Data.Common;
 using ChangeDB.Migration;
 using Microsoft.Data.SqlClient;
-using YS.Knife;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    [DictionaryKey("sqlserver")]
-    [Service]
+
+    [Service(typeof(IMigrationAgent), Name = "sqlserver")]
     public class SqlServerMigrationAgent : IMigrationAgent
     {
         public IDataMigrator DataMigrator { get => SqlServerDataMigrator.Default; }
