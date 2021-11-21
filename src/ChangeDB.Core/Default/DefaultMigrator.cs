@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
@@ -14,6 +15,7 @@ namespace ChangeDB.Default
     [Service]
     public class DefaultMigrator : IDatabaseMigrate
     {
+        
         private readonly IAgentFactory _agentFactory;
 
         public DefaultMigrator(IAgentFactory agentFactory)
@@ -246,27 +248,29 @@ namespace ChangeDB.Default
                 var targetTableName = context.Setting.TargetNameStyle.TableNameFunc(sourceTable.Name);
                 var targetTableDesc = target.Descriptor.GetTable(targetTableName);
                 await target.Agent.DataMigrator.BeforeWriteTableData(targetTableDesc, target.Connection, context.Setting);
-                var tableName = string.IsNullOrEmpty(sourceTable.Schema) ? sourceTable.Name : $"{sourceTable.Schema}.{sourceTable.Name}";
-                //_logger.LogInformation($"migrating data of table {tableName}.");
+                var tableName = string.IsNullOrEmpty(sourceTable.Schema) ? sourceTable.Name : $"\"{sourceTable.Schema}\".\"{sourceTable.Name}\"";
                 var totalCount = await source.Agent.DataMigrator.CountTable(sourceTable, source.Connection, context.Setting);
                 var migratedCount = 0;
+                var fetchCount = 1;
                 while (true)
                 {
-                    var pageInfo = new PageInfo { Offset = migratedCount, Limit = context.Setting.MaxPageSize };
+                    //Console.WriteLine($"fetchcount {fetchCount}.");
+                    var pageInfo = new PageInfo { Offset = migratedCount, Limit = fetchCount };
                     var sourceTableData = await source.Agent.DataMigrator.ReadTableData(sourceTable, pageInfo, source.Connection, context.Setting);
 
                     var targetTableData = UseNamingRules(sourceTableData, context.Setting.TargetNameStyle.ColumnNameFunc);
 
                     await target.Agent.DataMigrator.WriteTableData(targetTableData, targetTableDesc, target.Connection, context.Setting);
 
-
+                    fetchCount = CalcNextFetchCount(targetTableData, fetchCount);
+                   
                     migratedCount += sourceTableData.Rows.Count;
-                    Log($"migrating table [{tableName}] ......{migratedCount * 1.0 / totalCount:p2}.");
+                    Log($"migrating table {tableName} ......{migratedCount * 1.0 / totalCount:p2}.");
                     if (sourceTableData.Rows.Count < pageInfo.Limit)
                     {
                         // end of table
                         Console.SetCursorPosition(0, Console.CursorTop - 1);
-                        Log($"data of table [{tableName}] migration succeeded.");
+                        Log($"data of table {tableName} migration succeeded.");
                         break;
                     }
                     else
@@ -276,6 +280,26 @@ namespace ChangeDB.Default
                 }
                 await target.Agent.DataMigrator.AfterWriteTableData(targetTableDesc, target.Connection, context.Setting);
             }
+            int CalcNextFetchCount(DataTable dataTable, int lastCount)
+            {
+                if (dataTable.Rows.Count < 1) return 1;
+                var totalRowSize = dataTable.TotalSize();
+                var avgRowSize = totalRowSize * 1.0 / dataTable.Rows.Count;
+                var avgFetchCount = context.Setting.FetchDataMaxSize / avgRowSize;
+                if (avgFetchCount < 1)
+                {
+                    return 1;
+                }
+                if (avgFetchCount > lastCount * 10)
+                {
+                    return lastCount * 10;
+                }
+                return (int)Math.Floor(avgFetchCount);
+            }
+          
+            
+
+           
 
         }
         private static DataTable UseNamingRules(DataTable table, Func<string, string> columnNamingFunc)

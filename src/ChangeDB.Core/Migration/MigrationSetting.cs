@@ -6,7 +6,7 @@ namespace ChangeDB.Migration
 {
     public class MigrationSetting
     {
-        public int MaxPageSize { get; set; } = 10000;
+        public int FetchDataMaxSize { get; set; } = 1024 * 10;
         public MigrationType MigrationType { get; set; } = MigrationType.All;
         public bool DropTargetDatabaseIfExists { get; set; } = true;
         public SourceFilter SourceFilter { get; set; } = new SourceFilter();

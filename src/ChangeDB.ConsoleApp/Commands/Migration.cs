@@ -22,6 +22,15 @@ namespace ChangeDB.ConsoleApp.Commands
         [Value(4, MetaName = "target-connection", Required = true, HelpText = "target database connection strings")]
         public string TargetConnectionString { get; set; }
 
+
+        [Option('f', "force", HelpText = "drop target database if exists")]
+        public bool DropTargetDatabaseIfExists { get; set; } = false;
+
+        [Option("schema-only", HelpText = "only migrate schema (true/false)")]
+        public bool SchemaOnly { get; set; } = false;
+
+        [Option("table-name-style", HelpText = "target table name style (Original/Lower/Upper).")]
+        public NameStyle TableNameStyle { get; set; } = NameStyle.Original;
         public int Run()
         {
             var service = ServiceHost.Default.GetRequiredService<IDatabaseMigrate>();
@@ -29,9 +38,12 @@ namespace ChangeDB.ConsoleApp.Commands
             {
                 Setting = new MigrationSetting()
                 {
-                    DropTargetDatabaseIfExists = true,
-                    MaxPageSize = 500,
-                    // TargetNameStyle = new TargetNameStyle { NameStyle = NameStyle.Lower, TableNameStyle = NameStyle.Original }
+                    MigrationType = SchemaOnly ? MigrationType.MetaData : MigrationType.All,
+                    DropTargetDatabaseIfExists = DropTargetDatabaseIfExists,
+                    TargetNameStyle = new TargetNameStyle
+                    {
+                        TableNameStyle = TableNameStyle
+                    }
                 },
                 SourceDatabase = new DatabaseInfo { Type = SourceType, ConnectionString = SourceConnectionString },
                 TargetDatabase = new DatabaseInfo { Type = TargetType, ConnectionString = TargetConnectionString }
