@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net5</TargetFrameworks>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>changedb</ToolCommandName>
   </PropertyGroup>
 
   <ItemGroup>

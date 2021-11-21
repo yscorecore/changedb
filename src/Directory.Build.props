@@ -1,9 +1,9 @@
 <Project>
     <PropertyGroup>
-        <TargetFrameworks>net5</TargetFrameworks>
+        <TargetFrameworks>net5;net6</TargetFrameworks>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <Authors>Pengbo Yang</Authors>
-        <Product>YS.Knife</Product>
+        <Product>ChangeDB</Product>
         <PackageIcon>icon.png</PackageIcon>
         <RepositoryType>git</RepositoryType>
         <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
