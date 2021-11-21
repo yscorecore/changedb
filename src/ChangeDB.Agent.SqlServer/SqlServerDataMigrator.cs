@@ -10,7 +10,7 @@ namespace ChangeDB.Agent.SqlServer
     public class SqlServerDataMigrator : IDataMigrator
     {
         public static readonly IDataMigrator Default = new SqlServerDataMigrator();
-        private static string BuildTableName(TableDescriptor table) => $"[{table.Schema}].[{table.Name}]";
+        private static string BuildTableName(TableDescriptor table) => SqlServerUtils.IdentityName(table.Schema,table.Name);
         private static string BuildColumnNames(IEnumerable<string> names) => string.Join(",", names.Select(p => $"[{p}]"));
         private static string BuildColumnNames(TableDescriptor table) =>
             BuildColumnNames(table.Columns.Select(p => p.Name));

@@ -14,6 +14,35 @@ namespace ChangeDB.Agent.SqlCe
 {
     internal class SqlCeUtils
     {
+        public static string IdentityName(string objectName)
+        {
+            _ = objectName ?? throw new ArgumentNullException(nameof(objectName));
+
+            return $"[{objectName}]";
+
+        }
+        public static string IdentityName(string schema, string objectName)
+        {
+            if (string.IsNullOrEmpty(schema))
+            {
+                return IdentityName(objectName);
+            }
+            else
+            {
+                return $"{IdentityName(schema)}.{IdentityName(objectName)}";
+            }
+        }
+        public static string IdentityName(string schema, string objectName, string subObjectName)
+        {
+            if (string.IsNullOrEmpty(schema))
+            {
+                return IdentityName(objectName, subObjectName);
+            }
+            else
+            {
+                return $"{IdentityName(schema)}.{IdentityName(objectName)}.{IdentityName(subObjectName)}";
+            }
+        }
 
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
         {

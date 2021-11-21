@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ChangeDB.Agent.Postgres\ChangeDB.Agent.Postgres.csproj" />
+    <ProjectReference Include="..\ChangeDB.Agent.SqlCe\ChangeDB.Agent.SqlCe.csproj" />
     <ProjectReference Include="..\ChangeDB.Agent.SqlServer\ChangeDB.Agent.SqlServer.csproj" />
   </ItemGroup>
 
