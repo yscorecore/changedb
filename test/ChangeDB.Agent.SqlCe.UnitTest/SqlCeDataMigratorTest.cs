@@ -23,7 +23,7 @@ namespace ChangeDB.Agent.SqlCe
         {
             _dbConnection = databaseEnvironment.DbConnection;
             _dbConnection.ExecuteNonQuery(
-             
+
                "create table table1(id int primary key,nm nvarchar(64));",
                "insert into table1(id,nm) values(1,'name1');",
                "insert into table1(id,nm) values(2,'name2');",

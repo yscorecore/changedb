@@ -15,17 +15,7 @@ namespace ChangeDB.Agent.SqlCe
     public class SqlCeMetadataMigrator : IMetadataMigrator
     {
         public static readonly IMetadataMigrator Default = new SqlCeMetadataMigrator();
-        public Task DropDatabaseIfExists(DbConnection connection, MigrationSetting migrationSetting)
-        {
-            connection.DropDatabaseIfExists();
-            return Task.CompletedTask;
-        }
-
-        public Task CreateDatabase(DbConnection connection, MigrationSetting migrationSetting)
-        {
-            connection.CreateDatabase();
-            return Task.CompletedTask;
-        }
+      
 
         public Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection dbConnection, MigrationSetting migrationSetting)
         {

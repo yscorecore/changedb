@@ -2,14 +2,13 @@
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
-using ChangeDB.Agent.SqlCe.EFCore.SqlServerCompact;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 using Microsoft.Extensions.Logging;
-
+using ChangeDB.Agent.SqlCe.EFCore.SqlServerCompact;
 namespace ChangeDB.Agent.SqlCe
 {
     internal class SqlCeUtils
@@ -47,8 +46,8 @@ namespace ChangeDB.Agent.SqlCe
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
         {
             var loggerFactory = new LoggerFactory();
-
-            var databaseModelFactory = new SqlCeDatabaseModelFactory();
+            
+           var databaseModelFactory = new SqlCeDatabaseModelFactory();
             var options = new DatabaseModelFactoryOptions();
             var model = databaseModelFactory.Create(dbConnection, options);
             return FromDatabaseModel(model, dbConnection);
@@ -115,7 +114,7 @@ namespace ChangeDB.Agent.SqlCe
                     ComputedColumnSql = column.ComputedColumnSql,
                     DefaultValueSql = column.DefaultValueSql,
                     Name = column.Name,
-                    IsStored = (bool)column.IsStored,
+                    IsStored = column.IsStored??false,
                     IsNullable = column.IsNullable,
                     StoreType = column.StoreType,
                 };

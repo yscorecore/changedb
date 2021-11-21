@@ -25,7 +25,7 @@ namespace ChangeDB.Agent.SqlServer
                     _ => new SqlExpressionDescriptor { Expression = trimmedExpression }
                 };
             }
-            if (context.StoreType.ToLower() == "bit" && Regex.IsMatch(trimmedExpression, @"^\d+$"))
+            if (context.StoreType?.ToLower() == "bit" && Regex.IsMatch(trimmedExpression, @"^\d+$"))
             {
                 var val = Convert.ToBoolean(int.Parse(trimmedExpression));
                 return new SqlExpressionDescriptor { Expression = val.ToString().ToLowerInvariant() };
