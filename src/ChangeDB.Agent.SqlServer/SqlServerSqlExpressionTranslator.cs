@@ -22,15 +22,15 @@ namespace ChangeDB.Agent.SqlServer
                 {
                     "getdate" => new SqlExpressionDescriptor { Function = Function.Now },
                     "newid" => new SqlExpressionDescriptor { Function = Function.Uuid },
-                    _ => new SqlExpressionDescriptor { Expression = trimmedExpression }
+                    _ => new SqlExpressionDescriptor { Constant = trimmedExpression }
                 };
             }
             if (context.StoreType?.ToLower() == "bit" && Regex.IsMatch(trimmedExpression, @"^\d+$"))
             {
                 var val = Convert.ToBoolean(int.Parse(trimmedExpression));
-                return new SqlExpressionDescriptor { Expression = val.ToString().ToLowerInvariant() };
+                return new SqlExpressionDescriptor { Constant = val.ToString().ToLowerInvariant() };
             }
-            return new SqlExpressionDescriptor { Expression = trimmedExpression };
+            return new SqlExpressionDescriptor { Constant = trimmedExpression };
         }
 
         private string TrimBrackets(string sqlExpression)
@@ -77,12 +77,12 @@ namespace ChangeDB.Agent.SqlServer
             }
             else
             {
-                if (KeywordMapper.TryGetValue(sqlExpression.Expression ?? string.Empty, out var mappedExpression))
+                if (KeywordMapper.TryGetValue(sqlExpression.Constant ?? string.Empty, out var mappedExpression))
                 {
                     return mappedExpression;
                 }
                 // TODO Need to handle complex expression
-                return sqlExpression.Expression;
+                return sqlExpression.Constant;
             }
         }
     }

@@ -985,6 +985,48 @@ namespace ChangeDB.Agent.Postgres
             var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
+        
+        [Fact]
+        public async Task ShouldMapAlwaysIdentityWhenMigrateMetadataAndStartValueLessThan1()
+        {
+            var databaseDesc = new DatabaseDescriptor()
+            {
+                Tables = new List<TableDescriptor>
+                {
+                    new TableDescriptor
+                    {
+                        Schema="ts",
+                        Name="table1",
+                        Columns =new List<ColumnDescriptor>
+                        {
+                            new ColumnDescriptor
+                            {
+                                Name="id", StoreType = "bigint", IsIdentity =true,
+                                IdentityInfo = new IdentityDescriptor
+                                {
+                                    IsCyclic =false,
+                                    StartValue = -5,
+                                    Values = new Dictionary<string, object>
+                                    {
+                                        [PostgresUtils.IdentityType]="ALWAYS",
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var expectDatabaseDesc = databaseDesc.DeepClone().DoIfNotNull(p => p.Tables.SelectMany(t => t.Columns).Each(
+                c =>
+                {
+                    
+                    c.IdentityInfo.MinValue = -5;
+                }));
+            actualDatabaseDesc.Should().BeEquivalentTo(expectDatabaseDesc);
+        }
+        
         [Fact]
         public async Task ShouldMapIdentityWhenMigrateMetadataAndWithFullArguments()
         {

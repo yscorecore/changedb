@@ -36,7 +36,7 @@ namespace ChangeDB.Agent.Postgres
             {
 
                 // TODO handle expression
-                return sqlExpression.Expression;
+                return sqlExpression.Constant;
             }
 
         }
@@ -45,14 +45,14 @@ namespace ChangeDB.Agent.Postgres
         private static readonly Dictionary<string, SqlExpressionDescriptor> KeyWordsMap =
             new Dictionary<string, SqlExpressionDescriptor>(StringComparer.InvariantCultureIgnoreCase)
             {
-                ["true"] = new SqlExpressionDescriptor { Expression = "1" },
-                ["false"] = new SqlExpressionDescriptor { Expression = "0" },
+                ["true"] = new SqlExpressionDescriptor { Constant = "1" },
+                ["false"] = new SqlExpressionDescriptor { Constant = "0" },
             };
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
         {
             if (string.IsNullOrEmpty(sqlExpression))
             {
-                return new SqlExpressionDescriptor { Expression = sqlExpression };
+                return new SqlExpressionDescriptor { Constant = sqlExpression };
             }
 
             if (KeyWordsMap.TryGetValue(sqlExpression, out var mappedDesc))
@@ -72,11 +72,11 @@ namespace ChangeDB.Agent.Postgres
                 {
                     "now" => new SqlExpressionDescriptor { Function = Function.Now },
                     "gen_random_uuid" => new SqlExpressionDescriptor { Function = Function.Uuid },
-                    _ => new SqlExpressionDescriptor { Expression = sqlExpression }
+                    _ => new SqlExpressionDescriptor { Constant = sqlExpression }
                 };
             }
 
-            return new SqlExpressionDescriptor { Expression = sqlExpression };
+            return new SqlExpressionDescriptor { Constant = sqlExpression };
         }
 
         private string ReplaceTypeConvert(string sqlExpression)

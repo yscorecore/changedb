@@ -37,7 +37,7 @@ namespace ChangeDB.Agent.SqlServer
         public void ShouldMapToCommonSqlExpression(string storedSql, Function? function, string expression)
         {
             sqlTranslator.ToCommonSqlExpression(storedSql, new SqlExpressionTranslatorContext { })
-                .Should().BeEquivalentTo(new SqlExpressionDescriptor { Function = function, Expression = expression });
+                .Should().BeEquivalentTo(new SqlExpressionDescriptor { Function = function, Constant = expression });
         }
         [Theory]
         [InlineData(Function.Now, null, "getdate()")]
@@ -48,7 +48,7 @@ namespace ChangeDB.Agent.SqlServer
         [InlineData(null, "'abc'", "'abc'")]
         public void ShouldMapFromCommonSqlExpression(Function? function, string expression, string storedSql)
         {
-            var sourceSqlExpression = new SqlExpressionDescriptor { Function = function, Expression = expression };
+            var sourceSqlExpression = new SqlExpressionDescriptor { Function = function, Constant = expression };
             var targetSqlExpression = sqlTranslator
                  .FromCommonSqlExpression(sourceSqlExpression, new SqlExpressionTranslatorContext { });
             targetSqlExpression.Should().Be(storedSql);
