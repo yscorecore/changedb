@@ -24,284 +24,149 @@ namespace ChangeDB.Default
         private static Action<string> Log = Console.WriteLine;
         public async Task MigrateDatabase(MigrationContext context)
         {
-            var sourceAgent = _agentFactory.CreateAgent(context.SourceDatabase.Type);
-            var targetAgent = _agentFactory.CreateAgent(context.TargetDatabase.Type);
+            var sourceAgent = _agentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
+            var targetAgent = _agentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
             using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
             using var targetConnection = targetAgent.CreateConnection(context.TargetDatabase.ConnectionString);
 
-            Log("start geting source database metadata.");
-            var sourceDatabaseDescriptor =
-                await sourceAgent.MetadataMigrator.GetDatabaseDescriptor(sourceConnection, context.Setting);
-            var targetDatabaseDescriptor = ConvertToTargetDatabaseDescriptor(sourceDatabaseDescriptor, context, sourceAgent, targetAgent);
+            var sourceDatabaseDescriptor = await GetSourceDatabaseDescriptor(sourceAgent, sourceConnection, context.Setting);
 
-
-
-            var source = new MigrationDataInfo
+            var source = new AgentRunTimeInfo
             {
                 Agent = sourceAgent,
+                DatabaseType = context.SourceDatabase.DatabaseType,
                 Connection = sourceConnection,
                 Descriptor = sourceDatabaseDescriptor,
             };
-            var target = new MigrationDataInfo
+            var target = new AgentRunTimeInfo
             {
                 Agent = targetAgent,
+                DatabaseType = context.TargetDatabase.DatabaseType,
                 Connection = targetConnection,
-                Descriptor = targetDatabaseDescriptor
+                Descriptor = sourceDatabaseDescriptor.DeepClone(),
             };
+            await ApplyMigrationSettings(source, target, context.Setting);
 
-            // do migrate
-            await CreateEmptyTargetDatabase(context, targetAgent, targetConnection);
+            await DoMigrateDatabase(source, target, context.Setting);
 
-            if (context.Setting.IncludeMeta)
-            {
-                Log("start pre migration metadata.");
-                await targetAgent.MetadataMigrator.PreMigrate(targetDatabaseDescriptor, targetConnection, context.Setting);
-            }
 
-            if (context.Setting.IncludeData)
-            {
-                Log("start migrating data.");
-                await MigrationData(source, target, context);
-
-                Log("all data migration completed.");
-            }
-
-            if (context.Setting.IncludeMeta)
-            {
-                Log("start post migration metadata.");
-                await targetAgent.MetadataMigrator.PostMigrate(targetDatabaseDescriptor, targetConnection, context.Setting);
-
-            }
             Log("migration succeeded.");
+
+        }
+        private async Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(IMigrationAgent sourceAgent, DbConnection sourceConnection, MigrationSetting migrationSetting)
+        {
+            Log("start geting source database metadata.");
+            return await sourceAgent.MetadataMigrator.GetDatabaseDescriptor(sourceConnection, migrationSetting);
         }
 
-        private async Task CreateEmptyTargetDatabase(MigrationContext context, IMigrationAgent targetAgent, DbConnection targetConnection)
+        private Task ApplyMigrationSettings(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
-            if (context.Setting.DropTargetDatabaseIfExists)
+            MigrationSettingsApplier.ApplySettingForTarget(source, target, migrationSetting);
+            return Task.CompletedTask;
+        }
+        private async Task DoMigrateDatabase(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        {
+            await CreateTargetDatabase(target.Agent, target.Connection, migrationSetting);
+
+            if (migrationSetting.IncludeMeta)
+            {
+                await PreMigrationMetadata(target, migrationSetting);
+            }
+
+            if (migrationSetting.IncludeData)
+            {
+
+                await MigrationData(source, target, migrationSetting);
+            }
+
+            if (migrationSetting.IncludeMeta)
+            {
+                await PostMigrationMetadata(target, migrationSetting);
+            }
+        }
+        private async Task CreateTargetDatabase(IMigrationAgent targetAgent, DbConnection targetConnection, MigrationSetting migrationSetting)
+        {
+            if (migrationSetting.DropTargetDatabaseIfExists)
             {
                 Log("dropping target database if exists.");
-                await targetAgent.DatabaseManger.DropDatabaseIfExists(targetConnection, context.Setting);
+                await targetAgent.DatabaseManger.DropDatabaseIfExists(targetConnection, migrationSetting);
             }
             Log("creating target database.");
-            await targetAgent.DatabaseManger.CreateDatabase(targetConnection, context.Setting);
+            await targetAgent.DatabaseManger.CreateDatabase(targetConnection, migrationSetting);
         }
-
-        private DatabaseDescriptor ConvertToTargetDatabaseDescriptor(DatabaseDescriptor sourceDatabaseDescriptor, MigrationContext migrationContext, IMigrationAgent sourceAgent, IMigrationAgent targetAgent)
+        private async Task PreMigrationMetadata(AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
-            var isSameDbType = string.Equals(migrationContext.SourceDatabase?.Type, migrationContext.TargetDatabase?.Type, StringComparison.InvariantCultureIgnoreCase);
-            var clonedDescriptor = sourceDatabaseDescriptor.DeepClone();
-            // TODO apply filter
-            FixDuplicateObjectName();
-            ApplyNamingRules();
-            ConvertDataTypeAndExpressions();
-
-            return clonedDescriptor;
-
-            void ConvertDataTypeAndExpressions()
-            {
-                // the same database type
-                if (isSameDbType)
-                {
-                    return;
-                }
-                ConvertTableDataTypeAndExpression();
-                ConvertSequenceDataType();
-
-                void ConvertSequenceDataType()
-                {
-                    foreach (var sequence in clonedDescriptor.Sequences)
-                    {
-                        var commonType = sourceAgent.DataTypeMapper.ToCommonDatabaseType(sequence.StoreType);
-                        sequence.StoreType = targetAgent.DataTypeMapper.ToDatabaseStoreType(commonType);
-                    }
-                }
-                void ConvertTableDataTypeAndExpression()
-                {
-                    foreach (var table in clonedDescriptor.Tables)
-                    {
-                        foreach (var column in table.Columns)
-                        {
-                            var sourceDataType = column.StoreType;
-                            var commonType = sourceAgent.DataTypeMapper.ToCommonDatabaseType(sourceDataType);
-                            var targetDataType = targetAgent.DataTypeMapper.ToDatabaseStoreType(commonType);
-
-                            column.StoreType = targetDataType;
-
-                            var sourceContext = new SqlExpressionTranslatorContext
-                            {
-                                StoreType = sourceDataType
-                            };
-
-                            var targetContext = new SqlExpressionTranslatorContext
-                            {
-                                StoreType = targetDataType
-                            };
-                            if (!string.IsNullOrEmpty(column.DefaultValueSql))
-                            {
-                                var commonExpression = sourceAgent.ExpressionTranslator.ToCommonSqlExpression(column.DefaultValueSql, sourceContext);
-                                column.DefaultValueSql = targetAgent.ExpressionTranslator.FromCommonSqlExpression(commonExpression, targetContext);
-                            }
-                            if (!string.IsNullOrEmpty(column.ComputedColumnSql))
-                            {
-                                var commonExpression = sourceAgent.ExpressionTranslator.ToCommonSqlExpression(column.DefaultValueSql, sourceContext);
-                                column.ComputedColumnSql = targetAgent.ExpressionTranslator.FromCommonSqlExpression(commonExpression, targetContext);
-                            }
-                        }
-                    }
-                }
-
-            }
-
-            void FixDuplicateObjectName()
-            {
-                if (isSameDbType)
-                {
-                    return;
-                }
-                var objectDics = clonedDescriptor.Tables.ToDictionary(p => ObjectCacheName(p.Schema, p.Name), p => new List<INameObject>());
-                foreach (var table in clonedDescriptor.Tables)
-                {
-                    table.PrimaryKey.DoIfNotNull(p => AppendObject(table.Schema, p));
-                    table.Uniques.Each(p => AppendObject(table.Schema, p));
-                    table.ForeignKeys.Each(p => AppendObject(table.Schema, p));
-                    table.Indexes.Each(p => AppendObject(table.Schema, p));
-                }
-                objectDics.Values.Each(p => p.Each((t, i) => { t.Name = $"{t.Name}_{i + 1}"; }));
-                void AppendObject(string schema, INameObject nameObject)
-                {
-                    if (string.IsNullOrEmpty(nameObject?.Name))
-                    {   // don't handle empty name
-                        return;
-                    }
-                    var cacheKey = ObjectCacheName(schema, nameObject.Name);
-                    if (objectDics.ContainsKey(cacheKey))
-                    {
-                        objectDics[cacheKey].Add(nameObject);
-                    }
-                    else
-                    {
-                        objectDics[cacheKey] = new List<INameObject>();
-                    }
-                }
-                string ObjectCacheName(string schema, string name) => $"{schema}___{name}";
-
-            }
-
-            void ApplyNamingRules()
-            {
-                var nameStyle = migrationContext.Setting.TargetNameStyle;
-                Func<string, string> columnConvertFunc = nameStyle.ColumnNameFunc;
-                Func<string, string> tableConvertFunc = nameStyle.TableNameFunc;
-                Func<string, string> schemaConvertFunc = nameStyle.SchemaNameFunc;
-                Func<string, string> sequenceConvertFunc = nameStyle.SequenceNameFunc;
-                Func<string, string> indexConvertFunc = nameStyle.IndexNameFunc;
-                Func<string, string> uniqueConvertFunc = nameStyle.UniqueNameFunc;
-                Func<string, string> foreignKeyConvertFunc = nameStyle.ForeignKeyNameFunc;
-                Func<string, string> primaryKeyConvertFunc = nameStyle.PrimaryKeyNameFunc;
-                foreach (var table in clonedDescriptor.Tables)
-                {
-                    table.Schema = schemaConvertFunc(table.Schema);
-                    table.Name = tableConvertFunc(table.Name);
-
-                    foreach (var column in table.Columns)
-                    {
-                        column.Name = columnConvertFunc(column.Name);
-                    }
-                    table.PrimaryKey.DoIfNotNull(primaryKey =>
-                    {
-                        primaryKey.Name = primaryKeyConvertFunc(primaryKey.Name);
-                        primaryKey.Columns = primaryKey.Columns.Select(columnConvertFunc).ToList();
-                    });
-
-                    foreach (var index in table.Indexes)
-                    {
-                        index.Name = indexConvertFunc(index.Name);
-                        index.Columns = index.Columns.Select(columnConvertFunc).ToList();
-                    }
-                    foreach (var foreignKey in table.ForeignKeys)
-                    {
-                        foreignKey.Name = foreignKeyConvertFunc(foreignKey.Name);
-                        foreignKey.PrincipalSchema = schemaConvertFunc(foreignKey.PrincipalSchema);
-                        foreignKey.PrincipalTable = tableConvertFunc(foreignKey.PrincipalTable);
-                        foreignKey.ColumnNames = foreignKey.ColumnNames.Select(columnConvertFunc).ToList();
-                        foreignKey.PrincipalNames = foreignKey.PrincipalNames.Select(columnConvertFunc).ToList();
-                    }
-                    foreach (var unique in table.Uniques)
-                    {
-                        unique.Name = uniqueConvertFunc(unique.Name);
-                        unique.Columns = unique.Columns.Select(columnConvertFunc).ToList();
-                    }
-                }
-                foreach (var sequence in clonedDescriptor.Sequences)
-                {
-                    sequence.Schema = schemaConvertFunc(sequence.Schema);
-                    sequence.Name = sequenceConvertFunc(sequence.Name);
-                }
-
-            }
+            Log("start pre migration metadata.");
+            await target.Agent.MetadataMigrator.PreMigrate(target.Descriptor, target.Connection, migrationSetting);
         }
-        protected virtual async Task MigrationData(MigrationDataInfo source, MigrationDataInfo target, MigrationContext context)
+        private async Task PostMigrationMetadata(AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
+            Log("start post migration metadata.");
+            await target.Agent.MetadataMigrator.PostMigrate(target.Descriptor, target.Connection, migrationSetting);
+        }
+        private async Task MigrationData(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        {
+            Log("start migrating data.");
             foreach (var sourceTable in source.Descriptor.Tables)
             {
-                var targetTableName = context.Setting.TargetNameStyle.TableNameFunc(sourceTable.Name);
-                var targetTableDesc = target.Descriptor.GetTable(targetTableName);
-                await target.Agent.DataMigrator.BeforeWriteTableData(targetTableDesc, target.Connection, context.Setting);
-                var tableName = string.IsNullOrEmpty(sourceTable.Schema) ? sourceTable.Name : $"\"{sourceTable.Schema}\".\"{sourceTable.Name}\"";
-                var totalCount = await source.Agent.DataMigrator.CountTable(sourceTable, source.Connection, context.Setting);
-                var migratedCount = 0;
-                var fetchCount = 1;
-                while (true)
-                {
-                    //Console.WriteLine($"fetchcount {fetchCount}.");
-                    var pageInfo = new PageInfo { Offset = migratedCount, Limit = fetchCount };
-                    var sourceTableData = await source.Agent.DataMigrator.ReadTableData(sourceTable, pageInfo, source.Connection, context.Setting);
-
-                    var targetTableData = UseNamingRules(sourceTableData, context.Setting.TargetNameStyle.ColumnNameFunc);
-
-                    await target.Agent.DataMigrator.WriteTableData(targetTableData, targetTableDesc, target.Connection, context.Setting);
-
-                    fetchCount = CalcNextFetchCount(targetTableData, fetchCount);
-
-                    migratedCount += sourceTableData.Rows.Count;
-                    Log($"migrating table {tableName} ......{migratedCount * 1.0 / totalCount:p2}.");
-                    if (sourceTableData.Rows.Count < pageInfo.Limit)
-                    {
-                        // end of table
-                        Console.SetCursorPosition(0, Console.CursorTop - 1);
-                        Log($"data of table {tableName} migration succeeded.");
-                        break;
-                    }
-                    else
-                    {
-                        Console.SetCursorPosition(0, Console.CursorTop - 1);
-                    }
-                }
-                await target.Agent.DataMigrator.AfterWriteTableData(targetTableDesc, target.Connection, context.Setting);
+                await MigrationTable(source, target, migrationSetting, sourceTable);
             }
-            int CalcNextFetchCount(DataTable dataTable, int lastCount)
-            {
-                if (dataTable.Rows.Count < 1) return 1;
-                var totalRowSize = dataTable.TotalSize();
-                var avgRowSize = totalRowSize * 1.0 / dataTable.Rows.Count;
-                var avgFetchCount = context.Setting.FetchDataMaxSize / avgRowSize;
-                if (avgFetchCount < 1)
-                {
-                    return 1;
-                }
-                if (avgFetchCount > lastCount * 10)
-                {
-                    return lastCount * 10;
-                }
-                return (int)Math.Floor(avgFetchCount);
-            }
-
-
-
-
-
         }
-        private static DataTable UseNamingRules(DataTable table, Func<string, string> columnNamingFunc)
+        private async Task MigrationTable(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting, TableDescriptor sourceTable)
+        {
+            var targetTableName = migrationSetting.TargetNameStyle.TableNameFunc(sourceTable.Name);
+            var targetTableDesc = target.Descriptor.GetTable(targetTableName);
+            await target.Agent.DataMigrator.BeforeWriteTableData(targetTableDesc, target.Connection, migrationSetting);
+            var tableName = string.IsNullOrEmpty(sourceTable.Schema) ? sourceTable.Name : $"\"{sourceTable.Schema}\".\"{sourceTable.Name}\"";
+            var totalCount = await source.Agent.DataMigrator.CountTable(sourceTable, source.Connection, migrationSetting);
+            var migratedCount = 0;
+            var fetchCount = 1;
+            while (true)
+            {
+
+                var pageInfo = new PageInfo { Offset = migratedCount, Limit = fetchCount };
+                var sourceTableData = await source.Agent.DataMigrator.ReadTableData(sourceTable, pageInfo, source.Connection, migrationSetting);
+
+                var targetTableData = UseNamingRules(sourceTableData, migrationSetting.TargetNameStyle.ColumnNameFunc);
+
+                await target.Agent.DataMigrator.WriteTableData(targetTableData, targetTableDesc, target.Connection, migrationSetting);
+
+                fetchCount = CalcNextFetchCount(targetTableData, fetchCount, migrationSetting);
+
+                migratedCount += sourceTableData.Rows.Count;
+                Log($"migrating table {tableName} ......{migratedCount * 1.0 / totalCount:p2}.");
+                if (sourceTableData.Rows.Count < pageInfo.Limit)
+                {
+                    // end of table
+                    Console.SetCursorPosition(0, Console.CursorTop - 1);
+                    Log($"data of table {tableName} migration succeeded.");
+                    break;
+                }
+                else
+                {
+                    Console.SetCursorPosition(0, Console.CursorTop - 1);
+                }
+            }
+            await target.Agent.DataMigrator.AfterWriteTableData(targetTableDesc, target.Connection, migrationSetting);
+        }
+        private int CalcNextFetchCount(DataTable dataTable, int lastCount, MigrationSetting migrationSetting)
+        {
+            if (dataTable.Rows.Count < 1) return 1;
+            var totalRowSize = dataTable.TotalSize();
+            var avgRowSize = totalRowSize * 1.0 / dataTable.Rows.Count;
+            var avgFetchCount = migrationSetting.FetchDataMaxSize / avgRowSize;
+            if (avgFetchCount < 1)
+            {
+                return 1;
+            }
+            if (avgFetchCount > lastCount * 10)
+            {
+                return lastCount * 10;
+            }
+            return (int)Math.Floor(avgFetchCount);
+        }
+
+        private DataTable UseNamingRules(DataTable table, Func<string, string> columnNamingFunc)
         {
             foreach (DataColumn column in table.Columns)
             {
@@ -311,12 +176,8 @@ namespace ChangeDB.Default
         }
 
 
-        protected record MigrationDataInfo
-        {
-            public IMigrationAgent Agent { get; init; }
-            public DatabaseDescriptor Descriptor { get; init; }
-            public DbConnection Connection { get; init; }
-        }
+
+
 
     }
 }
