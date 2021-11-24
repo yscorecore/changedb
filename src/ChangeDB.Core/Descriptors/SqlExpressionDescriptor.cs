@@ -10,7 +10,7 @@ namespace ChangeDB.Descriptors
     {
         public Function? Function { get; set; }
 
-        public string Constant { get; set; }
+        public object Constant { get; set; }
     }
     public enum Function
     {

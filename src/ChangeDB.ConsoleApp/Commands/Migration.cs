@@ -49,8 +49,8 @@ namespace ChangeDB.ConsoleApp.Commands
                         TableNameStyle = TableNameStyle
                     }
                 },
-                SourceDatabase = new DatabaseInfo { Type = SourceType, ConnectionString = SourceConnectionString },
-                TargetDatabase = new DatabaseInfo { Type = TargetType, ConnectionString = TargetConnectionString }
+                SourceDatabase = new DatabaseInfo { DatabaseType =  SourceType, ConnectionString = SourceConnectionString },
+                TargetDatabase = new DatabaseInfo { DatabaseType = TargetType, ConnectionString = TargetConnectionString }
             });
             task.Wait();
             return 0;

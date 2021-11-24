@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using ChangeDB.Descriptors;
 using ChangeDB.Migration;
@@ -25,12 +26,11 @@ namespace ChangeDB.Agent.SqlServer
                     _ => new SqlExpressionDescriptor { Constant = trimmedExpression }
                 };
             }
-            if (context.StoreType?.ToLower() == "bit" && Regex.IsMatch(trimmedExpression, @"^\d+$"))
+            else
             {
-                var val = Convert.ToBoolean(int.Parse(trimmedExpression));
-                return new SqlExpressionDescriptor { Constant = val.ToString().ToLowerInvariant() };
+               var value =  context.AgentInfo.Connection.ExecuteScalar($"select cast({trimmedExpression} as {context.StoreType})");
+               return new SqlExpressionDescriptor() {Constant = value};
             }
-            return new SqlExpressionDescriptor { Constant = trimmedExpression };
         }
 
         private string TrimBrackets(string sqlExpression)
@@ -59,14 +59,9 @@ namespace ChangeDB.Agent.SqlServer
             return match.Success;
         }
 
-        private static readonly Dictionary<string, string> KeywordMapper = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
-        {
-            ["true"] = "1",
-            ["false"] = "0"
-        };
         public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
-            if (sqlExpression.Function != null)
+            if (sqlExpression?.Function != null)
             {
                 return sqlExpression.Function.Value switch
                 {
@@ -75,15 +70,55 @@ namespace ChangeDB.Agent.SqlServer
                     _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
                 };
             }
+            if(sqlExpression?.Constant!=null)
+            {
+                return ConstantToSqlExpression(sqlExpression.Constant, context);
+            }
             else
             {
-                if (KeywordMapper.TryGetValue(sqlExpression.Constant ?? string.Empty, out var mappedExpression))
-                {
-                    return mappedExpression;
-                }
-                // TODO Need to handle complex expression
-                return sqlExpression.Constant;
+                return "null";
             }
         }
+
+        private string ConstantToSqlExpression(object constant, SqlExpressionTranslatorContext context)
+        {
+            if (constant is string str)
+            {
+                return Repr(str);
+            }
+            else if(constant is bool)
+            {
+                return Convert.ToInt32(constant).ToString();
+            }
+            else if (constant is double || constant is float || constant is long || constant is int ||
+                     constant is short || constant is char || constant is byte || constant is decimal)
+            {
+                return constant.ToString();
+            }
+            else if(constant is Guid guid)
+            {
+                return $"'{guid}'";
+            }else if (constant is byte[] bytes)
+            {
+                return $"0x{string.Join("", bytes.Select(p => p.ToString("X2")))}";
+            }else if (constant is DateTime dateTime)
+            {
+                return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'";;
+            }else if (constant is DateTimeOffset dateTimeOffset)
+            {
+                return $"'{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}'";
+            }
+            else
+            {
+                return constant.ToString();
+            }
+        }
+
+        private string Repr(string input)
+        {
+            if (input is null) return null;
+            return $"'{input.Replace("'", "''")}'" ;
+        }
+
     }
 }

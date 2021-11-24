@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using ChangeDB.Descriptors;
 using ChangeDB.Migration;
@@ -22,38 +23,96 @@ namespace ChangeDB.Agent.SqlServer
         }
 
         [Theory]
-        [InlineData("(getdate())", Function.Now, null)]
-        [InlineData("((GETDATE( )))", Function.Now, null)]
-        [InlineData("(newid())", Function.Uuid, null)]
-        [InlineData("(((NEWID() )))", Function.Uuid, null)]
-        [InlineData("123", null, "123")]
-        [InlineData("(123)", null, "123")]
-        [InlineData("('abc')", null, "'abc'")]
-        [InlineData("null", null, "null")]
-        [InlineData("(null)", null, "null")]
-        [InlineData("NULL ", null, "NULL")]
-        [InlineData("('')", null, "''")]
 
-        public void ShouldMapToCommonSqlExpression(string storedSql, Function? function, string expression)
+        [ClassData(typeof(MapToCommonSqlExpression))]
+
+        public void ShouldMapToCommonSqlExpression(string sqlExpression, string storeType, SqlExpressionDescriptor sqlExpressionDescriptor)
         {
-            sqlTranslator.ToCommonSqlExpression(storedSql, new SqlExpressionTranslatorContext { })
-                .Should().BeEquivalentTo(new SqlExpressionDescriptor { Function = function, Constant = expression });
+            sqlTranslator.ToCommonSqlExpression(sqlExpression, new SqlExpressionTranslatorContext { StoreType = storeType, AgentInfo = new AgentRunTimeInfo { Connection = _dbConnection } })
+                .Should().BeEquivalentTo(sqlExpressionDescriptor);
         }
         [Theory]
-        [InlineData(Function.Now, null, "getdate()")]
-        [InlineData(Function.Uuid, null, "newid()")]
-        [InlineData(null, "null", "null")]
-        [InlineData(null, "123", "123")]
-        [InlineData(null, "''", "''")]
-        [InlineData(null, "'abc'", "'abc'")]
-        public void ShouldMapFromCommonSqlExpression(Function? function, string expression, string storedSql)
+        [ClassData(typeof(MapFromCommonSqlExpression))]
+        public void ShouldMapFromCommonSqlExpression(SqlExpressionDescriptor sourceSqlExpression, string sqlExpression)
         {
-            var sourceSqlExpression = new SqlExpressionDescriptor { Function = function, Constant = expression };
             var targetSqlExpression = sqlTranslator
-                 .FromCommonSqlExpression(sourceSqlExpression, new SqlExpressionTranslatorContext { });
-            targetSqlExpression.Should().Be(storedSql);
+                 .FromCommonSqlExpression(sourceSqlExpression, new SqlExpressionTranslatorContext { AgentInfo = new AgentRunTimeInfo { Connection = _dbConnection } });
+            targetSqlExpression.Should().Be(sqlExpression);
             Action executeExpression = () => _dbConnection.ExecuteScalar($"select {targetSqlExpression}");
             executeExpression.Should().NotThrow();
+        }
+
+        class MapFromCommonSqlExpression : List<object[]>
+        {
+            public MapFromCommonSqlExpression()
+            {
+                Add(null, "null");
+                Add(new SqlExpressionDescriptor(), "null");
+                Add(new SqlExpressionDescriptor { Function = Function.Now }, "getdate()");
+                Add(new SqlExpressionDescriptor { Function = Function.Uuid }, "newid()");
+                Add(new SqlExpressionDescriptor { Constant = null }, "null");
+                Add(new SqlExpressionDescriptor { Constant = 123 }, "123");
+                Add(new SqlExpressionDescriptor { Constant = 123L }, "123");
+                Add(new SqlExpressionDescriptor { Constant = true }, "1");
+                Add(new SqlExpressionDescriptor { Constant = false }, "0");
+                Add(new SqlExpressionDescriptor { Constant = 123.45 }, "123.45");
+                Add(new SqlExpressionDescriptor { Constant = 123.45M }, "123.45");
+                Add(new SqlExpressionDescriptor { Constant = "" }, "''");
+                Add(new SqlExpressionDescriptor { Constant = "'" }, "''''");
+                Add(new SqlExpressionDescriptor { Constant = "''" }, "''''''");
+                Add(new SqlExpressionDescriptor { Constant = "abc" }, "'abc'");
+                Add(new SqlExpressionDescriptor { Constant = Guid.Empty }, "'00000000-0000-0000-0000-000000000000'");
+                Add(new SqlExpressionDescriptor { Constant = new byte[] { 1, 15 } }, "0x010F");
+                Add(new SqlExpressionDescriptor { Constant = new DateTime(2021, 11, 24, 18, 54, 1) }, "'2021-11-24 18:54:01'");
+                Add(new SqlExpressionDescriptor { Constant = DateTimeOffset.Parse("2021-11-24 18:54:01 +08") }, "'2021-11-24 18:54:01 +08:00'");
+
+
+            }
+
+            private void Add(SqlExpressionDescriptor? descriptor, string targetSqlExpression)
+            {
+                this.Add(new Object[] { descriptor, targetSqlExpression });
+            }
+        }
+
+        class MapToCommonSqlExpression : List<object[]>
+        {
+            public MapToCommonSqlExpression()
+            {
+                Add(null, "int", null);
+                Add("", "int", null);
+                Add("(())", "int", null);
+                Add("(getdate())", "datetime", new SqlExpressionDescriptor() { Function = Function.Now });
+                Add("((GETDATE( )))", "datetime", new SqlExpressionDescriptor() { Function = Function.Now });
+                Add("(newid())", "uniqueidentifier", new SqlExpressionDescriptor() { Function = Function.Uuid });
+                Add("(((NEWID() )))", "uniqueidentifier", new SqlExpressionDescriptor() { Function = Function.Uuid });
+                Add("0", "bit", new SqlExpressionDescriptor() { Constant = false });
+                Add("1", "bit", new SqlExpressionDescriptor() { Constant = true });
+                Add("123", "int", new SqlExpressionDescriptor() { Constant = 123 });
+                Add("(123)", "int", new SqlExpressionDescriptor() { Constant = 123 });
+                Add("(123)", "nvarchar(10)", new SqlExpressionDescriptor() { Constant = "123" });
+                Add("(123)", "bigint", new SqlExpressionDescriptor() { Constant = 123L });
+                Add("(123.45)", "decimal(10,2)", new SqlExpressionDescriptor() { Constant = 123.45m });
+                Add("(123.45)", "float", new SqlExpressionDescriptor() { Constant = 123.45d });
+                Add("null", "nvarchar(10)", new SqlExpressionDescriptor());
+                Add("null", "bigint", new SqlExpressionDescriptor());
+                Add("('123')", "nvarchar(10)", new SqlExpressionDescriptor() { Constant = "123" });
+                Add("('123')", "int", new SqlExpressionDescriptor() { Constant = 123 });
+                Add("('')", "nvarchar(10)", new SqlExpressionDescriptor() { Constant = "" });
+                Add("('''')", "nvarchar(10)", new SqlExpressionDescriptor() { Constant = "'" });
+                Add("('''''')", "nvarchar(10)", new SqlExpressionDescriptor() { Constant = "''" });
+                Add("('00000000-0000-0000-0000-000000000000')", "uniqueidentifier", new SqlExpressionDescriptor() { Constant = Guid.Empty });
+                Add("0", "varbinary(5)", new SqlExpressionDescriptor() { Constant = new Byte[4] });
+                Add("0x1122", "varbinary(5)", new SqlExpressionDescriptor() { Constant = new Byte[] { 0x11, 0x22 } });
+                Add("0x1122", "binary(5)", new SqlExpressionDescriptor() { Constant = new Byte[] { 0x11, 0x22, 0x00, 0x00, 0x00 } });
+                Add("'2021-11-24 18:54:01'", "datetime2", new SqlExpressionDescriptor() { Constant = new DateTime(2021, 11, 24, 18, 54, 1) });
+                Add("'2021-11-24 18:54:01 +08:00'", "datetimeoffset", new SqlExpressionDescriptor() { Constant = DateTimeOffset.Parse("2021-11-24 18:54:01 +08:00") });
+
+            }
+            private void Add(string? sqlExpression, string storeType, SqlExpressionDescriptor? descriptor)
+            {
+                this.Add(new Object[] { sqlExpression, storeType, descriptor });
+            }
         }
     }
 }

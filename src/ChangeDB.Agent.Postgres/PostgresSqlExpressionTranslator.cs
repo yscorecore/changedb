@@ -23,7 +23,7 @@ namespace ChangeDB.Agent.Postgres
         }
         private string FromCommonSqlExpressionInternal(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
-            if (sqlExpression.Function.HasValue)
+            if (sqlExpression?.Function !=null)
             {
                 return sqlExpression.Function.Value switch
                 {
@@ -32,33 +32,69 @@ namespace ChangeDB.Agent.Postgres
                     _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
                 };
             }
-            else
-            {
 
-                // TODO handle expression
-                return sqlExpression.Constant;
+            if (sqlExpression?.Constant != null)
+            {
+                return ConstantToSqlExpression(sqlExpression.Constant, context);
             }
 
+            return "null";
+          
+
+        }
+        private string Repr(string input)
+        {
+            if (input is null) return null;
+            return $"'{input.Replace("'", "''")}'" ;
         }
 
-
-        private static readonly Dictionary<string, SqlExpressionDescriptor> KeyWordsMap =
-            new Dictionary<string, SqlExpressionDescriptor>(StringComparer.InvariantCultureIgnoreCase)
+        private string ConstantToSqlExpression(object constant, SqlExpressionTranslatorContext context)
+        {
+            if (constant is string str)
             {
-                ["true"] = new SqlExpressionDescriptor { Constant = "1" },
-                ["false"] = new SqlExpressionDescriptor { Constant = "0" },
-            };
+                return Repr(str);
+            }
+            else if (constant is double || constant is float || constant is long || constant is int ||
+                     constant is short || constant is char || constant is byte || constant is decimal || constant is bool)
+            {
+                if ("boolean".Equals(context.StoreType, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return Convert.ToBoolean(constant).ToString().ToLowerInvariant();
+                }
+                else
+                {
+                    return constant.ToString();
+                }
+
+               
+            }
+            else if(constant is Guid guid)
+            {
+                return $"'{guid}'::{context.StoreType}";
+            }else if (constant is byte[] bytes)
+            {
+                return $"'\\x{string.Join("", bytes.Select(p => p.ToString("X2")))}'::bytea";
+            }else if (constant is DateTime dateTime)
+            {
+                return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'::{context.StoreType}";;
+            }else if (constant is DateTimeOffset dateTimeOffset)
+            {
+                return $"'{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}'::{context.StoreType}";
+            }
+            else
+            {
+                return constant.ToString();
+            }
+        }
+        
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
         {
             if (string.IsNullOrEmpty(sqlExpression))
             {
-                return new SqlExpressionDescriptor { Constant = sqlExpression };
+                return null;
             }
 
-            if (KeyWordsMap.TryGetValue(sqlExpression, out var mappedDesc))
-            {
-                return mappedDesc;
-            }
+           
 
             sqlExpression = ReplaceTypeConvert(sqlExpression.Trim());
             if (Regex.IsMatch(sqlExpression, @"CURRENT_TIMESTAMP(\(\d\))?", RegexOptions.IgnoreCase))
@@ -76,7 +112,10 @@ namespace ChangeDB.Agent.Postgres
                 };
             }
 
-            return new SqlExpressionDescriptor { Constant = sqlExpression };
+            var val = context.AgentInfo.Connection.ExecuteScalar(
+                $"select cast({sqlExpression} as {context.StoreType})");
+
+            return new SqlExpressionDescriptor { Constant = val };
         }
 
         private string ReplaceTypeConvert(string sqlExpression)
