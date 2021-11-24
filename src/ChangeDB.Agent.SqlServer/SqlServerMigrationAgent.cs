@@ -13,10 +13,8 @@ namespace ChangeDB.Agent.SqlServer
         public IDataTypeMapper DataTypeMapper { get => SqlServerDataTypeMapper.Default; }
         public ISqlExpressionTranslator ExpressionTranslator { get => SqlServerSqlExpressionTranslator.Default; }
         public IDatabaseManager DatabaseManger { get => SqlServerDatabaseManager.Default; }
-
-        public DbConnection CreateConnection(string connectionString)
-        {
-            return new SqlConnection(connectionString);
-        }
+        public AgentSetting AgentSetting { get => new AgentSetting {ObjectNameMaxLength = 128, DefaultSchema = "dbo", SupportSchema = true}; }
+        public DbConnection CreateConnection(string connectionString) => new SqlConnection(connectionString);
+      
     }
 }

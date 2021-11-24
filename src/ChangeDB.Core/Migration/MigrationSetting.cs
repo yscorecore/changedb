@@ -13,6 +13,8 @@ namespace ChangeDB.Migration
         public CustomSqlScripts PostScripts { get; set; } = new CustomSqlScripts();
         public TargetNameStyle TargetNameStyle { get; set; } = new TargetNameStyle();
 
+        public bool FixObjectNameMaxLength { get; set; } = true;
+
         public bool IncludeMeta { get => MigrationType.HasFlag(MigrationType.MetaData); }
         public bool IncludeData { get => MigrationType.HasFlag(MigrationType.MetaData); }
     }

@@ -26,8 +26,8 @@ namespace ChangeDB.Default
         {
             var sourceAgent = _agentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
             var targetAgent = _agentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
-            using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
-            using var targetConnection = targetAgent.CreateConnection(context.TargetDatabase.ConnectionString);
+            await using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
+            await using var targetConnection = targetAgent.CreateConnection(context.TargetDatabase.ConnectionString);
 
             var sourceDatabaseDescriptor = await GetSourceDatabaseDescriptor(sourceAgent, sourceConnection, context.Setting);
 
@@ -46,7 +46,7 @@ namespace ChangeDB.Default
                 Descriptor = sourceDatabaseDescriptor.DeepClone(),
             };
             await ApplyMigrationSettings(source, target, context.Setting);
-
+            await ApplyTargetAgentSettings(target, context.Setting);
             await DoMigrateDatabase(source, target, context.Setting);
 
 
@@ -55,7 +55,7 @@ namespace ChangeDB.Default
         }
         private async Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(IMigrationAgent sourceAgent, DbConnection sourceConnection, MigrationSetting migrationSetting)
         {
-            Log("start geting source database metadata.");
+            Log("start getting source database metadata.");
             return await sourceAgent.MetadataMigrator.GetDatabaseDescriptor(sourceConnection, migrationSetting);
         }
 
@@ -64,6 +64,12 @@ namespace ChangeDB.Default
             MigrationSettingsApplier.ApplySettingForTarget(source, target, migrationSetting);
             return Task.CompletedTask;
         }
+
+        private Task ApplyTargetAgentSettings(AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        {
+            return MigrationSettingsApplier.ApplyAgentSettings(target);
+        }
+
         private async Task DoMigrateDatabase(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
             await CreateTargetDatabase(target.Agent, target.Connection, migrationSetting);
@@ -165,7 +171,6 @@ namespace ChangeDB.Default
             }
             return (int)Math.Floor(avgFetchCount);
         }
-
         private DataTable UseNamingRules(DataTable table, Func<string, string> columnNamingFunc)
         {
             foreach (DataColumn column in table.Columns)

@@ -166,8 +166,72 @@ namespace ChangeDB.Default
             }
         }
 
+        public static Task ApplyAgentSettings(AgentRunTimeInfo target)
+        {
+            FixMaxObjectName();
+            return Task.CompletedTask;
+            void FixMaxObjectName()
+            {
+                var agentSetting = target.Agent.AgentSetting;
+                
+                FixTableNameMaxLimit(agentSetting.ObjectNameMaxLength);
+                FixColumnNameMaxLimit(agentSetting.ObjectNameMaxLength);
+                FixIndexNameMaxLimit(agentSetting.ObjectNameMaxLength);
+                FixUniqueNameMaxLimit(agentSetting.ObjectNameMaxLength);
+                FixPrimaryKeyMaxLimit(agentSetting.ObjectNameMaxLength);
+                FixForeignKeyMaxLimit(agentSetting.ObjectNameMaxLength);
+                void FixTableNameMaxLimit(int objectMaxNameLength)
+                {
+                    var nameMap= target.Descriptor.Tables.Where(p => p?.Name?.Length > objectMaxNameLength)
+                        .ToDictionary(p => $"{p.Schema}___{p.Name}", p => GetNewName(p.Name, objectMaxNameLength));
 
+                    foreach (var table in target.Descriptor.Tables)
+                    {
+                        if (nameMap.ContainsKey($"{table.Schema}___{table.Name}"))
+                        {
+                            table.Name = nameMap[$"{table.Schema}___{table.Name}"];
+                        }
+                        table.ForeignKeys.Where(p => nameMap.ContainsKey($"{p.PrincipalSchema}___{p.PrincipalTable}"))
+                            .Each(p=>p.Name=nameMap[$"{p.PrincipalSchema}___{p.PrincipalTable}"]);
+                    }
+                    
+                }
 
-        
+                void FixColumnNameMaxLimit(int objectMaxNameLength)
+                {
+                    //TODO
+                }
+
+                void FixIndexNameMaxLimit(int objectMaxNameLength)
+                {
+                   target.Descriptor.Tables.SelectMany(p => p.Indexes)
+                        .Where(p => p.Name?.Length > objectMaxNameLength)
+                        .Each(p => p.Name = GetNewName(p.Name, objectMaxNameLength));
+                }
+
+                void FixUniqueNameMaxLimit(int objectMaxNameLength)
+                {
+                    target.Descriptor.Tables.SelectMany(p => p.Uniques)
+                        .Where(p =>p?.Name?.Length > objectMaxNameLength)
+                        .Each(p => p.Name = GetNewName(p.Name, objectMaxNameLength));
+                }
+
+                void FixPrimaryKeyMaxLimit(int objectMaxNameLength)
+                {
+                    target.Descriptor.Tables.Select(p => p.PrimaryKey)
+                        .Where(p =>p?.Name?.Length > objectMaxNameLength)
+                        .Each(p => p.Name = GetNewName(p.Name, objectMaxNameLength));
+                }
+
+                void FixForeignKeyMaxLimit(int objectMaxNameLength)
+                {
+                    target.Descriptor.Tables.SelectMany(p => p.ForeignKeys)
+                        .Where(p =>p?.Name?.Length >objectMaxNameLength)
+                        .Each(p => p.Name = GetNewName(p.Name, objectMaxNameLength));
+                }
+            }
+        }
+        private static string GetNewName(string originName,int maxLength)=>$"{originName.Substring(0,maxLength-9)}_{originName.FixedHash():x8}";
+
     }
 }

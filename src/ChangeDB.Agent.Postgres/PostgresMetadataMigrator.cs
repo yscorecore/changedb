@@ -207,8 +207,8 @@ namespace ChangeDB.Agent.Postgres
                     foreach (var foreignKey in table.ForeignKeys)
                     {
                         var foreignKeyName = PostgresUtils.IdentityName(foreignKey.Name);
-                        var foreignColumns = string.Join(",", foreignKey.ColumnNames.Select(p => PostgresUtils.IdentityName(p)));
-                        var principalColumns = string.Join(",", foreignKey.PrincipalNames.Select(p => PostgresUtils.IdentityName(p)));
+                        var foreignColumns = string.Join(",", foreignKey.ColumnNames.Select(PostgresUtils.IdentityName));
+                        var principalColumns = string.Join(",", foreignKey.PrincipalNames.Select(PostgresUtils.IdentityName));
                         var principalTable = PostgresUtils.IdentityName(foreignKey.PrincipalSchema, foreignKey.PrincipalTable);
                         dbConnection.ExecuteNonQuery($"alter table {PostgresUtils.IdentityName(table.Schema, table.Name)} ADD CONSTRAINT {foreignKeyName}" +
                             $"FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})");
