@@ -81,6 +81,11 @@ namespace ChangeDB.Agent.Postgres
 
             var allDefaultValues = dbConnection.ExecuteReaderAsList<string, string, string, string>(
                 "SELECT TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,COLUMN_DEFAULT FROM INFORMATION_SCHEMA.COLUMNS");
+
+            var allIdentityColumns = GetAllColumnInentitiesInfos();
+            
+            
+            
             return new DatabaseDescriptor
             {
                 //Collation = databaseModel.Collation,
@@ -88,6 +93,21 @@ namespace ChangeDB.Agent.Postgres
                 Tables = databaseModel.Tables.Where(IsTable).Select(FromTableModel).ToList(),
                 Sequences = databaseModel.Sequences.Select(FromSequenceModel).ToList(),
             };
+            Dictionary<DatabaseColumn,(string SequenceName,long? CurrentValue)> GetAllColumnInentitiesInfos()
+            {
+                var allIdentityColumns = databaseModel.Tables.SelectMany(p => p.Columns)
+                            .Where(p => p.ValueGenerated == ValueGenerated.OnAdd)
+                            .ToList();
+                if (allIdentityColumns.Count == 0)
+                    return new Dictionary<DatabaseColumn, (string SequenceName, long? CurrentValue)>();
+                var allSequenceNameSql = string.Join("\nunion all\n", allIdentityColumns.Select(column =>
+                    $"select pg_get_serial_sequence('{IdentityName(column.Table.Schema, column.Table.Name)}','{column.Name}')"));
+                var allSequenceNames = dbConnection.ExecuteReaderAsList<string>(allSequenceNameSql);
+                var allSequenceValueSql = string.Join("\nunion all\n", allSequenceNames.Select(p=>$"select case when is_called then last_value else null end from {p}"));
+                var allSequenceValues = dbConnection.ExecuteReaderAsList<long?>(allSequenceValueSql);
+                var infos= allSequenceNames.Zip(allSequenceValues, (name, val) => (SequenceName:name　 , CurrentValue:val));
+               return   allIdentityColumns.Zip(infos, (column, info) => new {column, info}).ToDictionary(p=>p.column,p=>p.info);
+            }
             bool IsTable(DatabaseTable table)
             {
                 return allTables.Any(t => t.Item1 == table.Schema && t.Item2 == table.Name);
@@ -164,15 +184,8 @@ namespace ChangeDB.Agent.Postgres
                         baseColumnDesc.IsIdentity = false;
                         baseColumnDesc.IdentityInfo = FromNpgSqlIdentityData(IdentitySequenceOptionsData.Empty);
                     }
-                    // read current value from database
-                    var sequenceName = dbConnection.ExecuteScalar<string>(
-                        $"select pg_get_serial_sequence('{IdentityName(column.Table.Schema, column.Table.Name)}','{column.Name}')");
-                    // nextval will throw exception when not called the sequence once
-                    var lastValue =
-                        dbConnection.ExecuteScalar<long?>(
-                            $"select case when is_called then last_value else null end from {sequenceName}");
-                    baseColumnDesc.IdentityInfo.CurrentValue = lastValue;
-                    //var sequenceInfo = dbConnection.ExecuteReaderAsTable($"select * from {sequenceName}");
+                    var sequenceInfo = allIdentityColumns[column];
+                    baseColumnDesc.IdentityInfo.CurrentValue = sequenceInfo.CurrentValue;
                 }
                 else
                 {

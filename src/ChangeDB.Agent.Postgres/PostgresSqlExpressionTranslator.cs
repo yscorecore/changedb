@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,13 +14,13 @@ namespace ChangeDB.Agent.Postgres
     {
 
         public static readonly ISqlExpressionTranslator Default = new PostgresSqlExpressionTranslator();
-
-        private static Func<string, string, string> CastType = (expression, type) => $"({expression})::{type}";
+        
+        private static readonly ConcurrentDictionary<string, object> ValueCache =
+            new ConcurrentDictionary<string, object>();
 
         public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
             return FromCommonSqlExpressionInternal(sqlExpression, context);
-            //return CastType(internalExpression, context.StoreType);
         }
         private string FromCommonSqlExpressionInternal(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
@@ -112,9 +113,8 @@ namespace ChangeDB.Agent.Postgres
                 };
             }
 
-            var val = context.AgentInfo.Connection.ExecuteScalar(
-                $"select cast({sqlExpression} as {context.StoreType})");
-
+            var sql = $"select cast({sqlExpression} as {context.StoreType})";
+            var val =  ValueCache.GetOrAdd(sql, (s) => context.AgentInfo.Connection.ExecuteScalar(s));
             return new SqlExpressionDescriptor { Constant = val };
         }
 

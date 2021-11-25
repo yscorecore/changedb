@@ -49,7 +49,7 @@ namespace ChangeDB.ConsoleApp.Commands
                         TableNameStyle = TableNameStyle
                     }
                 },
-                SourceDatabase = new DatabaseInfo { DatabaseType =  SourceType, ConnectionString = SourceConnectionString },
+                SourceDatabase = new DatabaseInfo { DatabaseType = SourceType, ConnectionString = SourceConnectionString },
                 TargetDatabase = new DatabaseInfo { DatabaseType = TargetType, ConnectionString = TargetConnectionString }
             });
             task.Wait();

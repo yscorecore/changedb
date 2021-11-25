@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -10,6 +11,9 @@ namespace ChangeDB.Agent.SqlServer
     public class SqlServerSqlExpressionTranslator : ISqlExpressionTranslator
     {
         public static readonly ISqlExpressionTranslator Default = new SqlServerSqlExpressionTranslator();
+
+        private static readonly ConcurrentDictionary<string, object> ValueCache =
+            new ConcurrentDictionary<string, object>();
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
         {
             var trimmedExpression = TrimBrackets(sqlExpression);
@@ -28,7 +32,8 @@ namespace ChangeDB.Agent.SqlServer
             }
             else
             {
-               var value =  context.AgentInfo.Connection.ExecuteScalar($"select cast({trimmedExpression} as {context.StoreType})");
+                var sql = $"select cast({trimmedExpression} as {context.StoreType})";
+               var value=  ValueCache.GetOrAdd(sql, (s) => context.AgentInfo.Connection.ExecuteScalar(s));
                return new SqlExpressionDescriptor() {Constant = value};
             }
         }

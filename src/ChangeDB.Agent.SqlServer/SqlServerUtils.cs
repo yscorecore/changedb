@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
@@ -72,6 +73,8 @@ namespace ChangeDB.Agent.SqlServer
             var allDefaultValues = dbConnection.ExecuteReaderAsList<string, string, string, string>(
                 "SELECT TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,COLUMN_DEFAULT FROM INFORMATION_SCHEMA.COLUMNS");
 
+            var addIdentityInfos =GetAllIdentityInfos();
+
             return new DatabaseDescriptor
             {
                 //Collation = databaseModel.Collation,
@@ -79,6 +82,19 @@ namespace ChangeDB.Agent.SqlServer
                 Tables = databaseModel.Tables.Where(IsTable).Select(FromTableModel).ToList(),
                 Sequences = databaseModel.Sequences.Select(FromSequenceModel).ToList(),
             };
+
+            List<Tuple<string,string,int,int,int?,int>> GetAllIdentityInfos()
+            {
+               var sqlLines=  databaseModel.Tables.Where(p => p.Columns.Any(c => c.ValueGenerated == ValueGenerated.OnAdd))
+                    .Select(t=>$"SELECT '{t.Schema}' as s, '{t.Name}' as t, IDENT_SEED('{SqlServerUtils.IdentityName(t.Schema,t.Name)}') as seed ,IDENT_INCR('{SqlServerUtils.IdentityName(t.Schema,t.Name)}') as incr,IDENT_CURRENT('{SqlServerUtils.IdentityName(t.Schema,t.Name)}') as currentValue,(select top 1 1 from {SqlServerUtils.IdentityName(t.Schema,t.Name)}) as hasrow");
+             var allSql= string.Join("\nunion all\n", sqlLines);
+             if (string.IsNullOrEmpty(allSql))
+             {
+                 return new List<Tuple<string, string, int, int, int?, int>>();
+             }
+             return dbConnection.ExecuteReaderAsList<string, string, int, int, int?, int>(allSql);
+            }
+
             bool IsTable(DatabaseTable table)
             {
                 return allTables.Any(t => t.Item1 == table.Schema && t.Item2 == table.Name);
@@ -144,18 +160,18 @@ namespace ChangeDB.Agent.SqlServer
                 {
                     var tableFullName = IdentityName(column.Table.Schema, column.Table.Name);
                     baseColumnDesc.IsIdentity = true;
+                    var identityInfo = addIdentityInfos.Single(p => p.Item1 == column.Table.Schema && p.Item2 == column.Table.Name);
                     baseColumnDesc.IdentityInfo = new IdentityDescriptor
                     {
                         IsCyclic = false,
-                        StartValue = dbConnection.ExecuteScalar<long>($"SELECT IDENT_SEED('{tableFullName}')"),
-                        IncrementBy = dbConnection.ExecuteScalar<int>($"SELECT IDENT_INCR('{tableFullName}')"),
-                        CurrentValue = dbConnection.ExecuteScalar<long?>($"SELECT IDENT_CURRENT('{tableFullName}')"),
+                        StartValue =identityInfo.Item3,
+                        IncrementBy =identityInfo.Item4,
+                        CurrentValue = identityInfo.Item6==1? identityInfo.Item5:null,
                     };
-                    if (baseColumnDesc.IdentityInfo.StartValue == baseColumnDesc.IdentityInfo.CurrentValue && !dbConnection.ExecuteExists($"select top 1 * from {tableFullName}"))
+                    if (baseColumnDesc.IdentityInfo.IncrementBy == 0)
                     {
-                        baseColumnDesc.IdentityInfo.CurrentValue = null;
+                        baseColumnDesc.IdentityInfo.IncrementBy = 1;
                     }
-
                 }
                 else
                 {

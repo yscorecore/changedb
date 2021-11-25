@@ -30,19 +30,24 @@ namespace ChangeDB
 
         }
 
-        public static T ExecuteScalar<T>(this IDbConnection connection, string sql,IDictionary<string, object> args=null)
+        private static T ToValue<T>(this object val)
         {
-            var result = connection.ExecuteScalar(sql,args);
-            if (result == null || result == DBNull.Value)
+            if (val == null || val == DBNull.Value)
             {
                 return default(T);
             }
             else
             {
                 var valType = Nullable.GetUnderlyingType(typeof(T));
-                return (T)Convert.ChangeType(result, valType ?? typeof(T));
+                return (T)Convert.ChangeType(val, valType ?? typeof(T));
             }
+        }
 
+        private static T FieldValue<T>(this DataRow row, int index) => row[index].ToValue<T>();
+        private static T FieldValue<T>(this DataRow row, string columnName) => row[columnName].ToValue<T>();
+        public static T ExecuteScalar<T>(this IDbConnection connection, string sql,IDictionary<string, object> args=null)
+        {
+             return connection.ExecuteScalar(sql,args).ToValue<T>();
         }
         public static int ExecuteNonQuery(this IDbConnection connection, string sql)
         {
@@ -105,28 +110,40 @@ namespace ChangeDB
         public static List<Tuple<T1, T2>> ExecuteReaderAsList<T1, T2>(this IDbConnection connection, string sql)
         {
             var table = ExecuteReaderAsTable(connection, sql);
-            return table.AsEnumerable().Select(p => new Tuple<T1, T2>(p.Field<T1>(0), p.Field<T2>(1))).ToList();
+            return table.AsEnumerable().Select(p => new Tuple<T1, T2>(p.FieldValue<T1>(0), p.FieldValue<T2>(1))).ToList();
         }
         public static List<Tuple<T1, T2, T3>> ExecuteReaderAsList<T1, T2, T3>(this IDbConnection connection, string sql)
         {
             var table = ExecuteReaderAsTable(connection, sql);
-            return table.AsEnumerable().Select(p => new Tuple<T1, T2, T3>(p.Field<T1>(0), p.Field<T2>(1), p.Field<T3>(2))).ToList();
+            return table.AsEnumerable().Select(p => new Tuple<T1, T2, T3>(p.FieldValue<T1>(0), p.FieldValue<T2>(1), p.FieldValue<T3>(2))).ToList();
         }
         public static List<Tuple<T1, T2, T3, T4>> ExecuteReaderAsList<T1, T2, T3, T4>(this IDbConnection connection, string sql)
         {
             var table = ExecuteReaderAsTable(connection, sql);
             return table.AsEnumerable().Select(p =>
-                new Tuple<T1, T2, T3, T4>(p.Field<T1>(0), p.Field<T2>(1), p.Field<T3>(2), p.Field<T4>(3))).ToList();
+                new Tuple<T1, T2, T3, T4>(p.FieldValue<T1>(0), p.FieldValue<T2>(1), p.FieldValue<T3>(2), p.FieldValue<T4>(3))).ToList();
+        }
+        public static List<Tuple<T1, T2, T3, T4,T5>> ExecuteReaderAsList<T1, T2, T3, T4,T5>(this IDbConnection connection, string sql)
+        {
+            var table = ExecuteReaderAsTable(connection, sql);
+            return table.AsEnumerable().Select(p =>
+                new Tuple<T1, T2, T3, T4,T5>(p.FieldValue<T1>(0), p.FieldValue<T2>(1), p.FieldValue<T3>(2), p.FieldValue<T4>(3),p.FieldValue<T5>(4))).ToList();
+        }
+        public static List<Tuple<T1, T2, T3, T4,T5,T6>> ExecuteReaderAsList<T1, T2, T3, T4,T5,T6>(this IDbConnection connection, string sql)
+        {
+            var table = ExecuteReaderAsTable(connection, sql);
+            return table.AsEnumerable().Select(p =>
+                new Tuple<T1, T2, T3, T4,T5,T6>(p.FieldValue<T1>(0), p.FieldValue<T2>(1), p.FieldValue<T3>(2), p.FieldValue<T4>(3),p.FieldValue<T5>(4),p.FieldValue<T6>(5))).ToList();
         }
         public static List<T> ExecuteReaderAsList<T>(this IDbConnection connection, string sql, int columnIndex = 0)
         {
             var table = ExecuteReaderAsTable(connection, sql);
-            return table.AsEnumerable().Select(p => p.Field<T>(columnIndex)).ToList();
+            return table.AsEnumerable().Select(p => p.FieldValue<T>(columnIndex)).ToList();
         }
         public static List<T> ExecuteReaderAsList<T>(this IDbConnection connection, string sql, string columnName)
         {
             var table = ExecuteReaderAsTable(connection, sql);
-            return table.AsEnumerable().Select(p => p.Field<T>(columnName)).ToList();
+            return table.AsEnumerable().Select(p => p.FieldValue<T>(columnName)).ToList();
         }
 
         public static void AlterOpen(IDbConnection connection)
