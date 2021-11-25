@@ -33,6 +33,17 @@ namespace ChangeDB.ConsoleApp.Commands
 
         [Option("table-name-style", HelpText = "target table name style (Original/Lower/Upper).")]
         public NameStyle TableNameStyle { get; set; } = NameStyle.Original;
+
+        [Option("max-fetch-bytes", HelpText = "max fetch bytes when read source database (unit KB), default value is 10 (10KB).")]
+        public int MaxFetchBytes { get; set; } = 10;
+
+        [Option("post-sql-file",
+            HelpText = "post sql file, execute these sql script after the migration one-by-one.")]
+        public string PostSqlFile { get; set; } 
+
+        [Option("post-sql-file-split", HelpText = "sql file split chars, default value is ;;")]
+        public string PostSqlSplit { get; set; } = ";;";
+
         public int Run()
         {
             var serviceHost = ServiceHost.Default;
@@ -47,6 +58,12 @@ namespace ChangeDB.ConsoleApp.Commands
                     TargetNameStyle = new TargetNameStyle
                     {
                         TableNameStyle = TableNameStyle
+                    },
+                    FetchDataMaxSize = MaxFetchBytes*1024,
+                    PostScripts = new CustomSqlScripts()
+                    {
+                        SqlFiles = string.IsNullOrEmpty(PostSqlFile)?new List<string>():new List<string>(){PostSqlFile},
+                        SqlSplit = PostSqlSplit,
                     }
                 },
                 SourceDatabase = new DatabaseInfo { DatabaseType = SourceType, ConnectionString = SourceConnectionString },

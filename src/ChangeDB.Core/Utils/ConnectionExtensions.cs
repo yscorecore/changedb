@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace ChangeDB
 {
@@ -81,11 +83,30 @@ namespace ChangeDB
                 );
             }
         }
-        public static void ExecuteSqlFiles(this IDbConnection connection, string[] sqlFiles, string sqlSplit)
+        public static void ExecuteSqlFiles(this IDbConnection connection, IEnumerable<string> sqlFiles, string sqlSplit)
         {
-
+            sqlFiles.Each(file => connection.ExecuteSqlFile(file, sqlSplit));
         }
-
+        public static void ExecuteSqlFile(this IDbConnection connection, string sqlFile, string sqlSplit)
+        {
+            var allLines = File.ReadAllLines(sqlFile);
+            var stringBuilder = new StringBuilder();
+            var allSqls = new List<string>();
+            allLines.Each((line) =>
+            {
+                if (sqlSplit.Equals(line.Trim(), StringComparison.InvariantCultureIgnoreCase))
+                {
+                    allSqls.Add(stringBuilder.ToString().Trim());
+                    stringBuilder.Clear();
+                }
+                else
+                {
+                    stringBuilder.AppendLine(line);
+                }
+            });
+            allSqls.Append(stringBuilder.ToString());
+            connection.ExecuteNonQuery(allSqls.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray());
+        }
         public static bool ExecuteExists(this IDbConnection connection, string sql, Func<DataRow, bool> condition = null)
         {
             var table = connection.ExecuteReaderAsTable(sql);

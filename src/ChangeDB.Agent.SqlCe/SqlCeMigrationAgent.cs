@@ -19,10 +19,9 @@ namespace ChangeDB.Agent.SqlCe
         public IDataTypeMapper DataTypeMapper { get => SqlServerDataTypeMapper.Default; }
         public ISqlExpressionTranslator ExpressionTranslator { get => SqlServerSqlExpressionTranslator.Default; }
         public IDatabaseManager DatabaseManger { get => SqlServerDatabaseManager.Default; }
+        public AgentSetting AgentSetting { get => new AgentSetting { DefaultSchema = null, ObjectNameMaxLength = 128}; }
 
-        public DbConnection CreateConnection(string connectionString)
-        {
-            return new SqlCeConnection(connectionString);
-        }
+        public DbConnection CreateConnection(string connectionString)=> new SqlCeConnection(connectionString);
+        
     }
 }

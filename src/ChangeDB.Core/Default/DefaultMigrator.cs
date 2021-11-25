@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -48,11 +46,12 @@ namespace ChangeDB.Default
             await ApplyMigrationSettings(source, target, context.Setting);
             await ApplyTargetAgentSettings(target, context.Setting);
             await DoMigrateDatabase(source, target, context.Setting);
-
+            await ApplyCustomScripts(target, context.Setting);
 
             Log("migration succeeded.");
 
         }
+
         private async Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(IMigrationAgent sourceAgent, DbConnection sourceConnection, MigrationSetting migrationSetting)
         {
             Log("start getting source database metadata.");
@@ -117,6 +116,15 @@ namespace ChangeDB.Default
             {
                 await MigrationTable(source, target, migrationSetting, sourceTable);
             }
+        }
+        private Task ApplyCustomScripts( AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        {
+            if (migrationSetting.PostScripts?.SqlFiles?.Count > 0)
+            {
+                Log("apply custom sql scripts");
+                target.Connection.ExecuteSqlFiles(migrationSetting.PostScripts.SqlFiles, migrationSetting.PostScripts.SqlSplit);
+            }
+            return Task.CompletedTask;
         }
         private async Task MigrationTable(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting, TableDescriptor sourceTable)
         {

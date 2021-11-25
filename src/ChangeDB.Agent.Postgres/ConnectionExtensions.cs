@@ -79,7 +79,7 @@ namespace ChangeDB.Agent.Postgres
 
         private static NpgsqlConnection CreateNoDatabaseConnection(IDbConnection connection)
         {
-            var builder = new NpgsqlConnectionStringBuilder(connection.ConnectionString) { Database = null };
+            var builder = new NpgsqlConnectionStringBuilder(connection.ConnectionString) { Database = "postgres" };
             var newConnection = new NpgsqlConnection(builder.ConnectionString);
             return newConnection;
         }
