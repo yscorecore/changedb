@@ -559,7 +559,7 @@ namespace ChangeDB.Agent.SqlCe
                 {
                     new TableDescriptor
                     {
-                        Schema="ts",
+                        Schema= null,
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
@@ -610,7 +610,7 @@ namespace ChangeDB.Agent.SqlCe
                 {
                     new TableDescriptor
                     {
-                        Schema="ts",
+                        Schema=null,
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
@@ -623,7 +623,7 @@ namespace ChangeDB.Agent.SqlCe
                     },
                     new TableDescriptor
                     {
-                        Schema="ts2",
+                        Schema=null,
                         Name="table2",
                         Columns =new List<ColumnDescriptor>
                         {
@@ -634,7 +634,7 @@ namespace ChangeDB.Agent.SqlCe
                              new ForeignKeyDescriptor
                              {
                                 Name="foreign_key",
-                                PrincipalSchema="ts",
+                                PrincipalSchema=null,
                                 PrincipalTable="table1",
                                 PrincipalNames= new List<string> {"id" },
                                 ColumnNames= new List<string> { "id2"},
@@ -769,7 +769,7 @@ namespace ChangeDB.Agent.SqlCe
                 {
                     new TableDescriptor
                     {
-                        Schema="ts",
+                        Schema=null,
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {

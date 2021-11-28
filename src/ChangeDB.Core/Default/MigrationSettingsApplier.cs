@@ -168,6 +168,7 @@ namespace ChangeDB.Default
 
         public static Task ApplyAgentSettings(AgentRunTimeInfo target)
         {
+            FixEmptySchema();
             FixMaxObjectName();
             return Task.CompletedTask;
             void FixMaxObjectName()
@@ -230,8 +231,27 @@ namespace ChangeDB.Default
                         .Each(p => p.Name = GetNewName(p.Name, objectMaxNameLength));
                 }
             }
+            void FixEmptySchema()
+            {
+                var agentSetting = target.Agent.AgentSetting;
+                if (string.IsNullOrEmpty(agentSetting.DefaultSchema))
+                {
+                    // clear schemas
+                    target.Descriptor.Tables.Each(p => p.Schema = null);
+                    target.Descriptor.Tables.SelectMany(p => p.ForeignKeys).Each(p => p.PrincipalSchema = null);
+                    target.Descriptor.Sequences.Each(p => p.Schema = null);
+                }
+                else
+                {
+                    // set defaultSchame
+                    target.Descriptor.Tables.Where(p=>string.IsNullOrEmpty(p.Schema)).Each(p => p.Schema = agentSetting.DefaultSchema);
+                    target.Descriptor.Tables.SelectMany(p => p.ForeignKeys).Where(p=>string.IsNullOrEmpty(p.PrincipalSchema)).Each(p => p.PrincipalSchema = agentSetting.DefaultSchema);
+                    target.Descriptor.Sequences.Where(p => string.IsNullOrEmpty(p.Schema)).Each(p => p.Schema = agentSetting.DefaultSchema);
+                }
+            }
+
         }
-        private static string GetNewName(string originName, int maxLength) => $"{originName.Substring(0, maxLength - 9)}_{originName.FixedHash():x8}";
+        private static string GetNewName(string originName, int maxLength) => $"{originName.Substring(0, maxLength - 9)}_{originName.FixedHash():X8}";
 
     }
 }

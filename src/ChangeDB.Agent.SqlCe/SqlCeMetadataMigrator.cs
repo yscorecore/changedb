@@ -23,19 +23,7 @@ namespace ChangeDB.Agent.SqlCe
             return Task.FromResult(databaseDescriptor);
         }
 
-        public override Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
-        {
-            // clear schemas
-            databaseDescriptor.Tables.Each(p => p.Schema = null);
-            databaseDescriptor.Tables.SelectMany(p => p.ForeignKeys).Each(p => p.PrincipalSchema = null);
-            databaseDescriptor.Sequences.Each(p => p.Schema = null);
-            return base.PreMigrate(databaseDescriptor, dbConnection, migrationSetting);
-        }
-
-        protected override string IdentityName(string schema, string objectName)
-        {
-            return base.IdentityName(objectName);
-        }
+        
 
     }
 }

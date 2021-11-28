@@ -152,7 +152,7 @@ namespace ChangeDB.Default
                 Console.SetCursorPosition(0, Console.CursorTop - 1);
                 if (dataTable.Rows.Count < pageInfo.Limit)
                 {
-                    Log($"data of table {tableName} migration succeeded.");
+                    Log($"data of table {tableName} migration succeeded, {migratedCount} rows migrated.");
                     break;
                 }
             }
