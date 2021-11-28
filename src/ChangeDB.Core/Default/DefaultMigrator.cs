@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -131,66 +132,34 @@ namespace ChangeDB.Default
             var targetTableName = migrationSetting.TargetNameStyle.TableNameFunc(sourceTable.Name);
             var targetTableDesc = target.Descriptor.GetTable(targetTableName);
             await target.Agent.DataMigrator.BeforeWriteTableData(targetTableDesc, target.Connection, migrationSetting);
-            var tableName = string.IsNullOrEmpty(sourceTable.Schema) ? sourceTable.Name : $"\"{sourceTable.Schema}\".\"{sourceTable.Name}\"";
+            var tableName = string.IsNullOrEmpty(sourceTable.Schema) ? $"\"{sourceTable.Name}\"" : $"\"{sourceTable.Schema}\".\"{sourceTable.Name}\"";
             var totalCount = await source.Agent.DataMigrator.CountTable(sourceTable, source.Connection, migrationSetting);
-            var migratedCount = 0;
-            var fetchCount = 1;
+            var (migratedCount,maxRowSize,fetchCount) = (0,1,1);
+           
             while (true)
             {
-
                 var pageInfo = new PageInfo { Offset = migratedCount, Limit = fetchCount };
-                var sourceTableData = await source.Agent.DataMigrator.ReadTableData(sourceTable, pageInfo, source.Connection, migrationSetting);
-
-                var targetTableData = UseNamingRules(sourceTableData, migrationSetting.TargetNameStyle.ColumnNameFunc);
-
-                await target.Agent.DataMigrator.WriteTableData(targetTableData, targetTableDesc, target.Connection, migrationSetting);
-
-                fetchCount = CalcNextFetchCount(targetTableData, fetchCount, migrationSetting);
-
-                migratedCount += sourceTableData.Rows.Count;
-                Log($"migrating table {tableName} ......{migratedCount * 1.0 / totalCount:p2}.");
-                if (sourceTableData.Rows.Count < pageInfo.Limit)
+                var dataTable = await source.Agent.DataMigrator.ReadTableData(sourceTable, pageInfo, source.Connection, migrationSetting);
+                // convert target column name
+                dataTable.Columns.OfType<DataColumn>().Each(p =>
+                    p.ColumnName = migrationSetting.TargetNameStyle.ColumnNameFunc(p.ColumnName));
+                await target.Agent.DataMigrator.WriteTableData(dataTable, targetTableDesc, target.Connection, migrationSetting);
+                
+                migratedCount += dataTable.Rows.Count;
+                maxRowSize = Math.Max(maxRowSize, dataTable.MaxRowSize());
+                fetchCount = Math.Min(fetchCount*5, Math.Max(1, migrationSetting.FetchDataMaxSize / maxRowSize));
+                Log($"migrating table {tableName} ......{migratedCount * 1.0 / totalCount:p2} [{migratedCount}/{totalCount}].");
+                Console.SetCursorPosition(0, Console.CursorTop - 1);
+                if (dataTable.Rows.Count < pageInfo.Limit)
                 {
-                    // end of table
-                    Console.SetCursorPosition(0, Console.CursorTop - 1);
                     Log($"data of table {tableName} migration succeeded.");
                     break;
-                }
-                else
-                {
-                    Console.SetCursorPosition(0, Console.CursorTop - 1);
                 }
             }
             await target.Agent.DataMigrator.AfterWriteTableData(targetTableDesc, target.Connection, migrationSetting);
         }
-        private int CalcNextFetchCount(DataTable dataTable, int lastCount, MigrationSetting migrationSetting)
-        {
-            if (dataTable.Rows.Count < 1) return 1;
-            var totalRowSize = dataTable.TotalSize();
-            var avgRowSize = totalRowSize * 1.0 / dataTable.Rows.Count;
-            var avgFetchCount = migrationSetting.FetchDataMaxSize / avgRowSize;
-            if (avgFetchCount < 1)
-            {
-                return 1;
-            }
-            if (avgFetchCount > lastCount * 10)
-            {
-                return lastCount * 10;
-            }
-            return (int)Math.Floor(avgFetchCount);
-        }
-        private DataTable UseNamingRules(DataTable table, Func<string, string> columnNamingFunc)
-        {
-            foreach (DataColumn column in table.Columns)
-            {
-                column.ColumnName = columnNamingFunc(column.ColumnName);
-            }
-            return table;
-        }
-
-
-
-
-
+        
+        
+        
     }
 }

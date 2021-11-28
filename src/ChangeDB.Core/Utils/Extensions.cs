@@ -31,6 +31,39 @@ namespace ChangeDB
         {
             return dataTable.Columns.OfType<DataColumn>().Sum(p => SumColumnSize(p));
         }
+
+        public static int MaxRowSize(this DataTable dataTable)
+        {
+            return dataTable.Rows.Count > 0 ? dataTable.Rows.OfType<DataRow>().Max(row => row.TotalSize()) : 0;
+        }
+
+        public static int TotalSize(this DataRow dataRow)
+        {
+           return dataRow.Table.Columns.OfType<DataColumn>().Sum(p => GetSize(dataRow, p));
+        }
+
+        private static int GetSize(DataRow row, DataColumn column)
+        {
+            if (column.DataType == typeof(byte[]))
+            {
+                return row.Field<byte[]>(column)?.Length ?? 0;
+            }
+            else if (column.DataType == typeof(string))
+            {
+                // not very accurate
+                return row.Field<string>(column)?.Length ?? 0;
+            }
+            else if (column.DataType.IsValueType)
+            {
+                var itemType = Nullable.GetUnderlyingType(column.DataType) ?? column.DataType;
+                return GetTypeSize(itemType);
+            }
+            else
+            {
+                return GetTypeSize(column.DataType);
+            }
+        }
+
         private static int SumColumnSize(DataColumn column)
         {
             var rowCount = column.Table.Rows.Count;

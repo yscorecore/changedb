@@ -17,6 +17,8 @@ namespace ChangeDB.Migration
 
         public bool IncludeMeta { get => MigrationType.HasFlag(MigrationType.MetaData); }
         public bool IncludeData { get => MigrationType.HasFlag(MigrationType.MetaData); }
+        
+        public int GrowthSpeed { get => 10; }
     }
 
     [Flags]
