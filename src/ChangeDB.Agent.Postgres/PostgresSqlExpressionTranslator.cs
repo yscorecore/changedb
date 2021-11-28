@@ -14,7 +14,7 @@ namespace ChangeDB.Agent.Postgres
     {
 
         public static readonly ISqlExpressionTranslator Default = new PostgresSqlExpressionTranslator();
-        
+
         private static readonly ConcurrentDictionary<string, object> ValueCache =
             new ConcurrentDictionary<string, object>();
 
@@ -24,7 +24,7 @@ namespace ChangeDB.Agent.Postgres
         }
         private string FromCommonSqlExpressionInternal(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
-            if (sqlExpression?.Function !=null)
+            if (sqlExpression?.Function != null)
             {
                 return sqlExpression.Function.Value switch
                 {
@@ -40,13 +40,13 @@ namespace ChangeDB.Agent.Postgres
             }
 
             return "null";
-          
+
 
         }
         private string Repr(string input)
         {
             if (input is null) return null;
-            return $"'{input.Replace("'", "''")}'" ;
+            return $"'{input.Replace("'", "''")}'";
         }
 
         private string ConstantToSqlExpression(object constant, SqlExpressionTranslatorContext context)
@@ -67,18 +67,21 @@ namespace ChangeDB.Agent.Postgres
                     return constant.ToString();
                 }
 
-               
+
             }
-            else if(constant is Guid guid)
+            else if (constant is Guid guid)
             {
                 return $"'{guid}'::{context.StoreType}";
-            }else if (constant is byte[] bytes)
+            }
+            else if (constant is byte[] bytes)
             {
                 return $"'\\x{string.Join("", bytes.Select(p => p.ToString("X2")))}'::bytea";
-            }else if (constant is DateTime dateTime)
+            }
+            else if (constant is DateTime dateTime)
             {
-                return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'::{context.StoreType}";;
-            }else if (constant is DateTimeOffset dateTimeOffset)
+                return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'::{context.StoreType}"; ;
+            }
+            else if (constant is DateTimeOffset dateTimeOffset)
             {
                 return $"'{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}'::{context.StoreType}";
             }
@@ -87,7 +90,7 @@ namespace ChangeDB.Agent.Postgres
                 return constant.ToString();
             }
         }
-        
+
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
         {
             if (string.IsNullOrEmpty(sqlExpression))
@@ -95,7 +98,7 @@ namespace ChangeDB.Agent.Postgres
                 return null;
             }
 
-           
+
 
             sqlExpression = ReplaceTypeConvert(sqlExpression.Trim());
             if (Regex.IsMatch(sqlExpression, @"CURRENT_TIMESTAMP(\(\d\))?", RegexOptions.IgnoreCase))
@@ -114,7 +117,7 @@ namespace ChangeDB.Agent.Postgres
             }
 
             var sql = $"select cast({sqlExpression} as {context.StoreType})";
-            var val =  ValueCache.GetOrAdd(sql, (s) => context.AgentInfo.Connection.ExecuteScalar(s));
+            var val = ValueCache.GetOrAdd(sql, (s) => context.AgentInfo.Connection.ExecuteScalar(s));
             return new SqlExpressionDescriptor { Constant = val };
         }
 

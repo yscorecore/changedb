@@ -73,7 +73,7 @@ namespace ChangeDB.Agent.SqlServer
             var allDefaultValues = dbConnection.ExecuteReaderAsList<string, string, string, string>(
                 "SELECT TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,COLUMN_DEFAULT FROM INFORMATION_SCHEMA.COLUMNS");
 
-            var addIdentityInfos =GetAllIdentityInfos();
+            var addIdentityInfos = GetAllIdentityInfos();
 
             return new DatabaseDescriptor
             {
@@ -83,16 +83,16 @@ namespace ChangeDB.Agent.SqlServer
                 Sequences = databaseModel.Sequences.Select(FromSequenceModel).ToList(),
             };
 
-            List<Tuple<string,string,int,int,int?,int>> GetAllIdentityInfos()
+            List<Tuple<string, string, int, int, int?, int>> GetAllIdentityInfos()
             {
-               var sqlLines=  databaseModel.Tables.Where(p => p.Columns.Any(c => c.ValueGenerated == ValueGenerated.OnAdd))
-                    .Select(t=>$"SELECT '{t.Schema}' as s, '{t.Name}' as t, IDENT_SEED('{SqlServerUtils.IdentityName(t.Schema,t.Name)}') as seed ,IDENT_INCR('{SqlServerUtils.IdentityName(t.Schema,t.Name)}') as incr,IDENT_CURRENT('{SqlServerUtils.IdentityName(t.Schema,t.Name)}') as currentValue,(select top 1 1 from {SqlServerUtils.IdentityName(t.Schema,t.Name)}) as hasrow");
-             var allSql= string.Join("\nunion all\n", sqlLines);
-             if (string.IsNullOrEmpty(allSql))
-             {
-                 return new List<Tuple<string, string, int, int, int?, int>>();
-             }
-             return dbConnection.ExecuteReaderAsList<string, string, int, int, int?, int>(allSql);
+                var sqlLines = databaseModel.Tables.Where(p => p.Columns.Any(c => c.ValueGenerated == ValueGenerated.OnAdd))
+                     .Select(t => $"SELECT '{t.Schema}' as s, '{t.Name}' as t, IDENT_SEED('{SqlServerUtils.IdentityName(t.Schema, t.Name)}') as seed ,IDENT_INCR('{SqlServerUtils.IdentityName(t.Schema, t.Name)}') as incr,IDENT_CURRENT('{SqlServerUtils.IdentityName(t.Schema, t.Name)}') as currentValue,(select top 1 1 from {SqlServerUtils.IdentityName(t.Schema, t.Name)}) as hasrow");
+                var allSql = string.Join("\nunion all\n", sqlLines);
+                if (string.IsNullOrEmpty(allSql))
+                {
+                    return new List<Tuple<string, string, int, int, int?, int>>();
+                }
+                return dbConnection.ExecuteReaderAsList<string, string, int, int, int?, int>(allSql);
             }
 
             bool IsTable(DatabaseTable table)
@@ -164,9 +164,9 @@ namespace ChangeDB.Agent.SqlServer
                     baseColumnDesc.IdentityInfo = new IdentityDescriptor
                     {
                         IsCyclic = false,
-                        StartValue =identityInfo.Item3,
-                        IncrementBy =identityInfo.Item4,
-                        CurrentValue = identityInfo.Item6==1? identityInfo.Item5:null,
+                        StartValue = identityInfo.Item3,
+                        IncrementBy = identityInfo.Item4,
+                        CurrentValue = identityInfo.Item6 == 1 ? identityInfo.Item5 : null,
                     };
                     if (baseColumnDesc.IdentityInfo.IncrementBy == 0)
                     {

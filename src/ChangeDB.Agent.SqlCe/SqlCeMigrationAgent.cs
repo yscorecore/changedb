@@ -12,16 +12,16 @@ using Microsoft.Data.SqlClient;
 namespace ChangeDB.Agent.SqlCe
 {
     [Service(typeof(IMigrationAgent), Name = "sqlse")]
-    public class SqlServerMigrationAgent : IMigrationAgent
+    public class SqlCeMigrationAgent : IMigrationAgent
     {
         public IDataMigrator DataMigrator { get => SqlServerDataMigrator.Default; }
-        public IMetadataMigrator MetadataMigrator { get => SqlServerMetadataMigrator.Default; }
-        public IDataTypeMapper DataTypeMapper { get => SqlServerDataTypeMapper.Default; }
+        public IMetadataMigrator MetadataMigrator { get => SqlCeMetadataMigrator.Default; }
+        public IDataTypeMapper DataTypeMapper { get => SqlCeDataTypeMapper.Default; }
         public ISqlExpressionTranslator ExpressionTranslator { get => SqlServerSqlExpressionTranslator.Default; }
-        public IDatabaseManager DatabaseManger { get => SqlServerDatabaseManager.Default; }
-        public AgentSetting AgentSetting { get => new AgentSetting { DefaultSchema = null, ObjectNameMaxLength = 128}; }
+        public IDatabaseManager DatabaseManger { get => SqlCeDatabaseManager.Default; }
+        public AgentSetting AgentSetting { get => new AgentSetting { DefaultSchema = null, ObjectNameMaxLength = 128 }; }
 
-        public DbConnection CreateConnection(string connectionString)=> new SqlCeConnection(connectionString);
-        
+        public DbConnection CreateConnection(string connectionString) => new SqlCeConnection(connectionString);
+
     }
 }

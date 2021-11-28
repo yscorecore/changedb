@@ -23,7 +23,6 @@ namespace ChangeDB.Agent.SqlServer
         }
 
         [Theory]
-
         [ClassData(typeof(MapToCommonSqlExpression))]
 
         public void ShouldMapToCommonSqlExpression(string sqlExpression, string storeType, SqlExpressionDescriptor sqlExpressionDescriptor)

@@ -14,7 +14,7 @@ namespace ChangeDB.Agent.SqlCe
     [Collection(nameof(DatabaseEnvironment))]
     public class SqlCeDataMigratorTest : IDisposable
     {
-        private readonly IDataMigrator _dataMigrator = SqlServerDataMigrator.Default;
+        private readonly IDataMigrator _dataMigrator = new SqlCeMigrationAgent().DataMigrator;
         private readonly MigrationSetting _migrationSetting = new MigrationSetting();
         private readonly DbConnection _dbConnection;
 

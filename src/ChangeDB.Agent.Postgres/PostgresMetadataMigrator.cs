@@ -92,12 +92,12 @@ namespace ChangeDB.Agent.Postgres
                     {
                         items.Add($"MINVALUE {desc.MinValue}");
                     }
-                    else if(desc.StartValue<1 && desc.IncrementBy>0)
+                    else if (desc.StartValue < 1 && desc.IncrementBy > 0)
                     {
                         // the minvalue default is 1
                         items.Add($"MINVALUE {desc.StartValue}");
                     }
-                    
+
                     if (desc.MaxValue != null)
                     {
                         items.Add($"MAXVALUE {desc.MaxValue}");

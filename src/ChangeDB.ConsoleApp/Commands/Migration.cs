@@ -39,7 +39,7 @@ namespace ChangeDB.ConsoleApp.Commands
 
         [Option("post-sql-file",
             HelpText = "post sql file, execute these sql script after the migration one-by-one.")]
-        public string PostSqlFile { get; set; } 
+        public string PostSqlFile { get; set; }
 
         [Option("post-sql-file-split", HelpText = "sql file split chars, default value is ;;")]
         public string PostSqlSplit { get; set; } = ";;";
@@ -59,10 +59,10 @@ namespace ChangeDB.ConsoleApp.Commands
                     {
                         TableNameStyle = TableNameStyle
                     },
-                    FetchDataMaxSize = MaxFetchBytes*1024,
+                    FetchDataMaxSize = MaxFetchBytes * 1024,
                     PostScripts = new CustomSqlScripts()
                     {
-                        SqlFiles = string.IsNullOrEmpty(PostSqlFile)?new List<string>():new List<string>(){PostSqlFile},
+                        SqlFiles = string.IsNullOrEmpty(PostSqlFile) ? new List<string>() : new List<string>() { PostSqlFile },
                         SqlSplit = PostSqlSplit,
                     }
                 },

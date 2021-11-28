@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
+using ChangeDB.Agent.SqlCe.EFCore.SqlServerCompact;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 using Microsoft.Extensions.Logging;
-using ChangeDB.Agent.SqlCe.EFCore.SqlServerCompact;
+
 namespace ChangeDB.Agent.SqlCe
 {
     internal class SqlCeUtils
@@ -45,9 +47,8 @@ namespace ChangeDB.Agent.SqlCe
 
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
         {
-            var loggerFactory = new LoggerFactory();
-            
-           var databaseModelFactory = new SqlCeDatabaseModelFactory();
+
+            var databaseModelFactory = new SqlCeDatabaseModelFactory();
             var options = new DatabaseModelFactoryOptions();
             var model = databaseModelFactory.Create(dbConnection, options);
             return FromDatabaseModel(model, dbConnection);
@@ -55,6 +56,12 @@ namespace ChangeDB.Agent.SqlCe
 
         private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection)
         {
+
+            var allDefaultValues = dbConnection.ExecuteReaderAsList<string, string, string>(
+                "SELECT TABLE_NAME,COLUMN_NAME,COLUMN_DEFAULT FROM INFORMATION_SCHEMA.COLUMNS");
+
+            var addIdentityInfos = GetAllIdentityInfos();
+
             return new DatabaseDescriptor
             {
                 //Collation = databaseModel.Collation,
@@ -62,6 +69,13 @@ namespace ChangeDB.Agent.SqlCe
                 Tables = databaseModel.Tables.Select(FromTableModel).ToList(),
                 Sequences = databaseModel.Sequences.Select(FromSequenceModel).ToList(),
             };
+
+            List<Tuple<string, string, long, int, long>> GetAllIdentityInfos()
+            {
+
+                var sql = "SELECT TABLE_SCHEMA,TABLE_NAME,AUTOINC_SEED,AUTOINC_INCREMENT,AUTOINC_NEXT FROM INFORMATION_SCHEMA.COLUMNS WHERE AUTOINC_INCREMENT IS NOT NULL";
+                return dbConnection.ExecuteReaderAsList<string, string, long, int, long>(sql);
+            }
             TableDescriptor FromTableModel(DatabaseTable table)
             {
                 return new TableDescriptor
@@ -104,7 +118,7 @@ namespace ChangeDB.Agent.SqlCe
 
                 };
             }
-            //https://github.com/npgsql/efcore.pg/blob/176fae2e08087ad43b9650768b7296a336d4f3f2/src/EFCore.PG/Scaffolding/Internal/NpgsqlDatabaseModelFactory.cs#L454
+            //https://github.com/dotnet/efcore/blob/252ece7a6bdf14139d90525a4dd0099616a82b4c/src/EFCore.SqlServer/Scaffolding/Internal/SqlServerDatabaseModelFactory.cs
             ColumnDescriptor FromColumnModel(DatabaseColumn column)
             {
                 var baseColumnDesc = new ColumnDescriptor
@@ -114,18 +128,38 @@ namespace ChangeDB.Agent.SqlCe
                     ComputedColumnSql = column.ComputedColumnSql,
                     DefaultValueSql = column.DefaultValueSql,
                     Name = column.Name,
-                    IsStored = column.IsStored??false,
+                    IsStored = column.IsStored ?? false,
                     IsNullable = column.IsNullable,
                     StoreType = column.StoreType,
                 };
 
                 if (column.ValueGenerated == ValueGenerated.OnAdd)
                 {
-
+                    var tableFullName = IdentityName(column.Table.Schema, column.Table.Name);
+                    baseColumnDesc.IsIdentity = true;
+                    var identityInfo = addIdentityInfos.Single(p => p.Item1 == column.Table.Schema && p.Item2 == column.Table.Name);
+                    baseColumnDesc.IdentityInfo = new IdentityDescriptor
+                    {
+                        IsCyclic = false,
+                        StartValue = identityInfo.Item3,
+                        IncrementBy = identityInfo.Item4,
+                        CurrentValue = identityInfo.Item5 == identityInfo.Item3 ? null : identityInfo.Item5 - identityInfo.Item4,
+                    };
+                    if (baseColumnDesc.IdentityInfo.IncrementBy == 0)
+                    {
+                        baseColumnDesc.IdentityInfo.IncrementBy = 1;
+                    }
                 }
+                else
+                {
+                    // reassign defaultValue Sql, because efcore will filter clr default
+                    baseColumnDesc.DefaultValueSql = allDefaultValues.Where(p =>
+                             p.Item1 == column.Table.Name && p.Item2 == column.Name)
+                        .Select(p => p.Item3).SingleOrDefault();
+                }
+
                 return baseColumnDesc;
             }
-
 
             ForeignKeyDescriptor FromForeignKeyModel(DatabaseForeignKey foreignKey)
             {
@@ -153,7 +187,6 @@ namespace ChangeDB.Agent.SqlCe
                     StoreType = sequence.StoreType,
                 };
             }
-
         }
     }
 }

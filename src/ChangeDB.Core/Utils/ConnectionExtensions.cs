@@ -11,10 +11,10 @@ namespace ChangeDB
 {
     public static class ConnectionExtensions
     {
-        public static object ExecuteScalar(this IDbConnection connection, string sql,IDictionary<string, object> args=null)
+        public static object ExecuteScalar(this IDbConnection connection, string sql, IDictionary<string, object> args = null)
         {
             AlterOpen(connection);
-            var command = connection.CreateCommand();
+            using var command = connection.CreateCommand();
             command.CommandText = sql;
             command.CommandType = CommandType.Text;
             if (args?.Count > 0)
@@ -47,9 +47,9 @@ namespace ChangeDB
 
         private static T FieldValue<T>(this DataRow row, int index) => row[index].ToValue<T>();
         private static T FieldValue<T>(this DataRow row, string columnName) => row[columnName].ToValue<T>();
-        public static T ExecuteScalar<T>(this IDbConnection connection, string sql,IDictionary<string, object> args=null)
+        public static T ExecuteScalar<T>(this IDbConnection connection, string sql, IDictionary<string, object> args = null)
         {
-             return connection.ExecuteScalar(sql,args).ToValue<T>();
+            return connection.ExecuteScalar(sql, args).ToValue<T>();
         }
         public static int ExecuteNonQuery(this IDbConnection connection, string sql)
         {
@@ -59,7 +59,7 @@ namespace ChangeDB
         {
             _ = sql ?? throw new ArgumentNullException(nameof(sql));
             AlterOpen(connection);
-            var command = connection.CreateCommand();
+            using var command = connection.CreateCommand();
             command.CommandText = sql;
             command.CommandType = CommandType.Text;
             if (args?.Count > 0)
@@ -120,13 +120,11 @@ namespace ChangeDB
         public static DataTable ExecuteReaderAsTable(this IDbConnection connection, string sql)
         {
             AlterOpen(connection);
-            var command = connection.CreateCommand();
+            using var command = connection.CreateCommand();
             command.CommandText = sql;
             command.CommandType = CommandType.Text;
             using var reader = command.ExecuteReader();
-            var table = new DataTable();
-            table.Load(reader);
-            return table;
+            return reader.LoadDataTable();
         }
         public static List<Tuple<T1, T2>> ExecuteReaderAsList<T1, T2>(this IDbConnection connection, string sql)
         {
@@ -144,17 +142,17 @@ namespace ChangeDB
             return table.AsEnumerable().Select(p =>
                 new Tuple<T1, T2, T3, T4>(p.FieldValue<T1>(0), p.FieldValue<T2>(1), p.FieldValue<T3>(2), p.FieldValue<T4>(3))).ToList();
         }
-        public static List<Tuple<T1, T2, T3, T4,T5>> ExecuteReaderAsList<T1, T2, T3, T4,T5>(this IDbConnection connection, string sql)
+        public static List<Tuple<T1, T2, T3, T4, T5>> ExecuteReaderAsList<T1, T2, T3, T4, T5>(this IDbConnection connection, string sql)
         {
             var table = ExecuteReaderAsTable(connection, sql);
             return table.AsEnumerable().Select(p =>
-                new Tuple<T1, T2, T3, T4,T5>(p.FieldValue<T1>(0), p.FieldValue<T2>(1), p.FieldValue<T3>(2), p.FieldValue<T4>(3),p.FieldValue<T5>(4))).ToList();
+                new Tuple<T1, T2, T3, T4, T5>(p.FieldValue<T1>(0), p.FieldValue<T2>(1), p.FieldValue<T3>(2), p.FieldValue<T4>(3), p.FieldValue<T5>(4))).ToList();
         }
-        public static List<Tuple<T1, T2, T3, T4,T5,T6>> ExecuteReaderAsList<T1, T2, T3, T4,T5,T6>(this IDbConnection connection, string sql)
+        public static List<Tuple<T1, T2, T3, T4, T5, T6>> ExecuteReaderAsList<T1, T2, T3, T4, T5, T6>(this IDbConnection connection, string sql)
         {
             var table = ExecuteReaderAsTable(connection, sql);
             return table.AsEnumerable().Select(p =>
-                new Tuple<T1, T2, T3, T4,T5,T6>(p.FieldValue<T1>(0), p.FieldValue<T2>(1), p.FieldValue<T3>(2), p.FieldValue<T4>(3),p.FieldValue<T5>(4),p.FieldValue<T6>(5))).ToList();
+                new Tuple<T1, T2, T3, T4, T5, T6>(p.FieldValue<T1>(0), p.FieldValue<T2>(1), p.FieldValue<T3>(2), p.FieldValue<T4>(3), p.FieldValue<T5>(4), p.FieldValue<T6>(5))).ToList();
         }
         public static List<T> ExecuteReaderAsList<T>(this IDbConnection connection, string sql, int columnIndex = 0)
         {
@@ -173,6 +171,39 @@ namespace ChangeDB
             {
                 connection.Open();
             }
+        }
+        private static DataTable LoadDataTable(this IDataReader reader)
+        {
+            //Create datatable to hold schema and data seperately
+            //Get schema of our actual table
+            DataTable schema = reader.GetSchemaTable();
+            DataTable table = new DataTable();
+            if (schema != null)
+                if (schema.Rows.Count > 0)
+                    for (int i = 0; i < schema.Rows.Count; i++)
+                    {
+                        //Create new column for each row in schema table
+                        //Set properties that are causing errors and add it to our datatable
+                        //Rows in schema table are filled with information of columns in our actual table
+                        DataColumn Col = new DataColumn(schema.Rows[i]["ColumnName"].ToString(), (Type)schema.Rows[i]["DataType"]);
+                        Col.AllowDBNull = true;
+                        Col.Unique = false;
+                        Col.AutoIncrement = false;
+                        table.Columns.Add(Col);
+                    }
+
+            while (reader.Read())
+            {
+                //Read data and fill it to our datatable
+                DataRow Row = table.NewRow();
+                for (int i = 0; i < table.Columns.Count; i++)
+                {
+                    Row[i] = reader[i];
+                }
+                table.Rows.Add(Row);
+            }
+            //This is our datatable filled with data
+            return table;
         }
     }
 }

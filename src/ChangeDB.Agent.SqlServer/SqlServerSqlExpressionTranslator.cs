@@ -33,8 +33,8 @@ namespace ChangeDB.Agent.SqlServer
             else
             {
                 var sql = $"select cast({trimmedExpression} as {context.StoreType})";
-               var value=  ValueCache.GetOrAdd(sql, (s) => context.AgentInfo.Connection.ExecuteScalar(s));
-               return new SqlExpressionDescriptor() {Constant = value};
+                var value = ValueCache.GetOrAdd(sql, (s) => context.AgentInfo.Connection.ExecuteScalar(s));
+                return new SqlExpressionDescriptor() { Constant = value };
             }
         }
 
@@ -75,7 +75,7 @@ namespace ChangeDB.Agent.SqlServer
                     _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
                 };
             }
-            if(sqlExpression?.Constant!=null)
+            if (sqlExpression?.Constant != null)
             {
                 return ConstantToSqlExpression(sqlExpression.Constant, context);
             }
@@ -91,7 +91,7 @@ namespace ChangeDB.Agent.SqlServer
             {
                 return Repr(str);
             }
-            else if(constant is bool)
+            else if (constant is bool)
             {
                 return Convert.ToInt32(constant).ToString();
             }
@@ -100,16 +100,19 @@ namespace ChangeDB.Agent.SqlServer
             {
                 return constant.ToString();
             }
-            else if(constant is Guid guid)
+            else if (constant is Guid guid)
             {
                 return $"'{guid}'";
-            }else if (constant is byte[] bytes)
+            }
+            else if (constant is byte[] bytes)
             {
                 return $"0x{string.Join("", bytes.Select(p => p.ToString("X2")))}";
-            }else if (constant is DateTime dateTime)
+            }
+            else if (constant is DateTime dateTime)
             {
-                return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'";;
-            }else if (constant is DateTimeOffset dateTimeOffset)
+                return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'"; ;
+            }
+            else if (constant is DateTimeOffset dateTimeOffset)
             {
                 return $"'{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}'";
             }
@@ -122,7 +125,7 @@ namespace ChangeDB.Agent.SqlServer
         private string Repr(string input)
         {
             if (input is null) return null;
-            return $"'{input.Replace("'", "''")}'" ;
+            return $"'{input.Replace("'", "''")}'";
         }
 
     }

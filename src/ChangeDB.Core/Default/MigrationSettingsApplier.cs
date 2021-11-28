@@ -11,7 +11,7 @@ namespace ChangeDB.Default
     class MigrationSettingsApplier
     {
 
-        public static void ApplySettingForTarget(AgentRunTimeInfo source,AgentRunTimeInfo target,MigrationSetting migrationSetting)
+        public static void ApplySettingForTarget(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
             var isSameDbType = string.Equals(source.DatabaseType, target.DatabaseType, StringComparison.InvariantCultureIgnoreCase);
             var clonedDescriptor = target.Descriptor;
@@ -173,7 +173,7 @@ namespace ChangeDB.Default
             void FixMaxObjectName()
             {
                 var agentSetting = target.Agent.AgentSetting;
-                
+
                 FixTableNameMaxLimit(agentSetting.ObjectNameMaxLength);
                 FixColumnNameMaxLimit(agentSetting.ObjectNameMaxLength);
                 FixIndexNameMaxLimit(agentSetting.ObjectNameMaxLength);
@@ -182,7 +182,7 @@ namespace ChangeDB.Default
                 FixForeignKeyMaxLimit(agentSetting.ObjectNameMaxLength);
                 void FixTableNameMaxLimit(int objectMaxNameLength)
                 {
-                    var nameMap= target.Descriptor.Tables.Where(p => p?.Name?.Length > objectMaxNameLength)
+                    var nameMap = target.Descriptor.Tables.Where(p => p?.Name?.Length > objectMaxNameLength)
                         .ToDictionary(p => $"{p.Schema}___{p.Name}", p => GetNewName(p.Name, objectMaxNameLength));
 
                     foreach (var table in target.Descriptor.Tables)
@@ -192,9 +192,9 @@ namespace ChangeDB.Default
                             table.Name = nameMap[$"{table.Schema}___{table.Name}"];
                         }
                         table.ForeignKeys.Where(p => nameMap.ContainsKey($"{p.PrincipalSchema}___{p.PrincipalTable}"))
-                            .Each(p=>p.Name=nameMap[$"{p.PrincipalSchema}___{p.PrincipalTable}"]);
+                            .Each(p => p.Name = nameMap[$"{p.PrincipalSchema}___{p.PrincipalTable}"]);
                     }
-                    
+
                 }
 
                 void FixColumnNameMaxLimit(int objectMaxNameLength)
@@ -204,34 +204,34 @@ namespace ChangeDB.Default
 
                 void FixIndexNameMaxLimit(int objectMaxNameLength)
                 {
-                   target.Descriptor.Tables.SelectMany(p => p.Indexes)
-                        .Where(p => p.Name?.Length > objectMaxNameLength)
-                        .Each(p => p.Name = GetNewName(p.Name, objectMaxNameLength));
+                    target.Descriptor.Tables.SelectMany(p => p.Indexes)
+                         .Where(p => p.Name?.Length > objectMaxNameLength)
+                         .Each(p => p.Name = GetNewName(p.Name, objectMaxNameLength));
                 }
 
                 void FixUniqueNameMaxLimit(int objectMaxNameLength)
                 {
                     target.Descriptor.Tables.SelectMany(p => p.Uniques)
-                        .Where(p =>p?.Name?.Length > objectMaxNameLength)
+                        .Where(p => p?.Name?.Length > objectMaxNameLength)
                         .Each(p => p.Name = GetNewName(p.Name, objectMaxNameLength));
                 }
 
                 void FixPrimaryKeyMaxLimit(int objectMaxNameLength)
                 {
                     target.Descriptor.Tables.Select(p => p.PrimaryKey)
-                        .Where(p =>p?.Name?.Length > objectMaxNameLength)
+                        .Where(p => p?.Name?.Length > objectMaxNameLength)
                         .Each(p => p.Name = GetNewName(p.Name, objectMaxNameLength));
                 }
 
                 void FixForeignKeyMaxLimit(int objectMaxNameLength)
                 {
                     target.Descriptor.Tables.SelectMany(p => p.ForeignKeys)
-                        .Where(p =>p?.Name?.Length >objectMaxNameLength)
+                        .Where(p => p?.Name?.Length > objectMaxNameLength)
                         .Each(p => p.Name = GetNewName(p.Name, objectMaxNameLength));
                 }
             }
         }
-        private static string GetNewName(string originName,int maxLength)=>$"{originName.Substring(0,maxLength-9)}_{originName.FixedHash():x8}";
+        private static string GetNewName(string originName, int maxLength) => $"{originName.Substring(0, maxLength - 9)}_{originName.FixedHash():x8}";
 
     }
 }

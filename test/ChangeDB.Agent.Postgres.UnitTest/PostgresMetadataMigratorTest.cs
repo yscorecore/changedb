@@ -985,7 +985,7 @@ namespace ChangeDB.Agent.Postgres
             var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
-        
+
         [Fact]
         public async Task ShouldMapAlwaysIdentityWhenMigrateMetadataAndStartValueLessThan1()
         {
@@ -1021,12 +1021,12 @@ namespace ChangeDB.Agent.Postgres
             var expectDatabaseDesc = databaseDesc.DeepClone().DoIfNotNull(p => p.Tables.SelectMany(t => t.Columns).Each(
                 c =>
                 {
-                    
+
                     c.IdentityInfo.MinValue = -5;
                 }));
             actualDatabaseDesc.Should().BeEquivalentTo(expectDatabaseDesc);
         }
-        
+
         [Fact]
         public async Task ShouldMapIdentityWhenMigrateMetadataAndWithFullArguments()
         {

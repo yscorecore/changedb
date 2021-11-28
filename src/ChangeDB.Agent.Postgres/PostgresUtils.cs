@@ -83,9 +83,9 @@ namespace ChangeDB.Agent.Postgres
                 "SELECT TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,COLUMN_DEFAULT FROM INFORMATION_SCHEMA.COLUMNS");
 
             var allIdentityColumns = GetAllColumnInentitiesInfos();
-            
-            
-            
+
+
+
             return new DatabaseDescriptor
             {
                 //Collation = databaseModel.Collation,
@@ -93,7 +93,7 @@ namespace ChangeDB.Agent.Postgres
                 Tables = databaseModel.Tables.Where(IsTable).Select(FromTableModel).ToList(),
                 Sequences = databaseModel.Sequences.Select(FromSequenceModel).ToList(),
             };
-            Dictionary<DatabaseColumn,(string SequenceName,long? CurrentValue)> GetAllColumnInentitiesInfos()
+            Dictionary<DatabaseColumn, (string SequenceName, long? CurrentValue)> GetAllColumnInentitiesInfos()
             {
                 var allIdentityColumns = databaseModel.Tables.SelectMany(p => p.Columns)
                             .Where(p => p.ValueGenerated == ValueGenerated.OnAdd)
@@ -103,10 +103,10 @@ namespace ChangeDB.Agent.Postgres
                 var allSequenceNameSql = string.Join("\nunion all\n", allIdentityColumns.Select(column =>
                     $"select pg_get_serial_sequence('{IdentityName(column.Table.Schema, column.Table.Name)}','{column.Name}')"));
                 var allSequenceNames = dbConnection.ExecuteReaderAsList<string>(allSequenceNameSql);
-                var allSequenceValueSql = string.Join("\nunion all\n", allSequenceNames.Select(p=>$"select case when is_called then last_value else null end from {p}"));
+                var allSequenceValueSql = string.Join("\nunion all\n", allSequenceNames.Select(p => $"select case when is_called then last_value else null end from {p}"));
                 var allSequenceValues = dbConnection.ExecuteReaderAsList<long?>(allSequenceValueSql);
-                var infos= allSequenceNames.Zip(allSequenceValues, (name, val) => (SequenceName:name　 , CurrentValue:val));
-               return   allIdentityColumns.Zip(infos, (column, info) => new {column, info}).ToDictionary(p=>p.column,p=>p.info);
+                var infos = allSequenceNames.Zip(allSequenceValues, (name, val) => (SequenceName: name, CurrentValue: val));
+                return allIdentityColumns.Zip(infos, (column, info) => new { column, info }).ToDictionary(p => p.column, p => p.info);
             }
             bool IsTable(DatabaseTable table)
             {

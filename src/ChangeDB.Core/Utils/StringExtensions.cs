@@ -11,7 +11,7 @@ namespace ChangeDB
             if (str == null) return default;
             unchecked
             {
-                return str.Aggregate(17,(a, b)=>23*a +b);
+                return str.Aggregate(17, (a, b) => 23 * a + b);
             }
         }
     }

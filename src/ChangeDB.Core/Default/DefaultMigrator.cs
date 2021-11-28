@@ -117,7 +117,7 @@ namespace ChangeDB.Default
                 await MigrationTable(source, target, migrationSetting, sourceTable);
             }
         }
-        private Task ApplyCustomScripts( AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        private Task ApplyCustomScripts(AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
             if (migrationSetting.PostScripts?.SqlFiles?.Count > 0)
             {
