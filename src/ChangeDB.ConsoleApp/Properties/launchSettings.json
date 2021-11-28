@@ -11,6 +11,10 @@
         "postgres_mssql": {
             "commandName": "Project",
             "commandLineArgs": "migration postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" sqlserver \"Server=127.0.0.1,1433;Database=Northwind3;User Id=sa;Password=myStrong(!)Password;\" -f"
+        },
+        "postgres_sqlce": {
+            "commandName": "Project",
+            "commandLineArgs": "migration postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" sqlce \"Data Source=Northwind.sdf\" -f"
         }
     }
 }

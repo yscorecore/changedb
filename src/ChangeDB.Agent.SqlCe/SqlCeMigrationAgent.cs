@@ -11,7 +11,7 @@ using Microsoft.Data.SqlClient;
 
 namespace ChangeDB.Agent.SqlCe
 {
-    [Service(typeof(IMigrationAgent), Name = "sqlse")]
+    [Service(typeof(IMigrationAgent), Name = "sqlce")]
     public class SqlCeMigrationAgent : IMigrationAgent
     {
         public IDataMigrator DataMigrator { get => SqlServerDataMigrator.Default; }

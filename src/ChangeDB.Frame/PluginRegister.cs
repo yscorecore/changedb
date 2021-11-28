@@ -32,7 +32,7 @@ namespace ChangeDB
             catch (Exception ex)
 #pragma warning restore CA1031 // 不捕获常规异常类型
             {
-                Debug.Fail($"Load plugin assembly \"{dll}\" error.", ex.Message);
+                //Debug.Fail($"Load plugin assembly \"{dll}\" error.", ex.Message);
             }
         }
     }
