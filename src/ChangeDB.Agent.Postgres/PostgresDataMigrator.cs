@@ -99,6 +99,12 @@ namespace ChangeDB.Agent.Postgres
 
         public Task AfterWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationSetting migrationSetting)
         {
+            var tableFullName = PostgresUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
+            tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)
+                .Each((column) =>
+                {
+                    connection.ExecuteNonQuery($"select setval(pg_get_serial_sequence('{tableFullName}','{column.Name}'),{column.IdentityInfo.CurrentValue})");
+                });
             return Task.CompletedTask;
         }
     }
