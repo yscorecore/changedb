@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Nullable>enable</Nullable>
+        <RootNamespace>ChangeDB.Core</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\ChangeDB.Core\ChangeDB.Core.csproj" />
+    </ItemGroup>
+
+
+
+</Project>
