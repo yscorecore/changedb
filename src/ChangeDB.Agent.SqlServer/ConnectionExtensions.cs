@@ -14,7 +14,7 @@ namespace ChangeDB.Agent.SqlServer
             {
                 var connectionInfo = new SqlConnectionStringBuilder(connection.ConnectionString);
                 newConnection.ExecuteNonQuery(
-                     $" drop database  if exists [{connectionInfo.InitialCatalog}]"
+                     $" drop database  if exists {SqlServerUtils.IdentityName(connectionInfo.InitialCatalog)}"
                      );
             }
         }
@@ -23,7 +23,7 @@ namespace ChangeDB.Agent.SqlServer
             using (var newConnection = CreateNoDatabaseConnection(connection))
             {
                 var connectionInfo = new SqlConnectionStringBuilder(connection.ConnectionString);
-                newConnection.ExecuteNonQuery($"create database {connectionInfo.InitialCatalog}");
+                newConnection.ExecuteNonQuery($"create database {SqlServerUtils.IdentityName(connectionInfo.InitialCatalog)}");
             }
         }
 
@@ -38,7 +38,7 @@ namespace ChangeDB.Agent.SqlServer
         private static void DropAllForeignConstraints(this DbConnection connection)
         {
             var allForeignConstraints = connection.ExecuteReaderAsList<string, string, string>($"SELECT TABLE_NAME ,CONSTRAINT_NAME,TABLE_SCHEMA from INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc where tc.CONSTRAINT_TYPE ='FOREIGN KEY'");
-            allForeignConstraints.ForEach(p => connection.ExecuteNonQuery($"alter table \"{p.Item3}\".\"{p.Item1}\" drop constraint \"{p.Item2}\";"));
+            allForeignConstraints.ForEach(p => connection.ExecuteNonQuery($"alter table {SqlServerUtils.IdentityName(p.Item3,p.Item1)} drop constraint {SqlServerUtils.IdentityName(p.Item2)};"));
         }
 
         private static void DropAllSchemas(this DbConnection connection)
@@ -58,12 +58,12 @@ namespace ChangeDB.Agent.SqlServer
             allTables.ForEach(p => connection.DropTableIfExists(schema, p));
             if (dropSchema)
             {
-                connection.ExecuteNonQuery($"drop schema if exists [{schema}]");
+                connection.ExecuteNonQuery($"drop schema if exists {SqlServerUtils.IdentityName(schema)}");
             }
         }
         public static void DropTableIfExists(this DbConnection connection, string schema, string table)
         {
-            connection.ExecuteNonQuery($"drop table if exists [{schema}].[{table}]");
+            connection.ExecuteNonQuery($"drop table if exists {SqlServerUtils.IdentityName(schema,table)}");
         }
     }
 }

@@ -8,7 +8,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Default
 {
-    class MigrationSettingsApplier
+    class SettingsApplier
     {
 
         public static void ApplySettingForTarget(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)

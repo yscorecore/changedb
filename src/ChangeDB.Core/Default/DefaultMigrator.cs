@@ -61,13 +61,13 @@ namespace ChangeDB.Default
 
         private Task ApplyMigrationSettings(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
-            MigrationSettingsApplier.ApplySettingForTarget(source, target, migrationSetting);
+            SettingsApplier.ApplySettingForTarget(source, target, migrationSetting);
             return Task.CompletedTask;
         }
 
         private Task ApplyTargetAgentSettings(AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
-            return MigrationSettingsApplier.ApplyAgentSettings(target);
+            return SettingsApplier.ApplyAgentSettings(target);
         }
 
         private async Task DoMigrateDatabase(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
@@ -147,7 +147,7 @@ namespace ChangeDB.Default
                 
                 migratedCount += dataTable.Rows.Count;
                 maxRowSize = Math.Max(maxRowSize, dataTable.MaxRowSize());
-                fetchCount = Math.Min(fetchCount*5, Math.Max(1, migrationSetting.FetchDataMaxSize / maxRowSize));
+                fetchCount = Math.Min(fetchCount*migrationSetting.GrowthSpeed, Math.Max(1, migrationSetting.FetchDataMaxSize / maxRowSize));
                 Log($"migrating table {tableName} ......{migratedCount * 1.0 / totalCount:p2} [{migratedCount}/{totalCount}].");
                 Console.SetCursorPosition(0, Console.CursorTop - 1);
                 if (dataTable.Rows.Count < pageInfo.Limit)
