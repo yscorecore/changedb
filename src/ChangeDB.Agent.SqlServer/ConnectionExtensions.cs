@@ -38,7 +38,7 @@ namespace ChangeDB.Agent.SqlServer
         private static void DropAllForeignConstraints(this DbConnection connection)
         {
             var allForeignConstraints = connection.ExecuteReaderAsList<string, string, string>($"SELECT TABLE_NAME ,CONSTRAINT_NAME,TABLE_SCHEMA from INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc where tc.CONSTRAINT_TYPE ='FOREIGN KEY'");
-            allForeignConstraints.ForEach(p => connection.ExecuteNonQuery($"alter table {SqlServerUtils.IdentityName(p.Item3,p.Item1)} drop constraint {SqlServerUtils.IdentityName(p.Item2)};"));
+            allForeignConstraints.ForEach(p => connection.ExecuteNonQuery($"alter table {SqlServerUtils.IdentityName(p.Item3, p.Item1)} drop constraint {SqlServerUtils.IdentityName(p.Item2)};"));
         }
 
         private static void DropAllSchemas(this DbConnection connection)
@@ -63,7 +63,7 @@ namespace ChangeDB.Agent.SqlServer
         }
         public static void DropTableIfExists(this DbConnection connection, string schema, string table)
         {
-            connection.ExecuteNonQuery($"drop table if exists {SqlServerUtils.IdentityName(schema,table)}");
+            connection.ExecuteNonQuery($"drop table if exists {SqlServerUtils.IdentityName(schema, table)}");
         }
     }
 }

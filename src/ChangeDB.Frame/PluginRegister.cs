@@ -29,7 +29,7 @@ namespace ChangeDB
                 Debug.WriteLine("Load plugin assembly \"{dll}\"");
             }
 #pragma warning disable CA1031 // 不捕获常规异常类型
-            catch (Exception ex)
+            catch (Exception)
 #pragma warning restore CA1031 // 不捕获常规异常类型
             {
                 //Debug.Fail($"Load plugin assembly \"{dll}\" error.", ex.Message);

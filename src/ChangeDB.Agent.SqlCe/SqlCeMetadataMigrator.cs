@@ -23,7 +23,7 @@ namespace ChangeDB.Agent.SqlCe
             return Task.FromResult(databaseDescriptor);
         }
 
-        
+
 
     }
 }

@@ -17,7 +17,7 @@ namespace ChangeDB.Migration
 
         public bool IncludeMeta { get => MigrationType.HasFlag(MigrationType.MetaData); }
         public bool IncludeData { get => MigrationType.HasFlag(MigrationType.MetaData); }
-        
+
         public int GrowthSpeed { get => 10; }
     }
 
@@ -44,7 +44,7 @@ namespace ChangeDB.Migration
     }
     public class TargetNameStyle
     {
-        static Random Random = new Random();
+        static readonly Random Random = new();
         static Func<string, string> Lower = p => p?.ToLowerInvariant();
         static Func<string, string> Upper = p => p?.ToUpperInvariant();
         static Func<string, string> Origin = p => p;

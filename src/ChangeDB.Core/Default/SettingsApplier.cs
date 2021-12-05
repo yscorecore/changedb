@@ -244,8 +244,8 @@ namespace ChangeDB.Default
                 else
                 {
                     // set defaultSchame
-                    target.Descriptor.Tables.Where(p=>string.IsNullOrEmpty(p.Schema)).Each(p => p.Schema = agentSetting.DefaultSchema);
-                    target.Descriptor.Tables.SelectMany(p => p.ForeignKeys).Where(p=>string.IsNullOrEmpty(p.PrincipalSchema)).Each(p => p.PrincipalSchema = agentSetting.DefaultSchema);
+                    target.Descriptor.Tables.Where(p => string.IsNullOrEmpty(p.Schema)).Each(p => p.Schema = agentSetting.DefaultSchema);
+                    target.Descriptor.Tables.SelectMany(p => p.ForeignKeys).Where(p => string.IsNullOrEmpty(p.PrincipalSchema)).Each(p => p.PrincipalSchema = agentSetting.DefaultSchema);
                     target.Descriptor.Sequences.Where(p => string.IsNullOrEmpty(p.Schema)).Each(p => p.Schema = agentSetting.DefaultSchema);
                 }
             }

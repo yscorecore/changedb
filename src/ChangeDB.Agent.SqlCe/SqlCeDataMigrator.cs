@@ -86,7 +86,7 @@ namespace ChangeDB.Agent.SqlCe
                 tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)
                     .Each((column) =>
                     {
-                        var startValue =  column.IdentityInfo.CurrentValue + column.IdentityInfo.IncrementBy ;
+                        var startValue = column.IdentityInfo.CurrentValue + column.IdentityInfo.IncrementBy;
                         var incrementBy = column.IdentityInfo.IncrementBy;
                         connection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {SqlCeUtils.IdentityName(column.Name)} IDENTITY({startValue},{incrementBy})");
                     });

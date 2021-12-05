@@ -39,7 +39,7 @@ namespace ChangeDB
 
         public static int TotalSize(this DataRow dataRow)
         {
-           return dataRow.Table.Columns.OfType<DataColumn>().Sum(p => GetSize(dataRow, p));
+            return dataRow.Table.Columns.OfType<DataColumn>().Sum(p => GetSize(dataRow, p));
         }
 
         private static int GetSize(DataRow row, DataColumn column)

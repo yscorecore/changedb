@@ -14,17 +14,17 @@ namespace ChangeDB.Default
     public class DefaultMigrator : IDatabaseMigrate
     {
 
-        private readonly IAgentFactory _agentFactory;
+        protected IAgentFactory AgentFactory { get; }
 
         public DefaultMigrator(IAgentFactory agentFactory)
         {
-            _agentFactory = agentFactory;
+            AgentFactory = agentFactory;
         }
-        private static Action<string> Log = Console.WriteLine;
-        public async Task MigrateDatabase(MigrationContext context)
+        protected static Action<string> Log = Console.WriteLine;
+        public virtual async Task MigrateDatabase(MigrationContext context)
         {
-            var sourceAgent = _agentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
-            var targetAgent = _agentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
+            var sourceAgent = AgentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
+            var targetAgent = AgentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
             await using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
             await using var targetConnection = targetAgent.CreateConnection(context.TargetDatabase.ConnectionString);
 
@@ -53,24 +53,24 @@ namespace ChangeDB.Default
 
         }
 
-        private async Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(IMigrationAgent sourceAgent, DbConnection sourceConnection, MigrationSetting migrationSetting)
+        protected virtual async Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(IMigrationAgent sourceAgent, DbConnection sourceConnection, MigrationSetting migrationSetting)
         {
             Log("start getting source database metadata.");
             return await sourceAgent.MetadataMigrator.GetDatabaseDescriptor(sourceConnection, migrationSetting);
         }
 
-        private Task ApplyMigrationSettings(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        protected virtual Task ApplyMigrationSettings(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
             SettingsApplier.ApplySettingForTarget(source, target, migrationSetting);
             return Task.CompletedTask;
         }
 
-        private Task ApplyTargetAgentSettings(AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        protected virtual Task ApplyTargetAgentSettings(AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
             return SettingsApplier.ApplyAgentSettings(target);
         }
 
-        private async Task DoMigrateDatabase(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        protected virtual async Task DoMigrateDatabase(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
             await CreateTargetDatabase(target.Agent, target.Connection, migrationSetting);
 
@@ -90,7 +90,7 @@ namespace ChangeDB.Default
                 await PostMigrationMetadata(target, migrationSetting);
             }
         }
-        private async Task CreateTargetDatabase(IMigrationAgent targetAgent, DbConnection targetConnection, MigrationSetting migrationSetting)
+        protected virtual async Task CreateTargetDatabase(IMigrationAgent targetAgent, DbConnection targetConnection, MigrationSetting migrationSetting)
         {
             if (migrationSetting.DropTargetDatabaseIfExists)
             {
@@ -100,17 +100,17 @@ namespace ChangeDB.Default
             Log("creating target database.");
             await targetAgent.DatabaseManger.CreateDatabase(targetConnection, migrationSetting);
         }
-        private async Task PreMigrationMetadata(AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        protected virtual async Task PreMigrationMetadata(AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
             Log("start pre migration metadata.");
             await target.Agent.MetadataMigrator.PreMigrate(target.Descriptor, target.Connection, migrationSetting);
         }
-        private async Task PostMigrationMetadata(AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        protected virtual async Task PostMigrationMetadata(AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
             Log("start post migration metadata.");
             await target.Agent.MetadataMigrator.PostMigrate(target.Descriptor, target.Connection, migrationSetting);
         }
-        private async Task MigrationData(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        protected virtual async Task MigrationData(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
             Log("start migrating data.");
             foreach (var sourceTable in source.Descriptor.Tables)
@@ -118,7 +118,7 @@ namespace ChangeDB.Default
                 await MigrationTable(source, target, migrationSetting, sourceTable);
             }
         }
-        private Task ApplyCustomScripts(AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        protected virtual Task ApplyCustomScripts(AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
             if (migrationSetting.PostScripts?.SqlFiles?.Count > 0)
             {
@@ -127,27 +127,27 @@ namespace ChangeDB.Default
             }
             return Task.CompletedTask;
         }
-        private async Task MigrationTable(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting, TableDescriptor sourceTable)
+        protected virtual async Task MigrationTable(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting, TableDescriptor sourceTable)
         {
             var targetTableName = migrationSetting.TargetNameStyle.TableNameFunc(sourceTable.Name);
             var targetTableDesc = target.Descriptor.GetTable(targetTableName);
             await target.Agent.DataMigrator.BeforeWriteTableData(targetTableDesc, target.Connection, migrationSetting);
             var tableName = string.IsNullOrEmpty(sourceTable.Schema) ? $"\"{sourceTable.Name}\"" : $"\"{sourceTable.Schema}\".\"{sourceTable.Name}\"";
             var totalCount = await source.Agent.DataMigrator.CountTable(sourceTable, source.Connection, migrationSetting);
-            var (migratedCount,maxRowSize,fetchCount) = (0,1,1);
-           
+            var (migratedCount, maxRowSize, fetchCount) = (0, 1, 1);
+
             while (true)
             {
-                var pageInfo = new PageInfo { Offset = migratedCount, Limit = fetchCount };
+                var pageInfo = new PageInfo { Offset = migratedCount, Limit = Math.Max(1, fetchCount) };
                 var dataTable = await source.Agent.DataMigrator.ReadTableData(sourceTable, pageInfo, source.Connection, migrationSetting);
                 // convert target column name
                 dataTable.Columns.OfType<DataColumn>().Each(p =>
                     p.ColumnName = migrationSetting.TargetNameStyle.ColumnNameFunc(p.ColumnName));
                 await target.Agent.DataMigrator.WriteTableData(dataTable, targetTableDesc, target.Connection, migrationSetting);
-                
+
                 migratedCount += dataTable.Rows.Count;
                 maxRowSize = Math.Max(maxRowSize, dataTable.MaxRowSize());
-                fetchCount = Math.Min(fetchCount*migrationSetting.GrowthSpeed, Math.Max(1, migrationSetting.FetchDataMaxSize / maxRowSize));
+                fetchCount = Math.Min(fetchCount * migrationSetting.GrowthSpeed, Math.Max(1, migrationSetting.FetchDataMaxSize / maxRowSize));
                 Log($"migrating table {tableName} ......{migratedCount * 1.0 / totalCount:p2} [{migratedCount}/{totalCount}].");
                 Console.SetCursorPosition(0, Console.CursorTop - 1);
                 if (dataTable.Rows.Count < pageInfo.Limit)
@@ -158,8 +158,8 @@ namespace ChangeDB.Default
             }
             await target.Agent.DataMigrator.AfterWriteTableData(targetTableDesc, target.Connection, migrationSetting);
         }
-        
-        
-        
+
+
+
     }
 }

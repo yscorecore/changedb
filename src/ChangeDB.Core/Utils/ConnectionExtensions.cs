@@ -165,7 +165,7 @@ namespace ChangeDB
             return table.AsEnumerable().Select(p => p.FieldValue<T>(columnName)).ToList();
         }
 
-        public static void AlterOpen(IDbConnection connection)
+        private static void AlterOpen(IDbConnection connection)
         {
             if (connection.State == ConnectionState.Closed)
             {
