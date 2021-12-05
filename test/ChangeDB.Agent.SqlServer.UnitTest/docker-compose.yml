@@ -6,4 +6,4 @@ services:
       ACCEPT_EULA: Y
       SA_PASSWORD: myStrong(!)Password
     ports:
-      - "1433:1433"
+      - "${DBPORT:-1433}:1433"

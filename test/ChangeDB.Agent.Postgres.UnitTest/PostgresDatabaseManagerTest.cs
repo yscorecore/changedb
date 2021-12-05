@@ -8,15 +8,16 @@ using Xunit;
 
 namespace ChangeDB.Agent.Postgres
 {
+    [Collection(nameof(DatabaseEnvironment))]
     public class PostgresDatabaseManagerTest
     {
         private readonly IDatabaseManager _databaseManager = PostgresDatabaseManager.Default;
         private readonly MigrationSetting _migrationSetting = new MigrationSetting();
         private readonly DbConnection _dbConnection;
 
-        public PostgresDatabaseManagerTest()
+        public PostgresDatabaseManagerTest(DatabaseEnvironment databaseEnvironment)
         {
-            _dbConnection = new NpgsqlConnection($"Server=127.0.0.1;Port=5432;Database={TestUtils.RandomDatabaseName()};User Id=postgres;Password=mypassword;");
+            _dbConnection = databaseEnvironment.NewDatabaseConnection();
             _dbConnection.CreateDatabase();
         }
         [Fact]

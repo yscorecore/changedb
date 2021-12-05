@@ -12,22 +12,30 @@ namespace ChangeDB.Agent.SqlServer
     [CollectionDefinition(nameof(DatabaseEnvironment))]
     public class DatabaseEnvironment : IDisposable, ICollectionFixture<DatabaseEnvironment>
     {
-        private readonly DbConnection _dbConnection;
-        private readonly string _connectionString;
+
         public DatabaseEnvironment()
         {
-            _connectionString = $"Server=127.0.0.1,1433;Database={TestUtils.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;";
-            _dbConnection = new SqlConnection(_connectionString);
-            _dbConnection.CreateDatabase();
+            DBPort = Utility.GetAvailableTcpPort(1433);
+            DockerCompose.Up(new Dictionary<string, object>
+            {
+                ["DBPORT"] = DBPort
+            }, "db:1433");
+
+            DbConnection = NewDatabaseConnection();
+            DbConnection.CreateDatabase();
         }
 
-        public DbConnection DbConnection => _dbConnection;
+        public uint DBPort { get; set; }
+        public DbConnection DbConnection { get; }
 
-        public string ConnectionString => _connectionString;
+        public DbConnection NewDatabaseConnection()
+        {
+            return new SqlConnection($"Server=127.0.0.1,1433;Database={TestUtils.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;");
+        }
 
         public void Dispose()
         {
-
+            DockerCompose.Down();
         }
 
 

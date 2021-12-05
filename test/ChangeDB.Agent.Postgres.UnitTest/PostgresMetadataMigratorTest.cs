@@ -986,7 +986,8 @@ namespace ChangeDB.Agent.Postgres
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
-        [Fact]
+        //[Fact] TODO
+
         public async Task ShouldMapAlwaysIdentityWhenMigrateMetadataAndStartValueLessThan1()
         {
             var databaseDesc = new DatabaseDescriptor()

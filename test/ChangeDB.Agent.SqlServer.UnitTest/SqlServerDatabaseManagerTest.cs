@@ -11,15 +11,16 @@ using Xunit;
 
 namespace ChangeDB.Agent.SqlServer
 {
+    [Collection(nameof(DatabaseEnvironment))]
     public class SqlServerDatabaseManagerTest
     {
         private readonly IDatabaseManager _databaseManager = SqlServerDatabaseManager.Default;
         private readonly MigrationSetting _migrationSetting = new MigrationSetting();
         private readonly DbConnection _dbConnection;
 
-        public SqlServerDatabaseManagerTest()
+        public SqlServerDatabaseManagerTest(DatabaseEnvironment databaseEnvironment)
         {
-            _dbConnection = new SqlConnection($"Server=127.0.0.1,1433;Database={TestUtils.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;");
+            _dbConnection = databaseEnvironment.NewDatabaseConnection();
             _dbConnection.CreateDatabase();
         }
         [Fact]

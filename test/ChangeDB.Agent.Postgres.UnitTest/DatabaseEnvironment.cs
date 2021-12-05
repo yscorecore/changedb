@@ -9,20 +9,34 @@ using Xunit;
 
 namespace ChangeDB.Agent.Postgres
 {
+
     [CollectionDefinition(nameof(DatabaseEnvironment))]
     public class DatabaseEnvironment : IDisposable, ICollectionFixture<DatabaseEnvironment>
     {
-        private readonly DbConnection _dbConnection;
+
         public DatabaseEnvironment()
         {
-            _dbConnection = new NpgsqlConnection($"Server=127.0.0.1;Port=5432;Database={TestUtils.RandomDatabaseName()};User Id=postgres;Password=mypassword;");
-            _dbConnection.CreateDatabase();
+            DBPort = Utility.GetAvailableTcpPort(5432);
+            DockerCompose.Up(new Dictionary<string, object>
+            {
+                ["DBPORT"] = DBPort
+            }, "db:5432");
+
+            DbConnection = NewDatabaseConnection();
+            DbConnection.CreateDatabase();
         }
 
-        public DbConnection DbConnection => _dbConnection;
+        public uint DBPort { get; set; }
+        public DbConnection DbConnection { get; }
+
+        public DbConnection NewDatabaseConnection()
+        {
+            return new NpgsqlConnection($"Server=127.0.0.1;Port={DBPort};Database={TestUtils.RandomDatabaseName()};User Id=postgres;Password=mypassword;");
+        }
 
         public void Dispose()
         {
+            DockerCompose.Down();
         }
     }
 }
