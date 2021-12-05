@@ -16,7 +16,7 @@ namespace ChangeDB.Fakes
         public SqlScriptDbConnection(string outputScriptFile, Func<object, string> repr)
         {
 
-            fileStream = new Lazy<StreamWriter>(() => new StreamWriter(outputScriptFile) {  AutoFlush =true}, true);
+            fileStream = new Lazy<StreamWriter>(() => new StreamWriter(outputScriptFile) { AutoFlush = true }, true);
             Repr = repr;
         }
         public override string ConnectionString { get; set; }
@@ -36,7 +36,7 @@ namespace ChangeDB.Fakes
 
         public override void Close()
         {
-            
+
         }
 
         public override void Open()
@@ -93,16 +93,16 @@ namespace ChangeDB.Fakes
             var dataDic = this.DbParameterCollection.OfType<DbParameter>()
                .ToDictionary(p => p.ParameterName, p => Repr(p.Value));
             if (dataDic.Count == 0) return this.CommandText;
-            return Regex.Replace(CommandText, @"@\w+", (m) => 
+            return Regex.Replace(CommandText, @"@\w+", (m) =>
             {
-                if (dataDic.TryGetValue(m.Value,out var text))
+                if (dataDic.TryGetValue(m.Value, out var text))
                 {
                     return text;
                 }
                 return m.Value;
             });
         }
-        
+
 
         public override object ExecuteScalar()
         {
@@ -129,7 +129,7 @@ namespace ChangeDB.Fakes
     {
         List<DbParameter> dbParameters = new List<DbParameter>();
         public override int Count { get => dbParameters.Count; }
-        public override object SyncRoot { get=>this; }
+        public override object SyncRoot { get => this; }
 
         public override int Add(object value)
         {
@@ -169,7 +169,7 @@ namespace ChangeDB.Fakes
 
         public override void CopyTo(Array array, int index)
         {
-            
+
         }
 
         public override IEnumerator GetEnumerator()

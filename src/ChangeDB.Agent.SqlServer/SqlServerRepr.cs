@@ -12,7 +12,7 @@ namespace ChangeDB.Agent.SqlServer
         public static readonly IRepr Default = new SqlServerRepr();
         public string ReprValue(object value)
         {
-           return ReprConstant(value);
+            return ReprConstant(value);
         }
 
         public static string ReprConstant(object constant)

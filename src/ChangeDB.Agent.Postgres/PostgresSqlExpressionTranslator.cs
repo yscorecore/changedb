@@ -33,16 +33,16 @@ namespace ChangeDB.Agent.Postgres
                     _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
                 };
             }
-            if ("boolean".Equals(context.StoreType, StringComparison.InvariantCultureIgnoreCase) && sqlExpression?.Constant !=null)
+            if ("boolean".Equals(context.StoreType, StringComparison.InvariantCultureIgnoreCase) && sqlExpression?.Constant != null)
             {
                 return Convert.ToBoolean(sqlExpression.Constant).ToString().ToLowerInvariant();
             }
 
 
             var text = PostgresRepr.ReprConstant(sqlExpression?.Constant);
-            if (sqlExpression?.Constant is Guid || 
-                sqlExpression?.Constant is DateTime || 
-                sqlExpression?.Constant is byte[] || 
+            if (sqlExpression?.Constant is Guid ||
+                sqlExpression?.Constant is DateTime ||
+                sqlExpression?.Constant is byte[] ||
                 sqlExpression?.Constant is DateTimeOffset)
             {
                 return $"{text}::{context.StoreType}";
@@ -51,7 +51,7 @@ namespace ChangeDB.Agent.Postgres
 
 
         }
-       
+
 
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
         {

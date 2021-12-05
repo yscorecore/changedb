@@ -78,7 +78,7 @@ namespace ChangeDB.Agent.SqlServer
             return SqlServerRepr.ReprConstant(sqlExpression?.Constant);
         }
 
-        
+
 
     }
 }

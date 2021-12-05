@@ -13,7 +13,7 @@ namespace ChangeDB.Agent.Postgres
         public ISqlExpressionTranslator ExpressionTranslator { get => PostgresSqlExpressionTranslator.Default; }
         public IDatabaseManager DatabaseManger { get => PostgresDatabaseManager.Default; }
         public AgentSetting AgentSetting { get => new AgentSetting { ObjectNameMaxLength = 64, DefaultSchema = "public", SupportSchema = true }; }
-        public IRepr Repr { get=> PostgresRepr.Default; }
+        public IRepr Repr { get => PostgresRepr.Default; }
 
         public DbConnection CreateConnection(string connectionString) => new NpgsqlConnection(connectionString);
 

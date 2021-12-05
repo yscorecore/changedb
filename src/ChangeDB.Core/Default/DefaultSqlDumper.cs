@@ -49,7 +49,7 @@ namespace ChangeDB.Default
 
         }
 
-       
+
 
         protected override async Task DoMigrateDatabase(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
         {
