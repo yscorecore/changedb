@@ -33,63 +33,25 @@ namespace ChangeDB.Agent.Postgres
                     _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
                 };
             }
-
-            if (sqlExpression?.Constant != null)
+            if ("boolean".Equals(context.StoreType, StringComparison.InvariantCultureIgnoreCase) && sqlExpression?.Constant !=null)
             {
-                return ConstantToSqlExpression(sqlExpression.Constant, context);
+                return Convert.ToBoolean(sqlExpression.Constant).ToString().ToLowerInvariant();
             }
 
-            return "null";
+
+            var text = PostgresRepr.ReprConstant(sqlExpression?.Constant);
+            if (sqlExpression?.Constant is Guid || 
+                sqlExpression?.Constant is DateTime || 
+                sqlExpression?.Constant is byte[] || 
+                sqlExpression?.Constant is DateTimeOffset)
+            {
+                return $"{text}::{context.StoreType}";
+            }
+            return text;
 
 
         }
-        private string Repr(string input)
-        {
-            if (input is null) return null;
-            return $"'{input.Replace("'", "''")}'";
-        }
-
-        private string ConstantToSqlExpression(object constant, SqlExpressionTranslatorContext context)
-        {
-            if (constant is string str)
-            {
-                return Repr(str);
-            }
-            else if (constant is double || constant is float || constant is long || constant is int ||
-                     constant is short || constant is char || constant is byte || constant is decimal || constant is bool)
-            {
-                if ("boolean".Equals(context.StoreType, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    return Convert.ToBoolean(constant).ToString().ToLowerInvariant();
-                }
-                else
-                {
-                    return constant.ToString();
-                }
-
-
-            }
-            else if (constant is Guid guid)
-            {
-                return $"'{guid}'::{context.StoreType}";
-            }
-            else if (constant is byte[] bytes)
-            {
-                return $"'\\x{string.Join("", bytes.Select(p => p.ToString("X2")))}'::bytea";
-            }
-            else if (constant is DateTime dateTime)
-            {
-                return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'::{context.StoreType}"; ;
-            }
-            else if (constant is DateTimeOffset dateTimeOffset)
-            {
-                return $"'{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}'::{context.StoreType}";
-            }
-            else
-            {
-                return constant.ToString();
-            }
-        }
+       
 
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
         {

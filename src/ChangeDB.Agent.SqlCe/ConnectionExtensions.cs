@@ -41,7 +41,7 @@ namespace ChangeDB.Agent.SqlCe
         private static void DropAllForeignConstraints(this DbConnection connection)
         {
             var allForeignConstraints = connection.ExecuteReaderAsList<string, string>($"SELECT TABLE_NAME ,CONSTRAINT_NAME from INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc where tc.CONSTRAINT_TYPE ='FOREIGN KEY'");
-            allForeignConstraints.ForEach(p => connection.ExecuteNonQuery($"alter table [{p.Item1}] drop constraint [{p.Item2}];"));
+            allForeignConstraints.ForEach(p => connection.ExecuteNonQuery($"ALTER TABLE [{p.Item1}] drop constraint [{p.Item2}];"));
         }
 
 

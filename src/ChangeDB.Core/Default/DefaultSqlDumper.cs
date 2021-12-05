@@ -37,7 +37,7 @@ namespace ChangeDB.Default
             {
                 Agent = targetAgent,
                 DatabaseType = context.DumpInfo.DatabaseType,
-                // Connection = //targetConnection,
+                Connection = new Fakes.SqlScriptDbConnection(context.DumpInfo.SqlScriptFile, (val) => targetAgent.Repr.ReprValue(val)),
                 Descriptor = sourceDatabaseDescriptor.DeepClone(),
             };
             await ApplyMigrationSettings(source, target, context.Setting);
@@ -45,12 +45,30 @@ namespace ChangeDB.Default
             await DoMigrateDatabase(source, target, context.Setting);
             await ApplyCustomScripts(target, context.Setting);
 
-            Log("migration succeeded.");
+            Log($"dump to file '{context.DumpInfo.SqlScriptFile}' succeeded.");
 
-            throw new NotImplementedException();
         }
 
+       
 
+        protected override async Task DoMigrateDatabase(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        {
 
+            if (migrationSetting.IncludeMeta)
+            {
+                await PreMigrationMetadata(target, migrationSetting);
+            }
+
+            if (migrationSetting.IncludeData)
+            {
+
+                await MigrationData(source, target, migrationSetting);
+            }
+
+            if (migrationSetting.IncludeMeta)
+            {
+                await PostMigrationMetadata(target, migrationSetting);
+            }
+        }
     }
 }

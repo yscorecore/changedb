@@ -75,58 +75,10 @@ namespace ChangeDB.Agent.SqlServer
                     _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
                 };
             }
-            if (sqlExpression?.Constant != null)
-            {
-                return ConstantToSqlExpression(sqlExpression.Constant, context);
-            }
-            else
-            {
-                return "null";
-            }
+            return SqlServerRepr.ReprConstant(sqlExpression?.Constant);
         }
 
-        private string ConstantToSqlExpression(object constant, SqlExpressionTranslatorContext context)
-        {
-            if (constant is string str)
-            {
-                return Repr(str);
-            }
-            else if (constant is bool)
-            {
-                return Convert.ToInt32(constant).ToString();
-            }
-            else if (constant is double || constant is float || constant is long || constant is int ||
-                     constant is short || constant is char || constant is byte || constant is decimal)
-            {
-                return constant.ToString();
-            }
-            else if (constant is Guid guid)
-            {
-                return $"'{guid}'";
-            }
-            else if (constant is byte[] bytes)
-            {
-                return $"0x{string.Join("", bytes.Select(p => p.ToString("X2")))}";
-            }
-            else if (constant is DateTime dateTime)
-            {
-                return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'"; ;
-            }
-            else if (constant is DateTimeOffset dateTimeOffset)
-            {
-                return $"'{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}'";
-            }
-            else
-            {
-                return constant.ToString();
-            }
-        }
-
-        private string Repr(string input)
-        {
-            if (input is null) return null;
-            return $"'{input.Replace("'", "''")}'";
-        }
+        
 
     }
 }

@@ -29,7 +29,7 @@ namespace ChangeDB.Agent.SqlServer
             {
                 foreach (var schema in databaseDescriptor.GetAllSchemas())
                 {
-                    dbConnection.ExecuteNonQuery($"IF NOT EXISTS (SELECT  * FROM sys.schemas WHERE name = N'{schema}') EXEC('CREATE SCHEMA {IdentityName(schema)}')");
+                    dbConnection.ExecuteNonQuery($"IF NOT EXISTS (SELECT  * FROM SYS.SCHEMAS WHERE NAME = N'{schema}') EXEC('CREATE SCHEMA {IdentityName(schema)}')");
                 }
             }
             void CreateTables()
@@ -37,7 +37,7 @@ namespace ChangeDB.Agent.SqlServer
                 foreach (var table in databaseDescriptor.Tables)
                 {
                     var tableFullName = IdentityName(table.Schema, table.Name);
-                    var columnDefines = string.Join(",", table.Columns.Select(p => $"{BuildColumnBasicDesc(p)}"));
+                    var columnDefines = string.Join(", ", table.Columns.Select(p => $"{BuildColumnBasicDesc(p)}"));
                     dbConnection.ExecuteNonQuery($"CREATE TABLE {tableFullName} ({columnDefines});");
                 }
                 string BuildColumnBasicDesc(ColumnDescriptor column)
@@ -45,9 +45,9 @@ namespace ChangeDB.Agent.SqlServer
                     var columnName = IdentityName(column.Name);
                     var dataType = column.StoreType;
                     var identityInfo = column.IsIdentity && column.IdentityInfo != null
-                        ? $"identity({column.IdentityInfo.StartValue},{column.IdentityInfo.IncrementBy})"
+                        ? $"IDENTITY({column.IdentityInfo.StartValue},{column.IdentityInfo.IncrementBy})"
                         : string.Empty;
-                    return $"{columnName} {dataType} {identityInfo}";
+                    return $"{columnName} {dataType} {identityInfo}".TrimEnd();
                 }
             }
             void CreatePrimaryKeys()
@@ -56,14 +56,14 @@ namespace ChangeDB.Agent.SqlServer
                 {
                     var tableFullName = IdentityName(table.Schema, table.Name);
                     if (table.PrimaryKey == null) continue;
-                    var primaryColumns = string.Join(",", table.PrimaryKey?.Columns.Select(p => IdentityName(p)));
+                    var primaryColumns = string.Join(", ", table.PrimaryKey?.Columns.Select(p => IdentityName(p)));
 
-                    // set primary key columns not null and with default value
+                    // set primary key columns NOT NULL and with default value
                     foreach (var column in table.PrimaryKey?.Columns ?? Enumerable.Empty<string>())
                     {
                         var columnName = IdentityName(column);
                         var columnDesc = table.Columns.Single(p => p.Name == column);
-                        dbConnection.ExecuteNonQuery($"alter table {tableFullName} alter column {columnName} {columnDesc.StoreType} not null;");
+                        dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} {columnDesc.StoreType} NOT NULL;");
                         if (!string.IsNullOrEmpty(columnDesc.DefaultValueSql))
                         {
                             dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD CONSTRAINT DF_DEFAULT_{table.Schema}_{table.Name}_{column} DEFAULT ({columnDesc.DefaultValueSql}) FOR {columnName};");
@@ -76,7 +76,7 @@ namespace ChangeDB.Agent.SqlServer
                     }
                     else
                     {
-                        dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD constraint {IdentityName(table.PrimaryKey.Name)} PRIMARY KEY ({primaryColumns})");
+                        dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD CONSTRAINT {IdentityName(table.PrimaryKey.Name)} PRIMARY KEY ({primaryColumns})");
                     }
                 }
             }
@@ -102,7 +102,7 @@ namespace ChangeDB.Agent.SqlServer
 
                         if (column.IdentityInfo == null && !column.IsNullable && !isPrimaryKey)
                         {
-                            dbConnection.ExecuteNonQuery($"alter table {tableFullName} alter column {columnName} {column.StoreType} not null");
+                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} {column.StoreType} NOT NULL");
                         }
                     }
                 }
@@ -117,7 +117,7 @@ namespace ChangeDB.Agent.SqlServer
                     {
                         var uniquename = IdentityName(unique.Name);
                         var uniqueColumns = string.Join(",", unique.Columns.Select(p => IdentityName(p)));
-                        dbConnection.ExecuteNonQuery($"AlTER TABLE {tableFullName} ADD constraint {uniquename} unique ({uniqueColumns})");
+                        dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD CONSTRAINT{uniquename} unique ({uniqueColumns})");
                     }
                 }
             }
@@ -171,8 +171,8 @@ namespace ChangeDB.Agent.SqlServer
                         var foreignColumns = string.Join(",", foreignKey.ColumnNames.Select(p => IdentityName(p)));
                         var principalColumns = string.Join(",", foreignKey.PrincipalNames.Select(p => IdentityName(p)));
                         var principalTable = IdentityName(foreignKey.PrincipalSchema, foreignKey.PrincipalTable);
-                        dbConnection.ExecuteNonQuery($"alter table {IdentityName(table.Schema, table.Name)} ADD CONSTRAINT {foreignKeyName}" +
-                            $"FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})");
+                        dbConnection.ExecuteNonQuery($"ALTER TABLE {IdentityName(table.Schema, table.Name)} ADD CONSTRAINT {foreignKeyName}" +
+                            $" FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})");
                     }
                 }
             }

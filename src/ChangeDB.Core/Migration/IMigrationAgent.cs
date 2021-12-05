@@ -12,6 +12,7 @@ namespace ChangeDB.Migration
         IDataTypeMapper DataTypeMapper { get; }
         ISqlExpressionTranslator ExpressionTranslator { get; }
         IDatabaseManager DatabaseManger { get; }
+        IRepr Repr { get; }
         AgentSetting AgentSetting { get; }
     }
 }

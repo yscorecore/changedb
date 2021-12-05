@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChangeDB.Dump
+namespace ChangeDB.Migration
 {
-    public interface IDatabaseSqlDumper
+    public interface IRepr
     {
-        Task DumpSql(DumpContext dumpContext);
+        string ReprValue(object value);
     }
 }

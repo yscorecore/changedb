@@ -36,7 +36,7 @@ namespace ChangeDB.Agent.Postgres
                 return Task.CompletedTask;
             }
             var overIdentity = OverIdentityType(table);
-            var insertSql = $"insert into {BuildTableName(table)}({BuildColumnNames(table)}) {overIdentity} values ({BuildParameterValueNames(table)});";
+            var insertSql = $"INSERT INTO {BuildTableName(table)}({BuildColumnNames(table)}) {overIdentity} VALUES ({BuildParameterValueNames(table)});";
             foreach (DataRow row in data.Rows)
             {
                 var rowData = GetRowData(row, table);
@@ -74,12 +74,12 @@ namespace ChangeDB.Agent.Postgres
 
         private string BuildColumnNames(TableDescriptor table)
         {
-            return string.Join(",", table.Columns.Select(p => $"\"{p.Name}\""));
+            return string.Join(", ", table.Columns.Select(p => $"\"{p.Name}\""));
         }
 
         private string BuildParameterValueNames(TableDescriptor table)
         {
-            return string.Join(",", table.Columns.Select(p => $"@{p.Name}"));
+            return string.Join(", ", table.Columns.Select(p => $"@{p.Name}"));
         }
 
         private IDictionary<string, object> GetRowData(DataRow row, TableDescriptor tableDescriptor)
@@ -103,7 +103,7 @@ namespace ChangeDB.Agent.Postgres
             tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)
                 .Each((column) =>
                 {
-                    connection.ExecuteNonQuery($"select setval(pg_get_serial_sequence('{tableFullName}','{column.Name}'),{column.IdentityInfo.CurrentValue})");
+                    connection.ExecuteNonQuery($"SELECT setval(pg_get_serial_sequence('{tableFullName}','{column.Name}'),{column.IdentityInfo.CurrentValue})");
                 });
             return Task.CompletedTask;
         }

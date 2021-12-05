@@ -11,10 +11,10 @@ namespace ChangeDB.Agent.SqlCe
     {
         public static readonly IDataMigrator Default = new SqlCeDataMigrator();
         private static string BuildTableName(TableDescriptor table) => SqlCeUtils.IdentityName(table.Name);
-        private static string BuildColumnNames(IEnumerable<string> names) => string.Join(",", names.Select(p => $"[{p}]"));
+        private static string BuildColumnNames(IEnumerable<string> names) => string.Join(", ", names.Select(p => $"[{p}]"));
         private static string BuildColumnNames(TableDescriptor table) =>
             BuildColumnNames(table.Columns.Select(p => p.Name));
-        private string BuildParameterValueNames(TableDescriptor table) => string.Join(",", table.Columns.Select(p => $"@{p.Name}"));
+        private string BuildParameterValueNames(TableDescriptor table) => string.Join(", ", table.Columns.Select(p => $"@{p.Name}"));
         private static string BuildPrimaryKeyColumnNames(TableDescriptor table)
         {
             if (table.PrimaryKey?.Columns?.Count > 0)
@@ -44,7 +44,7 @@ namespace ChangeDB.Agent.SqlCe
             {
                 return Task.CompletedTask;
             }
-            var insertSql = $"insert into {BuildTableName(table)}({BuildColumnNames(table)}) values ({BuildParameterValueNames(table)});";
+            var insertSql = $"INSERT INTO {BuildTableName(table)}({BuildColumnNames(table)}) VALUES ({BuildParameterValueNames(table)});";
             foreach (DataRow row in data.Rows)
             {
                 var rowData = GetRowData(row, table);
@@ -69,7 +69,7 @@ namespace ChangeDB.Agent.SqlCe
             var tableFullName = SqlCeUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
             {
-                connection.ExecuteNonQuery($"set identity_insert {tableFullName} on");
+                connection.ExecuteNonQuery($"SET IDENTITY_INSERT {tableFullName} ON");
 
             }
 
@@ -81,7 +81,7 @@ namespace ChangeDB.Agent.SqlCe
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
             {
                 var tableFullName = SqlCeUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
-                connection.ExecuteNonQuery($"set identity_insert {tableFullName} off");
+                connection.ExecuteNonQuery($"SET IDENTITY_INSERT {tableFullName} OFF");
 
                 tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)
                     .Each((column) =>

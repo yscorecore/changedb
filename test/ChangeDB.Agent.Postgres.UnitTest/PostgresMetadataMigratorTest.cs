@@ -58,7 +58,7 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection.ExecuteNonQuery(
                "create schema ts",
-               "create table ts.table1(id integer ,nm integer not null);");
+               "create table ts.table1(id integer ,nm integer NOT NULL);");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Should().HaveCount(1);
             databaseDesc.Tables.Should().ContainSingle()
@@ -291,7 +291,7 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id integer generated always as identity, val integer);",
-                    "insert into table1(val) values(1)"
+                    "INSERT INTO table1(val) VALUES(1)"
                 );
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
@@ -327,8 +327,8 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id integer generated always as identity, val integer);",
-                "insert into table1(val) values(1)",
-                "insert into table1(val) values(1)"
+                "INSERT INTO table1(val) VALUES(1)",
+                "INSERT INTO table1(val) VALUES(1)"
             );
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Single(p => p.Name == "table1").Should()
@@ -392,7 +392,7 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int, val serial);",
-                "insert into table1(id) values(1);"
+                "INSERT INTO table1(id) VALUES(1);"
             );
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Single(p => p.Name == "table1").Should()
@@ -422,7 +422,7 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int, val serial);",
-                            "insert into table1(id) values(1);"
+                            "INSERT INTO table1(id) VALUES(1);"
                 );
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
@@ -454,8 +454,8 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int, val serial);",
-                "insert into table1(id) values(1);",
-                "insert into table1(id) values(2);"
+                "INSERT INTO table1(id) VALUES(1);",
+                "INSERT INTO table1(id) VALUES(2);"
             );
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
@@ -520,7 +520,7 @@ namespace ChangeDB.Agent.Postgres
         public async Task ShouldIncludeDefaultValueWhenGetDatabaseDescription()
         {
             _dbConnection.ExecuteNonQuery(
-                "create table table1(id int not null default 0,nm varchar(10) default 'abc', val money default 0);");
+                "create table table1(id int NOT NULL default 0,nm varchar(10) default 'abc', val money default 0);");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor

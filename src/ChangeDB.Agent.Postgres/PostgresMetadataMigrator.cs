@@ -42,7 +42,7 @@ namespace ChangeDB.Agent.Postgres
                 foreach (var table in databaseDescriptor.Tables)
                 {
                     var tableFullName = PostgresUtils.IdentityName(table.Schema, table.Name);
-                    var columnDefines = string.Join(",", table.Columns.Select(p => $"{BuildColumnBasicDesc(p)}"));
+                    var columnDefines = string.Join(", ", table.Columns.Select(p => $"{BuildColumnBasicDesc(p)}"));
                     dbConnection.ExecuteNonQuery($"CREATE TABLE {tableFullName} ({columnDefines});");
                 }
                 string BuildColumnBasicDesc(ColumnDescriptor column)
@@ -60,7 +60,7 @@ namespace ChangeDB.Agent.Postgres
                             identityType = Convert.ToString(type);
                         }
 
-                        var identityDetails = $"generated {identityType} as identity {BuildIdentityDetails(column.IdentityInfo)}";
+                        var identityDetails = $"GENERATED {identityType} AS IDENTITY {BuildIdentityDetails(column.IdentityInfo)}";
                         return $"{columnName} {dataType} {identityDetails}";
                     }
                     else if (column.IdentityInfo != null)
@@ -126,7 +126,7 @@ namespace ChangeDB.Agent.Postgres
                     }
                     else
                     {
-                        dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD constraint {PostgresUtils.IdentityName(table.PrimaryKey.Name)} PRIMARY KEY ({primaryColumns})");
+                        dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD CONSTRAINT {PostgresUtils.IdentityName(table.PrimaryKey.Name)} PRIMARY KEY ({primaryColumns})");
                     }
                 }
             }
@@ -139,7 +139,7 @@ namespace ChangeDB.Agent.Postgres
                     {
                         var uniquename = PostgresUtils.IdentityName(unique.Name);
                         var uniqueColumns = string.Join(",", unique.Columns.Select(p => PostgresUtils.IdentityName(p)));
-                        dbConnection.ExecuteNonQuery($"AlTER TABLE {tableFullName} ADD constraint {uniquename} unique ({uniqueColumns})");
+                        dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD CONSTRAINT{uniquename} unique ({uniqueColumns})");
                     }
                 }
             }
@@ -179,7 +179,7 @@ namespace ChangeDB.Agent.Postgres
                         if (!column.IsNullable)
                         {
                             var columnName = PostgresUtils.IdentityName(column.Name);
-                            dbConnection.ExecuteNonQuery($"alter table {tableFullName} alter column {columnName} set not null;");
+                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} SET NOT NULL;");
                         }
                     }
                 }
@@ -210,7 +210,7 @@ namespace ChangeDB.Agent.Postgres
                         var foreignColumns = string.Join(",", foreignKey.ColumnNames.Select(PostgresUtils.IdentityName));
                         var principalColumns = string.Join(",", foreignKey.PrincipalNames.Select(PostgresUtils.IdentityName));
                         var principalTable = PostgresUtils.IdentityName(foreignKey.PrincipalSchema, foreignKey.PrincipalTable);
-                        dbConnection.ExecuteNonQuery($"alter table {PostgresUtils.IdentityName(table.Schema, table.Name)} ADD CONSTRAINT {foreignKeyName}" +
+                        dbConnection.ExecuteNonQuery($"ALTER TABLE {PostgresUtils.IdentityName(table.Schema, table.Name)} ADD CONSTRAINT {foreignKeyName}" +
                             $"FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})");
                     }
                 }

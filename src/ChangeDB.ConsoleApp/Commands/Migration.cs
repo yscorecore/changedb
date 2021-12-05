@@ -28,11 +28,11 @@ namespace ChangeDB.ConsoleApp.Commands
         [Option('f', "force", HelpText = "drop target database if exists")]
         public bool DropTargetDatabaseIfExists { get; set; } = false;
 
-        [Option("schema-only", HelpText = "only migrate schema (true/false)")]
-        public bool SchemaOnly { get; set; } = false;
+        [Option("metadata-only", HelpText = "only migrate metadata (true/false)")]
+        public bool MetadataOnly { get; set; } = false;
 
-        [Option("table-name-style", HelpText = "target table name style (Original/Lower/Upper).")]
-        public NameStyle TableNameStyle { get; set; } = NameStyle.Original;
+        [Option("name-style", HelpText = "target object name style (Original/Lower/Upper).")]
+        public NameStyle NameStyle { get; set; } = NameStyle.Original;
 
         [Option("max-fetch-bytes", HelpText = "max fetch bytes when read source database (unit KB), default value is 10 (10KB).")]
         public int MaxFetchBytes { get; set; } = 10;
@@ -53,11 +53,11 @@ namespace ChangeDB.ConsoleApp.Commands
             {
                 Setting = new MigrationSetting()
                 {
-                    MigrationType = SchemaOnly ? MigrationType.MetaData : MigrationType.All,
+                    MigrationType = MetadataOnly ? MigrationType.MetaData : MigrationType.All,
                     DropTargetDatabaseIfExists = DropTargetDatabaseIfExists,
                     TargetNameStyle = new TargetNameStyle
                     {
-                        TableNameStyle = TableNameStyle
+                        NameStyle = NameStyle
                     },
                     FetchDataMaxSize = MaxFetchBytes * 1024,
                     PostScripts = new CustomSqlScripts()

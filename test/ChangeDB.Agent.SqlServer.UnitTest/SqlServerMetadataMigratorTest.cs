@@ -56,7 +56,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             _dbConnection.ExecuteNonQuery(
                "create schema ts",
-               "create table ts.table1(id int, nm int not null);");
+               "create table ts.table1(id int, nm int NOT NULL);");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Should().HaveCount(1);
             databaseDesc.Tables.Should().ContainSingle()
@@ -175,7 +175,7 @@ namespace ChangeDB.Agent.SqlServer
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64));",
                 "create table table2(id int, id1 int);",
-                "alter table table2 add constraint table2_id1_fkey foreign key(id1) references table1(id);");
+                "ALTER TABLE table2 add constraint table2_id1_fkey foreign key(id1) references table1(id);");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Single(p => p.Name == "table2").ForeignKeys.Should()
                 .ContainSingle().And.BeEquivalentTo(new ForeignKeyDescriptor
@@ -195,7 +195,7 @@ namespace ChangeDB.Agent.SqlServer
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm int,primary key(id,nm));",
                 "create table table2(id2 int, nm2 int);",
-                "alter table table2 add constraint table2_id2_nm2_fkey foreign key(id2, nm2) references table1(id, nm);");
+                "ALTER TABLE table2 add constraint table2_id2_nm2_fkey foreign key(id2, nm2) references table1(id, nm);");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table2").Single().ForeignKeys.Should()
                 .ContainSingle().And.ContainEquivalentOf(new ForeignKeyDescriptor
@@ -260,7 +260,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int identity(2,5),val int);",
-                "insert into table1(val) values(123)"
+                "insert into table1(val) VALUES(123)"
             );
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
@@ -293,8 +293,8 @@ namespace ChangeDB.Agent.SqlServer
         {
             _dbConnection.ExecuteNonQuery(
                    "create table table1(id int identity(2,5),val int);",
-                   "insert into table1(val) values(123)",
-                   "insert into table1(val) values(123)"
+                   "insert into table1(val) VALUES(123)",
+                   "insert into table1(val) VALUES(123)"
                    );
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
@@ -361,7 +361,7 @@ namespace ChangeDB.Agent.SqlServer
         public async Task ShouldIncludeDefaultValueWhenGetDatabaseDescription()
         {
             _dbConnection.ExecuteNonQuery(
-                "create table table1(id int not null default 0,nm varchar(10) default 'abc', val money default 0);");
+                "create table table1(id int NOT NULL default 0,nm varchar(10) default 'abc', val money default 0);");
             var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor

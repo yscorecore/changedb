@@ -22,11 +22,11 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection = databaseEnvironment.DbConnection;
             _dbConnection.ExecuteNonQuery(
-                "create schema ts",
+                "create schema ts;",
                 "create table ts.table1(id int primary key,nm varchar(64));",
-                "insert into ts.table1(id,nm) values(1,'name1');",
-                "insert into ts.table1(id,nm) values(2,'name2');",
-                "insert into ts.table1(id,nm) values(3,'name3');"
+                "INSERT INTO ts.table1(id,nm) VALUES(1,'name1');",
+                "INSERT INTO ts.table1(id,nm) VALUES(2,'name2');",
+                "INSERT INTO ts.table1(id,nm) VALUES(3,'name3');"
             );
         }
         public void Dispose()

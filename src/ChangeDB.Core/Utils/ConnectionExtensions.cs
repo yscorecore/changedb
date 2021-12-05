@@ -60,7 +60,7 @@ namespace ChangeDB
             _ = sql ?? throw new ArgumentNullException(nameof(sql));
             AlterOpen(connection);
             using var command = connection.CreateCommand();
-            command.CommandText = sql;
+            command.CommandText = sql.EndsWith(';') ? sql : sql + ';';
             command.CommandType = CommandType.Text;
             if (args?.Count > 0)
             {
