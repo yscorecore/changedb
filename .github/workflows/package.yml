@@ -16,7 +16,7 @@ jobs:
     - name: 03 Restore Dotnet Tool
       run: dotnet tool restore
     - name: 04 Check Code Format
-      run: dotnet format --check --check
+      run: dotnet format --verify-no-changes
     - name: 05 Build with dotnet
       run: dotnet build
     - name: 06 Count Test Projects
