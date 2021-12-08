@@ -47,7 +47,7 @@ namespace ChangeDB
                     fileWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.LastAccess;
                     fileWatcher.Changed += (sender, e) =>
                     {
-                        if (e.ChangeType == WatcherChangeTypes.Changed)
+                        if (e.ChangeType == WatcherChangeTypes.Changed && e.FullPath == statusFile)
                         {
                             waitReport.Set();
                         }
