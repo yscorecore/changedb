@@ -16,5 +16,10 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.100
-    - name: 03 Build with dotnet
+    - name: 03 Setup .NET Core 6
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.100
+    - name: 04 Build with dotnet
       run: dotnet build
+
