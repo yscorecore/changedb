@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using FluentAssertions;
-using Npgsql;
 using Xunit;
 
 namespace ChangeDB.Agent.Postgres
@@ -15,12 +14,16 @@ namespace ChangeDB.Agent.Postgres
     {
         private readonly IDataTypeMapper _dataTypeMapper = PostgresDataTypeMapper.Default;
         private readonly IMetadataMigrator _metadataMigrator = PostgresMetadataMigrator.Default;
-        private readonly MigrationContext _migrationSetting = new MigrationContext();
+        private readonly MigrationContext _migrationContext;
         private readonly DbConnection _dbConnection;
 
         public PostgresDataTypeMapperTest(DatabaseEnvironment databaseEnvironment)
         {
             _dbConnection = databaseEnvironment.DbConnection;
+            _migrationContext = new MigrationContext
+            {
+                Source = new AgentRunTimeInfo { Connection = _dbConnection }
+            };
         }
         public void Dispose()
         {
@@ -76,7 +79,7 @@ namespace ChangeDB.Agent.Postgres
         public async Task ShouldMapToCommonDataType(string storeType, CommonDataType commonDbType, int? arg1, int? arg2)
         {
             _dbConnection.ExecuteNonQuery($"create table table1(id {storeType});");
-            var databaseDescriptor = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDescriptor = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
             var columnStoreType = databaseDescriptor.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).Single();
             var commonDataType = _dataTypeMapper.ToCommonDatabaseType(columnStoreType);
             commonDataType.Should().BeEquivalentTo(new DataTypeDescriptor { DbType = commonDbType, Arg1 = arg1, Arg2 = arg2 });
@@ -88,7 +91,7 @@ namespace ChangeDB.Agent.Postgres
         {
             var targetType = _dataTypeMapper.ToDatabaseStoreType(dataTypeDescriptor);
             _dbConnection.ExecuteNonQuery($"create table table1(id {targetType});");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
             var targetTypeInDatabase = databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).First();
             targetTypeInDatabase.Should().Be(targetStoreType);
         }

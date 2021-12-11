@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Diagnostics;
 using System.Linq;
 using ChangeDB.Agent.SqlCe.EFCore.SqlServerCompact;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
-using Microsoft.Extensions.Logging;
 
 namespace ChangeDB.Agent.SqlCe
 {

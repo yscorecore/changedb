@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlCe
@@ -12,15 +7,16 @@ namespace ChangeDB.Agent.SqlCe
     {
         public static readonly IDatabaseManager Default = new SqlCeDatabaseManager();
 
-        public Task DropDatabaseIfExists(DbConnection connection, MigrationContext migrationContext)
+        public Task DropTargetDatabaseIfExists(MigrationContext migrationContext)
         {
-            connection.DropDatabaseIfExists();
+            migrationContext.TargetConnection.DropDatabaseIfExists();
             return Task.CompletedTask;
         }
 
-        public Task CreateDatabase(DbConnection connection, MigrationContext migrationContext)
+        public Task CreateTargetDatabase(MigrationContext migrationContext)
         {
-            connection.CreateDatabase();
+            migrationContext.TargetConnection.CreateDatabase();
+            migrationContext.RaiseObjectCreated(ObjectType.Database, migrationContext.TargetConnection.Database);
             return Task.CompletedTask;
         }
     }

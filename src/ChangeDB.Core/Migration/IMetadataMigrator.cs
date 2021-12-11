@@ -1,20 +1,18 @@
-﻿using System;
-using System.Data.Common;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace ChangeDB.Migration
 {
     public interface IMetadataMigrator
     {
-        Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection connection, MigrationContext migrationContext);
+        Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext);
 
-        Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection connection, MigrationContext migrationContext);
+        Task PreMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext);
 
-        Task PostMigrate(DatabaseDescriptor databaseDescriptor, DbConnection connection, MigrationContext migrationContext);
-        public async Task MigrateAllMetaData(DatabaseDescriptor databaseDescriptor, DbConnection connection, MigrationContext migrationContext)
+        Task PostMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext);
+        public async Task MigrateAllTargetMetaData(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
         {
-            await PreMigrate(databaseDescriptor, connection, migrationContext);
-            await PostMigrate(databaseDescriptor, connection, migrationContext);
+            await PreMigrateTargetMetadata(databaseDescriptor, migrationContext);
+            await PostMigrateTargetMetadata(databaseDescriptor, migrationContext);
         }
     }
 }

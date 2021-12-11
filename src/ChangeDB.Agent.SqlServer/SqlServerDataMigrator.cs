@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
@@ -24,21 +23,21 @@ namespace ChangeDB.Agent.SqlServer
             return BuildColumnNames(table);
         }
 
-        public Task<long> CountTable(TableDescriptor table, DbConnection connection, MigrationContext migrationContext)
+        public Task<long> CountSourceTable(TableDescriptor table, MigrationContext migrationContext)
         {
             var sql = $"select count(1) from {BuildTableName(table)}";
-            var val = connection.ExecuteScalar<long>(sql);
+            var val = migrationContext.SourceConnection.ExecuteScalar<long>(sql);
             return Task.FromResult(val);
         }
 
-        public Task<DataTable> ReadTableData(TableDescriptor table, PageInfo pageInfo, DbConnection connection, MigrationContext migrationContext)
+        public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, MigrationContext migrationContext)
         {
             var sql =
                 $"select * from {BuildTableName(table)} order by {BuildPrimaryKeyColumnNames(table)} offset {pageInfo.Offset} row fetch next {pageInfo.Limit} row only";
-            return Task.FromResult(connection.ExecuteReaderAsTable(sql));
+            return Task.FromResult(migrationContext.SourceConnection.ExecuteReaderAsTable(sql));
         }
 
-        public Task WriteTableData(DataTable data, TableDescriptor table, DbConnection connection, MigrationContext migrationContext)
+        public Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
         {
             if (table.Columns.Count == 0)
             {
@@ -48,7 +47,7 @@ namespace ChangeDB.Agent.SqlServer
             foreach (DataRow row in data.Rows)
             {
                 var rowData = GetRowData(row, table);
-                connection.ExecuteNonQuery(insertSql, rowData);
+                migrationContext.TargetConnection.ExecuteNonQuery(insertSql, rowData);
             }
             return Task.CompletedTask;
         }
@@ -64,29 +63,29 @@ namespace ChangeDB.Agent.SqlServer
         }
 
 
-        public Task BeforeWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationContext migrationContext)
+        public Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
         {
             var tableFullName = SqlServerUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
             {
-                connection.ExecuteNonQuery($"SET IDENTITY_INSERT {tableFullName} ON");
+                migrationContext.TargetConnection.ExecuteNonQuery($"SET IDENTITY_INSERT {tableFullName} ON");
 
             }
 
             return Task.CompletedTask;
         }
 
-        public Task AfterWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationContext migrationContext)
+        public Task AfterWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
         {
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
             {
                 var tableFullName = SqlServerUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
-                connection.ExecuteNonQuery($"SET IDENTITY_INSERT {tableFullName} OFF");
+                migrationContext.TargetConnection.ExecuteNonQuery($"SET IDENTITY_INSERT {tableFullName} OFF");
 
                 tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)
                     .Each((column) =>
                     {
-                        connection.ExecuteNonQuery($"DBCC CHECKIDENT ('{tableFullName}', RESEED, {column.IdentityInfo.CurrentValue})");
+                        migrationContext.TargetConnection.ExecuteNonQuery($"DBCC CHECKIDENT ('{tableFullName}', RESEED, {column.IdentityInfo.CurrentValue})");
                     });
             }
 

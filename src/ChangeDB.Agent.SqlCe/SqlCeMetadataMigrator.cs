@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ChangeDB.Agent.SqlCe;
+﻿using System.Threading.Tasks;
 using ChangeDB.Migration;
 
 
@@ -17,9 +9,9 @@ namespace ChangeDB.Agent.SqlCe
         public static new readonly IMetadataMigrator Default = new SqlCeMetadataMigrator();
 
 
-        public override Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection dbConnection, MigrationContext migrationContext)
+        public override Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext)
         {
-            var databaseDescriptor = SqlCeUtils.GetDataBaseDescriptorByEFCore(dbConnection);
+            var databaseDescriptor = SqlCeUtils.GetDataBaseDescriptorByEFCore(migrationContext.SourceConnection);
             return Task.FromResult(databaseDescriptor);
         }
 

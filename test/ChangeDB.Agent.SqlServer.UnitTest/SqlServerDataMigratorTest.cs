@@ -5,7 +5,6 @@ using System.Data.Common;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using FluentAssertions;
-using Microsoft.Data.SqlClient;
 using Xunit;
 
 namespace ChangeDB.Agent.SqlServer
@@ -14,13 +13,18 @@ namespace ChangeDB.Agent.SqlServer
     public class SqlServerDataMigratorTest : IDisposable
     {
         private readonly IDataMigrator _dataMigrator = SqlServerDataMigrator.Default;
-        private readonly MigrationContext _migrationContext = new MigrationContext();
+        private readonly MigrationContext _migrationContext;
         private readonly DbConnection _dbConnection;
 
 
         public SqlServerDataMigratorTest(DatabaseEnvironment databaseEnvironment)
         {
             _dbConnection = databaseEnvironment.DbConnection;
+            _migrationContext = new MigrationContext
+            {
+                Target = new AgentRunTimeInfo { Connection = _dbConnection },
+                Source = new AgentRunTimeInfo { Connection = _dbConnection }
+            };
             _dbConnection.ExecuteNonQuery(
                "create schema ts",
                "create table ts.table1(id int primary key,nm varchar(64));",
@@ -38,11 +42,11 @@ namespace ChangeDB.Agent.SqlServer
         {
 
 
-            var rows = await _dataMigrator.CountTable(new TableDescriptor
+            var rows = await _dataMigrator.CountSourceTable(new TableDescriptor
             {
                 Name = "table1",
                 Schema = "ts",
-            }, _dbConnection, _migrationContext);
+            }, _migrationContext);
             rows.Should().Be(3);
         }
 
@@ -51,8 +55,8 @@ namespace ChangeDB.Agent.SqlServer
         {
 
 
-            var table = await _dataMigrator.ReadTableData(new TableDescriptor { Name = "table1", Schema = "ts", PrimaryKey = new PrimaryKeyDescriptor { Columns = new List<string> { "id" } } },
-                new PageInfo() { Limit = 1, Offset = 1 }, _dbConnection, _migrationContext);
+            var table = await _dataMigrator.ReadSourceTable(new TableDescriptor { Name = "table1", Schema = "ts", PrimaryKey = new PrimaryKeyDescriptor { Columns = new List<string> { "id" } } },
+                new PageInfo() { Limit = 1, Offset = 1 }, _migrationContext);
             table.Rows.Count.Should().Be(1);
             table.Rows[0]["id"].Should().Be(2);
             table.Rows[0]["nm"].Should().Be("name2");
@@ -79,8 +83,8 @@ namespace ChangeDB.Agent.SqlServer
                     new ColumnDescriptor{Name = "nm"}
                 }
             };
-            await _dataMigrator.WriteTableData(table, tableDescriptor, _dbConnection, _migrationContext);
-            var totalRows = await _dataMigrator.CountTable(tableDescriptor, _dbConnection, _migrationContext);
+            await _dataMigrator.WriteTargetTable(table, tableDescriptor, _migrationContext);
+            var totalRows = await _dataMigrator.CountSourceTable(tableDescriptor, _migrationContext);
             totalRows.Should().Be(4);
         }
 

@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 
@@ -16,13 +13,14 @@ namespace ChangeDB.Agent.Postgres
 
         public static readonly PostgresMetadataMigrator Default = new PostgresMetadataMigrator();
 
-        public Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection dbConnection, MigrationContext migrationContext)
+        public Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext)
         {
-            var databaseDescriptor = PostgresUtils.GetDataBaseDescriptorByEFCore(dbConnection);
+            var databaseDescriptor = PostgresUtils.GetDataBaseDescriptorByEFCore(migrationContext.SourceConnection);
             return Task.FromResult(databaseDescriptor);
         }
-        public Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationContext migrationContext)
+        public Task PreMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
         {
+            var dbConnection = migrationContext.TargetConnection;
             CreateSchemas();
             CreateTables();
             CreatePrimaryKeys();
@@ -34,7 +32,9 @@ namespace ChangeDB.Agent.Postgres
             {
                 foreach (var schema in databaseDescriptor.GetAllSchemas())
                 {
-                    dbConnection.ExecuteNonQuery($"CREATE SCHEMA IF NOT EXISTS {PostgresUtils.IdentityName(schema)};");
+                    var schemaName = PostgresUtils.IdentityName(schema);
+                    var sql = $"CREATE SCHEMA IF NOT EXISTS {schemaName}";
+                    migrationContext.CreateTargetObject(sql, ObjectType.Schema, schemaName);
                 }
             }
             void CreateTables()
@@ -43,7 +43,8 @@ namespace ChangeDB.Agent.Postgres
                 {
                     var tableFullName = PostgresUtils.IdentityName(table.Schema, table.Name);
                     var columnDefines = string.Join(", ", table.Columns.Select(p => $"{BuildColumnBasicDesc(p)}"));
-                    dbConnection.ExecuteNonQuery($"CREATE TABLE {tableFullName} ({columnDefines});");
+                    var sql = $"CREATE TABLE {tableFullName} ({columnDefines});";
+                    migrationContext.CreateTargetObject(sql, ObjectType.Table, tableFullName);
                 }
                 string BuildColumnBasicDesc(ColumnDescriptor column)
                 {
@@ -139,7 +140,8 @@ namespace ChangeDB.Agent.Postgres
                     {
                         var uniquename = PostgresUtils.IdentityName(unique.Name);
                         var uniqueColumns = string.Join(",", unique.Columns.Select(p => PostgresUtils.IdentityName(p)));
-                        dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD CONSTRAINT{uniquename} unique ({uniqueColumns})");
+                        var sql = $"ALTER TABLE {tableFullName} ADD CONSTRAINT {uniquename} unique ({uniqueColumns})";
+                        migrationContext.CreateTargetObject(sql, ObjectType.Unique, uniquename, tableFullName);
                     }
                 }
             }
@@ -164,8 +166,9 @@ namespace ChangeDB.Agent.Postgres
                 }
             }
         }
-        public Task PostMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationContext migrationContext)
+        public Task PostMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
         {
+            var dbConnection = migrationContext.TargetConnection;
             AlterNotnullColumns();
             AddDefaultValues();
             AddForeignKeys();
@@ -207,8 +210,8 @@ namespace ChangeDB.Agent.Postgres
                     foreach (var foreignKey in table.ForeignKeys)
                     {
                         var foreignKeyName = PostgresUtils.IdentityName(foreignKey.Name);
-                        var foreignColumns = string.Join(",", foreignKey.ColumnNames.Select(PostgresUtils.IdentityName));
-                        var principalColumns = string.Join(",", foreignKey.PrincipalNames.Select(PostgresUtils.IdentityName));
+                        var foreignColumns = string.Join(", ", foreignKey.ColumnNames.Select(PostgresUtils.IdentityName));
+                        var principalColumns = string.Join(", ", foreignKey.PrincipalNames.Select(PostgresUtils.IdentityName));
                         var principalTable = PostgresUtils.IdentityName(foreignKey.PrincipalSchema, foreignKey.PrincipalTable);
                         dbConnection.ExecuteNonQuery($"ALTER TABLE {PostgresUtils.IdentityName(table.Schema, table.Name)} ADD CONSTRAINT {foreignKeyName}" +
                             $"FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})");

@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using FluentAssertions;
-using Microsoft.Data.SqlClient;
 using Xunit;
 
 namespace ChangeDB.Agent.SqlServer
@@ -22,6 +20,11 @@ namespace ChangeDB.Agent.SqlServer
         public SqlServerDataTypeMapperTest(DatabaseEnvironment databaseEnvironment)
         {
             _dbConnection = databaseEnvironment.DbConnection;
+            _migrationContext = new MigrationContext
+            {
+                Source = new AgentRunTimeInfo() { Connection = _dbConnection },
+
+            };
         }
         public void Dispose()
         {
@@ -82,7 +85,7 @@ namespace ChangeDB.Agent.SqlServer
         public async Task ShouldMapToCommonDataType(string storeType, CommonDataType commonDbType, int? arg1, int? arg2)
         {
             _dbConnection.ExecuteNonQuery($"create table table1(id {storeType});");
-            var databaseDescriptor = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
+            var databaseDescriptor = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
             var columnStoreType = databaseDescriptor.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).Single();
             var commonDataType = _dataTypeMapper.ToCommonDatabaseType(columnStoreType);
             commonDataType.Should().BeEquivalentTo(new DataTypeDescriptor { DbType = commonDbType, Arg1 = arg1, Arg2 = arg2 });
@@ -94,7 +97,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             var targetType = _dataTypeMapper.ToDatabaseStoreType(dataTypeDescriptor);
             _dbConnection.ExecuteNonQuery($"create table table1(id {targetType});");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
+            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
             var targetTypeInDatabase = databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).First();
             targetTypeInDatabase.Should().Be(targetStoreType);
         }

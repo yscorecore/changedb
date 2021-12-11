@@ -1,5 +1,4 @@
-﻿using System.Data.Common;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.Postgres
@@ -7,15 +6,16 @@ namespace ChangeDB.Agent.Postgres
     public class PostgresDatabaseManager : IDatabaseManager
     {
         public static readonly IDatabaseManager Default = new PostgresDatabaseManager();
-        public Task DropDatabaseIfExists(DbConnection connection, MigrationContext migrationContext)
+        public Task DropTargetDatabaseIfExists(MigrationContext migrationContext)
         {
-            connection.DropDatabaseIfExists();
+            migrationContext.TargetConnection.DropDatabaseIfExists();
             return Task.CompletedTask;
         }
 
-        public Task CreateDatabase(DbConnection connection, MigrationContext migrationContext)
+        public Task CreateTargetDatabase(MigrationContext migrationContext)
         {
-            connection.CreateDatabase();
+            migrationContext.TargetConnection.CreateDatabase();
+            migrationContext.RaiseObjectCreated(ObjectType.Database, migrationContext.TargetConnection.Database);
             return Task.CompletedTask;
         }
     }

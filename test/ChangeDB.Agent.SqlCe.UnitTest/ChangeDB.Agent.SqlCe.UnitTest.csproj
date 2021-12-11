@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ChangeDB.Agent.SqlCe\ChangeDB.Agent.SqlCe.csproj" />
+    <ProjectReference Include="..\ChangeDB.Test\ChangeDB.Test.csproj" />
   </ItemGroup>
 
 

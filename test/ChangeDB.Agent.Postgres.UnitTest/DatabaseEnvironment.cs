@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Npgsql;
 using Xunit;
 
@@ -31,7 +28,7 @@ namespace ChangeDB.Agent.Postgres
 
         public DbConnection NewDatabaseConnection()
         {
-            return new NpgsqlConnection($"Server=127.0.0.1;Port={DBPort};Database={TestUtils.RandomDatabaseName()};User Id=postgres;Password=mypassword;");
+            return new NpgsqlConnection($"Server=127.0.0.1;Port={DBPort};Database={Utility.RandomDatabaseName()};User Id=postgres;Password=mypassword;");
         }
 
         public void Dispose()

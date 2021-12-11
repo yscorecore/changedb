@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
+﻿using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
@@ -12,14 +9,15 @@ namespace ChangeDB.Agent.SqlServer
     {
         public static readonly IMetadataMigrator Default = new SqlServerMetadataMigrator();
 
-        public virtual Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection connection, MigrationContext migrationContext)
+        public virtual Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext)
         {
-            var databaseDescriptor = SqlServerUtils.GetDataBaseDescriptorByEFCore(connection);
+            var databaseDescriptor = SqlServerUtils.GetDataBaseDescriptorByEFCore(migrationContext.SourceConnection);
             return Task.FromResult(databaseDescriptor);
         }
 
-        public virtual Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationContext migrationContext)
+        public virtual Task PreMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
         {
+            var dbConnection = migrationContext.TargetConnection;
             CreateSchemas();
             CreateTables();
             CreatePrimaryKeys();
@@ -83,8 +81,9 @@ namespace ChangeDB.Agent.SqlServer
 
         }
 
-        public virtual Task PostMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationContext migrationContext)
+        public virtual Task PostMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
         {
+            var dbConnection = migrationContext.TargetConnection;
             AlterNotNullColumns();
             AddDefaultValues();
             CreateUniques();

@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Text;
 
 namespace ChangeDB
 {
@@ -23,33 +22,13 @@ namespace ChangeDB
         }
         const string FullCode = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
 
-        public static string NewPassword(int length = 16)
+
+        public static string RandomDatabaseName()
         {
-            Random random = new Random((int)DateTime.Now.Ticks);
-            StringBuilder passwordBuilder = new StringBuilder();
-            for (int i = 0; i < length; i++)
-            {
-                passwordBuilder.Append(FullCode[random.Next(FullCode.Length)]);
-            }
-            return passwordBuilder.ToString();
+            var random = new Random((int)DateTime.Now.Ticks);
+            return $"testdb_{random.Next(100000):d6}";
         }
-        public static IDisposable WithDotnetEnv(string envName)
-        {
-            return new EnvnameStore(envName);
-        }
-        class EnvnameStore : IDisposable
-        {
-            const string ASPNETCORE_ENVKEY = "DOTNET_ENVIRONMENT";
-            public EnvnameStore(string envName)
-            {
-                this.backupEnvName = Environment.GetEnvironmentVariable(ASPNETCORE_ENVKEY);
-                Environment.SetEnvironmentVariable(ASPNETCORE_ENVKEY, envName);
-            }
-            private readonly string backupEnvName;
-            public void Dispose()
-            {
-                Environment.SetEnvironmentVariable(ASPNETCORE_ENVKEY, backupEnvName);
-            }
-        }
+
+
     }
 }

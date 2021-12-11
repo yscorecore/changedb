@@ -2,8 +2,6 @@
 using System.Data;
 using System.Data.Common;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 
@@ -57,7 +55,7 @@ namespace ChangeDB.Default
         protected virtual async Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(IMigrationAgent sourceAgent, DbConnection sourceConnection, MigrationContext migrationContext)
         {
             Log("start getting source database metadata.");
-            return await sourceAgent.MetadataMigrator.GetDatabaseDescriptor(sourceConnection, migrationContext);
+            return await sourceAgent.MetadataMigrator.GetSourceDatabaseDescriptor(migrationContext);
         }
 
         protected virtual Task ApplyMigrationSettings(MigrationContext migrationContext)
@@ -98,20 +96,20 @@ namespace ChangeDB.Default
             if (migrationContext.Setting.DropTargetDatabaseIfExists)
             {
                 Log("dropping target database if exists.");
-                await targetAgent.DatabaseManger.DropDatabaseIfExists(targetConnection, migrationContext);
+                await targetAgent.DatabaseManger.DropTargetDatabaseIfExists(migrationContext);
             }
             Log("creating target database.");
-            await targetAgent.DatabaseManger.CreateDatabase(targetConnection, migrationContext);
+            await targetAgent.DatabaseManger.CreateTargetDatabase(migrationContext);
         }
         protected virtual async Task PreMigrationMetadata(AgentRunTimeInfo target, MigrationContext migrationContext)
         {
             Log("start pre migration metadata.");
-            await target.Agent.MetadataMigrator.PreMigrate(target.Descriptor, target.Connection, migrationContext);
+            await target.Agent.MetadataMigrator.PreMigrateTargetMetadata(target.Descriptor, migrationContext);
         }
         protected virtual async Task PostMigrationMetadata(AgentRunTimeInfo target, MigrationContext migrationContext)
         {
             Log("start post migration metadata.");
-            await target.Agent.MetadataMigrator.PostMigrate(target.Descriptor, target.Connection, migrationContext);
+            await target.Agent.MetadataMigrator.PostMigrateTargetMetadata(target.Descriptor, migrationContext);
         }
         protected virtual async Task MigrationData(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationContext migrationContext)
         {
@@ -136,19 +134,19 @@ namespace ChangeDB.Default
             var migrationSetting = migrationContext.Setting;
             var targetTableName = migrationSetting.TargetNameStyle.TableNameFunc(sourceTable.Name);
             var targetTableDesc = target.Descriptor.GetTable(targetTableName);
-            await target.Agent.DataMigrator.BeforeWriteTableData(targetTableDesc, target.Connection, migrationContext);
+            await target.Agent.DataMigrator.BeforeWriteTargetTable(targetTableDesc, migrationContext);
             var tableName = string.IsNullOrEmpty(sourceTable.Schema) ? $"\"{sourceTable.Name}\"" : $"\"{sourceTable.Schema}\".\"{sourceTable.Name}\"";
-            var totalCount = await source.Agent.DataMigrator.CountTable(sourceTable, source.Connection, migrationContext);
+            var totalCount = await source.Agent.DataMigrator.CountSourceTable(sourceTable, migrationContext);
             var (migratedCount, maxRowSize, fetchCount) = (0, 1, 1);
 
             while (true)
             {
                 var pageInfo = new PageInfo { Offset = migratedCount, Limit = Math.Max(1, fetchCount) };
-                var dataTable = await source.Agent.DataMigrator.ReadTableData(sourceTable, pageInfo, source.Connection, migrationContext);
+                var dataTable = await source.Agent.DataMigrator.ReadSourceTable(sourceTable, pageInfo, migrationContext);
                 // convert target column name
                 dataTable.Columns.OfType<DataColumn>().Each(p =>
                     p.ColumnName = migrationSetting.TargetNameStyle.ColumnNameFunc(p.ColumnName));
-                await target.Agent.DataMigrator.WriteTableData(dataTable, targetTableDesc, target.Connection, migrationContext);
+                await target.Agent.DataMigrator.WriteTargetTable(dataTable, targetTableDesc, migrationContext);
 
                 migratedCount += dataTable.Rows.Count;
                 maxRowSize = Math.Max(maxRowSize, dataTable.MaxRowSize());
@@ -161,7 +159,7 @@ namespace ChangeDB.Default
                     break;
                 }
             }
-            await target.Agent.DataMigrator.AfterWriteTableData(targetTableDesc, target.Connection, migrationContext);
+            await target.Agent.DataMigrator.AfterWriteTargetTable(targetTableDesc, migrationContext);
         }
 
 

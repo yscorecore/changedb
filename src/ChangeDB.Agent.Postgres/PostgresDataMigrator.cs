@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
@@ -14,22 +12,20 @@ namespace ChangeDB.Agent.Postgres
         public static readonly PostgresDataMigrator Default = new PostgresDataMigrator();
 
 
-        public Task<DataTable> ReadTableData(TableDescriptor table, PageInfo pageInfo, DbConnection dbConnection,
-            MigrationContext migrationContext)
+        public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, MigrationContext migrationContext)
         {
             var sql = $"select * from {BuildTableName(table)} limit {pageInfo.Limit} offset {pageInfo.Offset}";
-            return Task.FromResult(dbConnection.ExecuteReaderAsTable(sql));
+            return Task.FromResult(migrationContext.SourceConnection.ExecuteReaderAsTable(sql));
         }
 
-        public Task<long> CountTable(TableDescriptor table, DbConnection dbConnection, MigrationContext migrationContext)
+        public Task<long> CountSourceTable(TableDescriptor table, MigrationContext migrationContext)
         {
             var sql = $"select count(1) from {BuildTableName(table)}";
-            var val = dbConnection.ExecuteScalar<long>(sql);
+            var val = migrationContext.SourceConnection.ExecuteScalar<long>(sql);
             return Task.FromResult(val);
         }
 
-        public Task WriteTableData(DataTable data, TableDescriptor table, DbConnection dbConnection,
-            MigrationContext migrationContext)
+        public Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
         {
             if (table.Columns.Count == 0)
             {
@@ -40,7 +36,7 @@ namespace ChangeDB.Agent.Postgres
             foreach (DataRow row in data.Rows)
             {
                 var rowData = GetRowData(row, table);
-                dbConnection.ExecuteNonQuery(insertSql, rowData);
+                migrationContext.TargetConnection.ExecuteNonQuery(insertSql, rowData);
             }
 
             return Task.CompletedTask;
@@ -92,18 +88,18 @@ namespace ChangeDB.Agent.Postgres
             return dic;
         }
 
-        public Task BeforeWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationContext migrationContext)
+        public Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
         {
             return Task.CompletedTask;
         }
 
-        public Task AfterWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationContext migrationContext)
+        public Task AfterWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
         {
             var tableFullName = PostgresUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
             tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)
                 .Each((column) =>
                 {
-                    connection.ExecuteNonQuery($"SELECT setval(pg_get_serial_sequence('{tableFullName}','{column.Name}'),{column.IdentityInfo.CurrentValue})");
+                    migrationContext.TargetConnection.ExecuteNonQuery($"SELECT setval(pg_get_serial_sequence('{tableFullName}','{column.Name}'),{column.IdentityInfo.CurrentValue})");
                 });
             return Task.CompletedTask;
         }

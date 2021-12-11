@@ -5,9 +5,7 @@ using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace ChangeDB.Fakes
 {
@@ -29,30 +27,16 @@ namespace ChangeDB.Fakes
 
         private readonly Lazy<StreamWriter> fileStream;
 
-        public override void ChangeDatabase(string databaseName)
-        {
+        public override void ChangeDatabase(string databaseName) { }
 
-        }
+        public override void Close() { }
 
-        public override void Close()
-        {
+        public override void Open() { }
 
-        }
+        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel) => throw new NotImplementedException();
 
-        public override void Open()
-        {
 
-        }
-
-        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override DbCommand CreateDbCommand()
-        {
-            return new SqlScriptDbCommand(this.fileStream, this.Repr);
-        }
+        protected override DbCommand CreateDbCommand() => new SqlScriptDbCommand(this.fileStream, this.Repr);
     }
 
     internal class SqlScriptDbCommand : DbCommand
@@ -74,14 +58,10 @@ namespace ChangeDB.Fakes
         protected override DbParameterCollection DbParameterCollection { get; }
         protected override DbTransaction DbTransaction { get; set; }
 
-        public override void Cancel()
-        {
-
-        }
+        public override void Cancel() { }
 
         public override int ExecuteNonQuery()
         {
-
 
             var line = BuildCommandText();
             this.Writer.Value.WriteLine(line);
@@ -104,25 +84,14 @@ namespace ChangeDB.Fakes
         }
 
 
-        public override object ExecuteScalar()
-        {
-            throw new NotImplementedException();
-        }
+        public override object ExecuteScalar() => throw new NotImplementedException();
 
-        public override void Prepare()
-        {
 
-        }
+        public override void Prepare() { }
 
-        protected override DbParameter CreateDbParameter()
-        {
-            return new SqlScriptDbParameter();
-        }
+        protected override DbParameter CreateDbParameter() => new SqlScriptDbParameter();
 
-        protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
-        {
-            throw new NotImplementedException();
-        }
+        protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) => throw new NotImplementedException();
     }
 
     internal class SqlScriptDbParameterCollection : DbParameterCollection
@@ -144,88 +113,42 @@ namespace ChangeDB.Fakes
             return 1;
         }
 
-        public override void AddRange(Array VALUES)
+        public override void AddRange(Array values)
         {
-            foreach (var item in VALUES)
+            foreach (var item in values)
             {
                 Add(item);
             }
         }
 
-        public override void Clear()
-        {
-            this.dbParameters.Clear();
-        }
+        public override void Clear() => dbParameters.Clear();
 
-        public override bool Contains(object value)
-        {
-            throw new NotImplementedException();
-        }
+        public override bool Contains(object value) => throw new NotImplementedException();
 
-        public override bool Contains(string value)
-        {
-            throw new NotImplementedException();
-        }
+        public override bool Contains(string value) => throw new NotImplementedException();
 
-        public override void CopyTo(Array array, int index)
-        {
+        public override void CopyTo(Array array, int index) { }
 
-        }
+        public override IEnumerator GetEnumerator() => this.dbParameters.GetEnumerator();
 
-        public override IEnumerator GetEnumerator()
-        {
-            return this.dbParameters.GetEnumerator();
-        }
+        public override int IndexOf(object value) => throw new NotImplementedException();
+        public override int IndexOf(string parameterName) => throw new NotImplementedException();
 
-        public override int IndexOf(object value)
-        {
-            throw new NotImplementedException();
-        }
+        public override void Insert(int index, object value) => throw new NotImplementedException();
 
-        public override int IndexOf(string parameterName)
-        {
-            throw new NotImplementedException();
-        }
+        public override void Remove(object value) => throw new NotImplementedException();
 
-        public override void Insert(int index, object value)
-        {
-            throw new NotImplementedException();
-        }
+        public override void RemoveAt(int index) => throw new NotImplementedException();
 
-        public override void Remove(object value)
-        {
-            throw new NotImplementedException();
-        }
+        public override void RemoveAt(string parameterName) => throw new NotImplementedException();
 
-        public override void RemoveAt(int index)
-        {
-            throw new NotImplementedException();
-        }
+        protected override DbParameter GetParameter(int index) => dbParameters[index];
 
-        public override void RemoveAt(string parameterName)
-        {
-            throw new NotImplementedException();
-        }
+        protected override DbParameter GetParameter(string parameterName) => throw new NotImplementedException();
 
-        protected override DbParameter GetParameter(int index)
-        {
-            return dbParameters[index];
-        }
+        protected override void SetParameter(int index, DbParameter value) => throw new NotImplementedException();
 
-        protected override DbParameter GetParameter(string parameterName)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void SetParameter(int index, DbParameter value)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void SetParameter(string parameterName, DbParameter value)
-        {
-            throw new NotImplementedException();
-        }
+        protected override void SetParameter(string parameterName, DbParameter value) => throw new NotImplementedException();
     }
 
 
@@ -240,9 +163,6 @@ namespace ChangeDB.Fakes
         public override bool SourceColumnNullMapping { get; set; }
         public override object Value { get; set; }
 
-        public override void ResetDbType()
-        {
-
-        }
+        public override void ResetDbType() { }
     }
 }

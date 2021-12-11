@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlServerCe;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using FluentAssertions;
-using Microsoft.Data.SqlClient;
 using Xunit;
 
 namespace ChangeDB.Agent.SqlCe
@@ -15,18 +11,22 @@ namespace ChangeDB.Agent.SqlCe
     public class SqlCeDatabaseManagerTest
     {
         private readonly IDatabaseManager _databaseManager = new SqlCeMigrationAgent().DatabaseManger;
-        private readonly MigrationContext _migrationContext = new MigrationContext();
+        private readonly MigrationContext _migrationContext;
         private readonly DbConnection _dbConnection;
 
         public SqlCeDatabaseManagerTest()
         {
-            _dbConnection = new SqlCeConnection($"Data Source={TestUtils.RandomDatabaseName()}.sdf;Persist Security Info=False;");
+            _dbConnection = new SqlCeConnection($"Data Source={Utility.RandomDatabaseName()}.sdf;Persist Security Info=False;");
+            _migrationContext = new MigrationContext
+            {
+                Target = new AgentRunTimeInfo { Connection = _dbConnection }
+            };
             _dbConnection.CreateDatabase();
         }
         [Fact]
         public async Task ShouldDropCurrentDatabase()
         {
-            await _databaseManager.DropDatabaseIfExists(_dbConnection, _migrationContext);
+            await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
             Action action = () =>
             {
                 _dbConnection.Open();
@@ -38,8 +38,8 @@ namespace ChangeDB.Agent.SqlCe
         [Fact]
         public async Task ShouldCreateNewDatabase()
         {
-            await _databaseManager.DropDatabaseIfExists(_dbConnection, _migrationContext);
-            await _databaseManager.CreateDatabase(_dbConnection, _migrationContext);
+            await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
+            await _databaseManager.CreateTargetDatabase(_migrationContext);
             Action action = () =>
             {
                 _dbConnection.Open();

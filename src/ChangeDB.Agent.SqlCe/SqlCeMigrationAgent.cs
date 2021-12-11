@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Data.SqlServerCe;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ChangeDB.Agent.SqlServer;
 using ChangeDB.Migration;
-using Microsoft.Data.SqlClient;
 
 namespace ChangeDB.Agent.SqlCe
 {

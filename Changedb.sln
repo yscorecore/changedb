@@ -27,8 +27,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Core.UnitTest", "t
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Test", "test\ChangeDB.Test\ChangeDB.Test.csproj", "{E5ECE762-7946-41CB-A107-9FE8A9CAF939}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.SqlCe.UnitTest", "test\ChangeDB.Agent.SqlCe.UnitTest\ChangeDB.Agent.SqlCe.UnitTest.csproj", "{BCED16F9-F426-4C74-9232-7BDCD2C5F454}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,10 +73,6 @@ Global
 		{E5ECE762-7946-41CB-A107-9FE8A9CAF939}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E5ECE762-7946-41CB-A107-9FE8A9CAF939}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E5ECE762-7946-41CB-A107-9FE8A9CAF939}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BCED16F9-F426-4C74-9232-7BDCD2C5F454}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BCED16F9-F426-4C74-9232-7BDCD2C5F454}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BCED16F9-F426-4C74-9232-7BDCD2C5F454}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BCED16F9-F426-4C74-9232-7BDCD2C5F454}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -94,7 +88,6 @@ Global
 		{2B3AFFC4-A592-4429-B1A5-2BC47E5ED9A8} = {6C7E5914-CD6B-40F1-BFD7-8FB17E3EAE11}
 		{11F7B1DA-E49E-4365-83E0-6FC3F07AFEAE} = {9D50B35B-1EAA-4620-B0A6-245456051247}
 		{E5ECE762-7946-41CB-A107-9FE8A9CAF939} = {9D50B35B-1EAA-4620-B0A6-245456051247}
-		{BCED16F9-F426-4C74-9232-7BDCD2C5F454} = {9D50B35B-1EAA-4620-B0A6-245456051247}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB11BB21-3F5D-42D6-8737-F19C0666F1F8}
