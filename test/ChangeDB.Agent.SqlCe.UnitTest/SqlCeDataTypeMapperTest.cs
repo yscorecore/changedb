@@ -15,7 +15,7 @@ namespace ChangeDB.Agent.SqlCe
     {
         private readonly IMetadataMigrator _metadataMigrator = new SqlCeMigrationAgent().MetadataMigrator;
         private readonly IDataTypeMapper _dataTypeMapper = new SqlCeMigrationAgent().DataTypeMapper;
-        private readonly MigrationSetting _migrationSetting = new MigrationSetting { DropTargetDatabaseIfExists = true };
+        private readonly MigrationContext _migrationContext = new MigrationContext { };
         private readonly DbConnection _dbConnection;
 
         public SqlCeDataTypeMapperTest(DatabaseEnvironment databaseEnvironment)
@@ -61,7 +61,7 @@ namespace ChangeDB.Agent.SqlCe
         public async Task ShouldMapToCommonDataType(string storeType, CommonDataType commonDbType, int? arg1, int? arg2)
         {
             _dbConnection.ExecuteNonQuery($"create table table1(id {storeType});");
-            var databaseDescriptor = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDescriptor = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             var columnStoreType = databaseDescriptor.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).Single();
             var commonDataType = _dataTypeMapper.ToCommonDatabaseType(columnStoreType);
             commonDataType.Should().BeEquivalentTo(new DataTypeDescriptor { DbType = commonDbType, Arg1 = arg1, Arg2 = arg2 });
@@ -73,7 +73,7 @@ namespace ChangeDB.Agent.SqlCe
         {
             var targetType = _dataTypeMapper.ToDatabaseStoreType(dataTypeDescriptor);
             _dbConnection.ExecuteNonQuery($"create table table1(id {targetType});");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             var targetTypeInDatabase = databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).First();
             targetTypeInDatabase.Should().Be(targetStoreType);
         }

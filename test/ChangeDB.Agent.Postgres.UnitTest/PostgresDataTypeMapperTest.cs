@@ -15,7 +15,7 @@ namespace ChangeDB.Agent.Postgres
     {
         private readonly IDataTypeMapper _dataTypeMapper = PostgresDataTypeMapper.Default;
         private readonly IMetadataMigrator _metadataMigrator = PostgresMetadataMigrator.Default;
-        private readonly MigrationSetting _migrationSetting = new MigrationSetting();
+        private readonly MigrationContext _migrationSetting = new MigrationContext();
         private readonly DbConnection _dbConnection;
 
         public PostgresDataTypeMapperTest(DatabaseEnvironment databaseEnvironment)

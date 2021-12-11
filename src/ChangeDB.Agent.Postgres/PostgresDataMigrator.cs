@@ -15,13 +15,13 @@ namespace ChangeDB.Agent.Postgres
 
 
         public Task<DataTable> ReadTableData(TableDescriptor table, PageInfo pageInfo, DbConnection dbConnection,
-            MigrationSetting migrationSetting)
+            MigrationContext migrationContext)
         {
             var sql = $"select * from {BuildTableName(table)} limit {pageInfo.Limit} offset {pageInfo.Offset}";
             return Task.FromResult(dbConnection.ExecuteReaderAsTable(sql));
         }
 
-        public Task<long> CountTable(TableDescriptor table, DbConnection dbConnection, MigrationSetting migrationSetting)
+        public Task<long> CountTable(TableDescriptor table, DbConnection dbConnection, MigrationContext migrationContext)
         {
             var sql = $"select count(1) from {BuildTableName(table)}";
             var val = dbConnection.ExecuteScalar<long>(sql);
@@ -29,7 +29,7 @@ namespace ChangeDB.Agent.Postgres
         }
 
         public Task WriteTableData(DataTable data, TableDescriptor table, DbConnection dbConnection,
-            MigrationSetting migrationSetting)
+            MigrationContext migrationContext)
         {
             if (table.Columns.Count == 0)
             {
@@ -92,12 +92,12 @@ namespace ChangeDB.Agent.Postgres
             return dic;
         }
 
-        public Task BeforeWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        public Task BeforeWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationContext migrationContext)
         {
             return Task.CompletedTask;
         }
 
-        public Task AfterWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        public Task AfterWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationContext migrationContext)
         {
             var tableFullName = PostgresUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
             tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)

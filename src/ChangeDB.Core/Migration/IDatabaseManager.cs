@@ -9,14 +9,14 @@ namespace ChangeDB.Migration
 {
     public interface IDatabaseManager
     {
-        Task DropDatabaseIfExists(DbConnection connection, MigrationSetting migrationSetting);
+        Task DropDatabaseIfExists(DbConnection connection, MigrationContext migrationContext);
 
-        Task CreateDatabase(DbConnection connection, MigrationSetting migrationSetting);
+        Task CreateDatabase(DbConnection connection, MigrationContext migrationContext);
 
-        public async Task ReCreateDatabase(DbConnection connection, MigrationSetting migrationSetting)
+        public async Task ReCreateDatabase(DbConnection connection, MigrationContext migrationContext)
         {
-            await DropDatabaseIfExists(connection, migrationSetting);
-            await CreateDatabase(connection, migrationSetting);
+            await DropDatabaseIfExists(connection, migrationContext);
+            await CreateDatabase(connection, migrationContext);
         }
     }
 }

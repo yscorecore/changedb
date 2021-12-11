@@ -17,7 +17,7 @@ namespace ChangeDB.Agent.Postgres
 
     {
         private readonly IMetadataMigrator _metadataMigrator = PostgresMetadataMigrator.Default;
-        private readonly MigrationSetting _migrationSetting = new MigrationSetting { DropTargetDatabaseIfExists = true };
+        private readonly MigrationContext _migrationContext = new MigrationContext { };
         private readonly DbConnection _dbConnection;
 
         public PostgresMetadataMigratorTest(DatabaseEnvironment databaseEnvironment)
@@ -34,7 +34,7 @@ namespace ChangeDB.Agent.Postgres
         public async Task ShouldReturnEmptyDescriptorWhenGetDatabaseDescriptionAndGivenEmptyDatabase()
         {
 
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Should().BeEquivalentTo(new DatabaseDescriptor
             {
                 Tables = new List<TableDescriptor>(),
@@ -48,7 +48,7 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ExecuteNonQuery(
                "create schema ts",
                "create table ts.table1(id int ,nm varchar(64));");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Should().HaveCount(1);
             databaseDesc.Tables.First().Should().Match<TableDescriptor>(p => p.Schema == "ts" && p.Name == "table1");
         }
@@ -59,7 +59,7 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ExecuteNonQuery(
                "create schema ts",
                "create table ts.table1(id integer ,nm integer NOT NULL);");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Should().HaveCount(1);
             databaseDesc.Tables.Should().ContainSingle()
                 .And.ContainEquivalentOf(
@@ -81,7 +81,7 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64));");
 
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Should().HaveCount(1);
             databaseDesc.Tables.First().PrimaryKey.Should()
                 .Match<PrimaryKeyDescriptor>(p => p.Name != null)
@@ -94,7 +94,7 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm varchar(64),primary key(id,nm));");
 
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Should().HaveCount(1);
             databaseDesc.Tables.First().PrimaryKey.Should()
                 .Match<PrimaryKeyDescriptor>(p => p.Name != null)
@@ -108,7 +108,7 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm varchar(64));",
                 "create index nm_index ON table1 (nm);");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.First().Indexes.Should()
                 .ContainSingle().And
                 .ContainEquivalentOf(
@@ -125,7 +125,7 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm varchar(64));",
                 "create index id_nm_index ON table1 (id,nm);");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.First().Indexes.Should()
                 .ContainSingle().And
                 .ContainEquivalentOf(
@@ -142,7 +142,7 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm varchar(64));",
                 "create unique index nm_index ON table1 (nm);");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.First().Indexes.Should()
                 .ContainSingle().And
                 .ContainEquivalentOf(
@@ -159,7 +159,7 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64));",
                 "create index nm_index ON table1 (nm);");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.First().Indexes.Should()
                 .ContainSingle().And
                 .ContainEquivalentOf(
@@ -176,7 +176,7 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64));",
                 "create table table2(id int, id1 int references table1(id));");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Where(p => p.Name == "table2").Single().ForeignKeys.Should()
                 .ContainSingle().And.ContainEquivalentOf(new ForeignKeyDescriptor
                 {
@@ -194,7 +194,7 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64));",
                 "create table table2(id int, id1 int references table1(id));");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Where(p => p.Name == "table2").Single().ForeignKeys.Should()
                 .ContainSingle().And.ContainEquivalentOf(new ForeignKeyDescriptor
                 {
@@ -213,7 +213,7 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm int,primary key(id,nm));",
                 "create table table2(id2 int, nm2 int, foreign key (id2, nm2) references table1 (id, nm));");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Where(p => p.Name == "table2").Single().ForeignKeys.Should()
                 .ContainSingle().And.ContainEquivalentOf(new ForeignKeyDescriptor
                 {
@@ -232,7 +232,7 @@ namespace ChangeDB.Agent.Postgres
 
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64) unique);");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Single().Uniques.Should()
                 .ContainSingle().And.ContainEquivalentOf(new UniqueDescriptor
                 {
@@ -246,7 +246,7 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm int,unique(id,nm));");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Single().Uniques.Should()
                 .ContainSingle().And.ContainEquivalentOf(new UniqueDescriptor
                 {
@@ -259,7 +259,7 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection.ExecuteNonQuery(
                    "create table table1(id integer generated always as identity, val integer);");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -293,7 +293,7 @@ namespace ChangeDB.Agent.Postgres
                 "create table table1(id integer generated always as identity, val integer);",
                     "INSERT INTO table1(val) VALUES(1)"
                 );
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -330,7 +330,7 @@ namespace ChangeDB.Agent.Postgres
                 "INSERT INTO table1(val) VALUES(1)",
                 "INSERT INTO table1(val) VALUES(1)"
             );
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Single(p => p.Name == "table1").Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -364,7 +364,7 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection.ExecuteNonQuery(
                    "create table table1(id bigint generated by default as identity);");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Single(p => p.Name == "table1").Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -394,7 +394,7 @@ namespace ChangeDB.Agent.Postgres
                 "create table table1(id int, val serial);",
                 "INSERT INTO table1(id) VALUES(1);"
             );
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Single(p => p.Name == "table1").Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -424,7 +424,7 @@ namespace ChangeDB.Agent.Postgres
                 "create table table1(id int, val serial);",
                             "INSERT INTO table1(id) VALUES(1);"
                 );
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -457,7 +457,7 @@ namespace ChangeDB.Agent.Postgres
                 "INSERT INTO table1(id) VALUES(1);",
                 "INSERT INTO table1(id) VALUES(2);"
             );
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -487,7 +487,7 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection.ExecuteNonQuery(
                    "create table table1(abc uuid default gen_random_uuid());");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -504,7 +504,7 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection.ExecuteNonQuery(
                    "create table table1(id TIMESTAMP(3) WITHOUT TIME ZONE default current_timestamp(3));");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -521,7 +521,7 @@ namespace ChangeDB.Agent.Postgres
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int NOT NULL default 0,nm varchar(10) default 'abc', val money default 0);");
-            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -557,8 +557,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -578,8 +578,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             var exceptedDatabaseDesc = databaseDesc.DeepCloneAndSet(p => p.Tables.ForEach(t => t.Schema = "public"));
             actualDatabaseDesc.Should().BeEquivalentTo(exceptedDatabaseDesc);
         }
@@ -604,8 +604,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -629,8 +629,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             var exceptedDatabaseDesc = databaseDesc.DeepCloneAndSet(p => p.Tables.ForEach(t => t.PrimaryKey.Name = "table1_pkey"));
             actualDatabaseDesc.Should().BeEquivalentTo(exceptedDatabaseDesc);
         }
@@ -657,8 +657,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -685,8 +685,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -712,8 +712,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -740,8 +740,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -766,8 +766,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -789,8 +789,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -836,8 +836,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -886,8 +886,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -914,8 +914,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -947,8 +947,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -981,8 +981,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -1017,8 +1017,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             var expectDatabaseDesc = databaseDesc.DeepClone().DoIfNotNull(p => p.Tables.SelectMany(t => t.Columns).Each(
                 c =>
                 {
@@ -1062,8 +1062,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -1095,8 +1095,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             var expectedDatabaseDesc = databaseDesc.DeepCloneAndSet(desc =>
             {
                 desc.Tables.SelectMany(p => p.Columns).Select(p => p.IdentityInfo.Values).Each(dic => { dic[PostgresUtils.IdentityType] = "ALWAYS"; });
@@ -1133,8 +1133,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationSetting);
-            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationSetting);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _dbConnection, _migrationContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_dbConnection, _migrationContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         #endregion

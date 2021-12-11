@@ -15,7 +15,7 @@ namespace ChangeDB.Agent.SqlCe
     public class SqlCeDatabaseManagerTest
     {
         private readonly IDatabaseManager _databaseManager = new SqlCeMigrationAgent().DatabaseManger;
-        private readonly MigrationSetting _migrationSetting = new MigrationSetting();
+        private readonly MigrationContext _migrationContext = new MigrationContext();
         private readonly DbConnection _dbConnection;
 
         public SqlCeDatabaseManagerTest()
@@ -26,7 +26,7 @@ namespace ChangeDB.Agent.SqlCe
         [Fact]
         public async Task ShouldDropCurrentDatabase()
         {
-            await _databaseManager.DropDatabaseIfExists(_dbConnection, _migrationSetting);
+            await _databaseManager.DropDatabaseIfExists(_dbConnection, _migrationContext);
             Action action = () =>
             {
                 _dbConnection.Open();
@@ -38,8 +38,8 @@ namespace ChangeDB.Agent.SqlCe
         [Fact]
         public async Task ShouldCreateNewDatabase()
         {
-            await _databaseManager.DropDatabaseIfExists(_dbConnection, _migrationSetting);
-            await _databaseManager.CreateDatabase(_dbConnection, _migrationSetting);
+            await _databaseManager.DropDatabaseIfExists(_dbConnection, _migrationContext);
+            await _databaseManager.CreateDatabase(_dbConnection, _migrationContext);
             Action action = () =>
             {
                 _dbConnection.Open();

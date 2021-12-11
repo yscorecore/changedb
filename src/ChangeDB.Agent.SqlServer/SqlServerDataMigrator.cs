@@ -24,21 +24,21 @@ namespace ChangeDB.Agent.SqlServer
             return BuildColumnNames(table);
         }
 
-        public Task<long> CountTable(TableDescriptor table, DbConnection connection, MigrationSetting migrationSetting)
+        public Task<long> CountTable(TableDescriptor table, DbConnection connection, MigrationContext migrationContext)
         {
             var sql = $"select count(1) from {BuildTableName(table)}";
             var val = connection.ExecuteScalar<long>(sql);
             return Task.FromResult(val);
         }
 
-        public Task<DataTable> ReadTableData(TableDescriptor table, PageInfo pageInfo, DbConnection connection, MigrationSetting migrationSetting)
+        public Task<DataTable> ReadTableData(TableDescriptor table, PageInfo pageInfo, DbConnection connection, MigrationContext migrationContext)
         {
             var sql =
                 $"select * from {BuildTableName(table)} order by {BuildPrimaryKeyColumnNames(table)} offset {pageInfo.Offset} row fetch next {pageInfo.Limit} row only";
             return Task.FromResult(connection.ExecuteReaderAsTable(sql));
         }
 
-        public Task WriteTableData(DataTable data, TableDescriptor table, DbConnection connection, MigrationSetting migrationSetting)
+        public Task WriteTableData(DataTable data, TableDescriptor table, DbConnection connection, MigrationContext migrationContext)
         {
             if (table.Columns.Count == 0)
             {
@@ -64,7 +64,7 @@ namespace ChangeDB.Agent.SqlServer
         }
 
 
-        public Task BeforeWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        public Task BeforeWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationContext migrationContext)
         {
             var tableFullName = SqlServerUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
@@ -76,7 +76,7 @@ namespace ChangeDB.Agent.SqlServer
             return Task.CompletedTask;
         }
 
-        public Task AfterWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationSetting migrationSetting)
+        public Task AfterWriteTableData(TableDescriptor tableDescriptor, DbConnection connection, MigrationContext migrationContext)
         {
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
             {

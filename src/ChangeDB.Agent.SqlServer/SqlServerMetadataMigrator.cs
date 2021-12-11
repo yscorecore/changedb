@@ -12,13 +12,13 @@ namespace ChangeDB.Agent.SqlServer
     {
         public static readonly IMetadataMigrator Default = new SqlServerMetadataMigrator();
 
-        public virtual Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection connection, MigrationSetting migrationSetting)
+        public virtual Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection connection, MigrationContext migrationContext)
         {
             var databaseDescriptor = SqlServerUtils.GetDataBaseDescriptorByEFCore(connection);
             return Task.FromResult(databaseDescriptor);
         }
 
-        public virtual Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
+        public virtual Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationContext migrationContext)
         {
             CreateSchemas();
             CreateTables();
@@ -83,7 +83,7 @@ namespace ChangeDB.Agent.SqlServer
 
         }
 
-        public virtual Task PostMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
+        public virtual Task PostMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationContext migrationContext)
         {
             AlterNotNullColumns();
             AddDefaultValues();

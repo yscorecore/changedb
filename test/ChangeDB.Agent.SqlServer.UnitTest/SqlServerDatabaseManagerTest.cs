@@ -15,7 +15,7 @@ namespace ChangeDB.Agent.SqlServer
     public class SqlServerDatabaseManagerTest
     {
         private readonly IDatabaseManager _databaseManager = SqlServerDatabaseManager.Default;
-        private readonly MigrationSetting _migrationSetting = new MigrationSetting();
+        private readonly MigrationContext _migrationSetting = new MigrationContext();
         private readonly DbConnection _dbConnection;
 
         public SqlServerDatabaseManagerTest(DatabaseEnvironment databaseEnvironment)

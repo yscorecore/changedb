@@ -12,7 +12,7 @@ namespace ChangeDB.Agent.Postgres
     public class PostgresDatabaseManagerTest
     {
         private readonly IDatabaseManager _databaseManager = PostgresDatabaseManager.Default;
-        private readonly MigrationSetting _migrationSetting = new MigrationSetting();
+        private readonly MigrationContext _migrationContext = new MigrationContext();
         private readonly DbConnection _dbConnection;
 
         public PostgresDatabaseManagerTest(DatabaseEnvironment databaseEnvironment)
@@ -23,7 +23,7 @@ namespace ChangeDB.Agent.Postgres
         [Fact]
         public async Task ShouldDropCurrentDatabase()
         {
-            await _databaseManager.DropDatabaseIfExists(_dbConnection, _migrationSetting);
+            await _databaseManager.DropDatabaseIfExists(_dbConnection, _migrationContext);
             Action action = () =>
             {
                 _dbConnection.Open();
@@ -35,8 +35,8 @@ namespace ChangeDB.Agent.Postgres
         [Fact]
         public async Task ShouldCreateNewDatabase()
         {
-            await _databaseManager.DropDatabaseIfExists(_dbConnection, _migrationSetting);
-            await _databaseManager.CreateDatabase(_dbConnection, _migrationSetting);
+            await _databaseManager.DropDatabaseIfExists(_dbConnection, _migrationContext);
+            await _databaseManager.CreateDatabase(_dbConnection, _migrationContext);
             var currentDatabase = _dbConnection.ExecuteScalar<string>("select current_database()");
             currentDatabase.Should().NotBeEmpty();
         }

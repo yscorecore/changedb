@@ -14,7 +14,7 @@ namespace ChangeDB.Agent.SqlServer
     public class SqlServerDataMigratorTest : IDisposable
     {
         private readonly IDataMigrator _dataMigrator = SqlServerDataMigrator.Default;
-        private readonly MigrationSetting _migrationSetting = new MigrationSetting();
+        private readonly MigrationContext _migrationContext = new MigrationContext();
         private readonly DbConnection _dbConnection;
 
 
@@ -42,7 +42,7 @@ namespace ChangeDB.Agent.SqlServer
             {
                 Name = "table1",
                 Schema = "ts",
-            }, _dbConnection, _migrationSetting);
+            }, _dbConnection, _migrationContext);
             rows.Should().Be(3);
         }
 
@@ -52,7 +52,7 @@ namespace ChangeDB.Agent.SqlServer
 
 
             var table = await _dataMigrator.ReadTableData(new TableDescriptor { Name = "table1", Schema = "ts", PrimaryKey = new PrimaryKeyDescriptor { Columns = new List<string> { "id" } } },
-                new PageInfo() { Limit = 1, Offset = 1 }, _dbConnection, _migrationSetting);
+                new PageInfo() { Limit = 1, Offset = 1 }, _dbConnection, _migrationContext);
             table.Rows.Count.Should().Be(1);
             table.Rows[0]["id"].Should().Be(2);
             table.Rows[0]["nm"].Should().Be("name2");
@@ -79,8 +79,8 @@ namespace ChangeDB.Agent.SqlServer
                     new ColumnDescriptor{Name = "nm"}
                 }
             };
-            await _dataMigrator.WriteTableData(table, tableDescriptor, _dbConnection, _migrationSetting);
-            var totalRows = await _dataMigrator.CountTable(tableDescriptor, _dbConnection, _migrationSetting);
+            await _dataMigrator.WriteTableData(table, tableDescriptor, _dbConnection, _migrationContext);
+            var totalRows = await _dataMigrator.CountTable(tableDescriptor, _dbConnection, _migrationContext);
             totalRows.Should().Be(4);
         }
 

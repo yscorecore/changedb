@@ -49,7 +49,7 @@ namespace ChangeDB.ConsoleApp.Commands
             var serviceHost = ServiceHost.Default;
             var serviceProvider = serviceHost.ServiceCollection.BuildServiceProvider();
             var service = serviceProvider.GetService<IDatabaseMigrate>();
-            var task = service.MigrateDatabase(new MigrationContext
+            var context = new MigrationContext
             {
                 Setting = new MigrationSetting()
                 {
@@ -66,11 +66,25 @@ namespace ChangeDB.ConsoleApp.Commands
                         SqlSplit = PostSqlSplit,
                     }
                 },
+
                 SourceDatabase = new DatabaseInfo { DatabaseType = SourceType, ConnectionString = SourceConnectionString },
                 TargetDatabase = new DatabaseInfo { DatabaseType = TargetType, ConnectionString = TargetConnectionString }
-            });
+            };
+            context.ObjectCreated += Context_ObjectCreated;
+            context.TableDataMigrated += Context_TableDataMigrated;
+            var task = service.MigrateDatabase(context);
             task.Wait();
             return 0;
+        }
+
+        private void Context_TableDataMigrated(object sender, TableDataInfo e)
+        {
+
+        }
+
+        private void Context_ObjectCreated(object sender, ObjectInfo e)
+        {
+
         }
     }
 }

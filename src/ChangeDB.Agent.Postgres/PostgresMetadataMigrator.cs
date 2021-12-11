@@ -16,12 +16,12 @@ namespace ChangeDB.Agent.Postgres
 
         public static readonly PostgresMetadataMigrator Default = new PostgresMetadataMigrator();
 
-        public Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection dbConnection, MigrationSetting migrationSetting)
+        public Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection dbConnection, MigrationContext migrationContext)
         {
             var databaseDescriptor = PostgresUtils.GetDataBaseDescriptorByEFCore(dbConnection);
             return Task.FromResult(databaseDescriptor);
         }
-        public Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
+        public Task PreMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationContext migrationContext)
         {
             CreateSchemas();
             CreateTables();
@@ -164,7 +164,7 @@ namespace ChangeDB.Agent.Postgres
                 }
             }
         }
-        public Task PostMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationSetting migrationSetting)
+        public Task PostMigrate(DatabaseDescriptor databaseDescriptor, DbConnection dbConnection, MigrationContext migrationContext)
         {
             AlterNotnullColumns();
             AddDefaultValues();

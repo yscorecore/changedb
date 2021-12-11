@@ -12,13 +12,13 @@ namespace ChangeDB.Agent.SqlCe
     {
         public static readonly IDatabaseManager Default = new SqlCeDatabaseManager();
 
-        public Task DropDatabaseIfExists(DbConnection connection, MigrationSetting migrationSetting)
+        public Task DropDatabaseIfExists(DbConnection connection, MigrationContext migrationContext)
         {
             connection.DropDatabaseIfExists();
             return Task.CompletedTask;
         }
 
-        public Task CreateDatabase(DbConnection connection, MigrationSetting migrationSetting)
+        public Task CreateDatabase(DbConnection connection, MigrationContext migrationContext)
         {
             connection.CreateDatabase();
             return Task.CompletedTask;

@@ -17,7 +17,7 @@ namespace ChangeDB.Agent.SqlCe
         public static new readonly IMetadataMigrator Default = new SqlCeMetadataMigrator();
 
 
-        public override Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection dbConnection, MigrationSetting migrationSetting)
+        public override Task<DatabaseDescriptor> GetDatabaseDescriptor(DbConnection dbConnection, MigrationContext migrationContext)
         {
             var databaseDescriptor = SqlCeUtils.GetDataBaseDescriptorByEFCore(dbConnection);
             return Task.FromResult(databaseDescriptor);
