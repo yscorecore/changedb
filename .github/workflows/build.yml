@@ -22,13 +22,11 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 6.0.100
-    - name: 04 Restore Dotnet Tool
-      run: dotnet tool restore
-    - name: 05 Build with dotnet
+    - name: 04 Build with dotnet
       run: dotnet build
-    - name: 06 Run Unit test
+    - name: 05 Run Unit test
       run: dotnet test test/ChangeDB.Agent.SqlCe.UnitTest /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude="[*Test]*"
-    - name: 07 UpLoad SqlCe Coverage
+    - name: 06 UpLoad SqlCe Coverage
       uses: actions/upload-artifact@v2
       with:
         name: sqlce-coverage

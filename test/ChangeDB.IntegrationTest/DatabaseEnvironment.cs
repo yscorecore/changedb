@@ -44,7 +44,7 @@ namespace ChangeDB
 
         public void Dispose()
         {
-             DockerCompose.Down();
+            DockerCompose.Down();
         }
     }
 }
