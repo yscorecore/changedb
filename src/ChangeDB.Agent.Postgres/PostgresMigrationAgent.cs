@@ -4,7 +4,6 @@ using Npgsql;
 
 namespace ChangeDB.Agent.Postgres
 {
-    [Service(typeof(IMigrationAgent), Name = "postgres")]
     public class PostgresMigrationAgent : IMigrationAgent
     {
         public IDataMigrator DataMigrator { get => PostgresDataMigrator.Default; }

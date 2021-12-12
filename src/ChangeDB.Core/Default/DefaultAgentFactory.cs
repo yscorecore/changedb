@@ -4,7 +4,6 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Default
 {
-    [Service(typeof(IAgentFactory))]
     public class DefaultAgentFactory : IAgentFactory
     {
         private readonly IDictionary<string, IMigrationAgent> allMigrators;

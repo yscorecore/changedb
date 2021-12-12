@@ -1,0 +1,15 @@
+version: '3'
+services:
+  postgres:
+    image: "postgres"
+    environment:
+      POSTGRES_PASSWORD: mypassword
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+  sqlserver:
+    image: "mcr.microsoft.com/mssql/server:2019-latest"
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: myStrong(!)Password
+    ports:
+      - "${SQLSERVER_PORT:-1433}:1433"

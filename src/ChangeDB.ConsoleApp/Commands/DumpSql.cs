@@ -43,8 +43,8 @@ namespace ChangeDB.ConsoleApp.Commands
         public int Run()
         {
             var serviceHost = ServiceHost.Default;
-            var serviceProvider = serviceHost.ServiceCollection.BuildServiceProvider();
-            var service = serviceProvider.GetService<IDatabaseSqlDumper>();
+
+            var service = serviceHost.GetService<IDatabaseSqlDumper>();
             var task = service.DumpSql(new DumpContext
             {
                 Setting = new MigrationSetting()

@@ -4,7 +4,6 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Default
 {
-    [Service(typeof(IDatabaseSqlDumper))]
     public class DefaultSqlDumper : DefaultMigrator, IDatabaseSqlDumper
     {
 
@@ -20,16 +19,19 @@ namespace ChangeDB.Default
             var targetAgent = AgentFactory.CreateAgent(context.DumpInfo.DatabaseType);
             await using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
 
-            var sourceDatabaseDescriptor = await GetSourceDatabaseDescriptor(sourceAgent, sourceConnection, context);
 
-            var source = new AgentRunTimeInfo
+            context.Source = new AgentRunTimeInfo
             {
                 Agent = sourceAgent,
                 DatabaseType = context.SourceDatabase.DatabaseType,
                 Connection = sourceConnection,
-                Descriptor = sourceDatabaseDescriptor,
+                Descriptor = null,
             };
-            var target = new AgentRunTimeInfo
+            var sourceDatabaseDescriptor = await GetSourceDatabaseDescriptor(sourceAgent, sourceConnection, context);
+
+            context.Source.Descriptor = sourceDatabaseDescriptor;
+
+            context.Target = new AgentRunTimeInfo
             {
                 Agent = targetAgent,
                 DatabaseType = context.DumpInfo.DatabaseType,

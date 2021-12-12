@@ -17,6 +17,7 @@
         <IncludeAssets>all</IncludeAssets>
         </ProjectReference>
     <ProjectReference Include="..\ChangeDB.Agent.SqlServer\ChangeDB.Agent.SqlServer.csproj" />
+    <ProjectReference Include="..\ChangeDB.Extenstions.DependencyInjection\ChangeDB.Extenstions.DependencyInjection.csproj" />
   </ItemGroup>
 
 </Project>

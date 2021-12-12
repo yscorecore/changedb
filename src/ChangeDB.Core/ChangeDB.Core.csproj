@@ -4,8 +4,4 @@
         <RootNamespace>ChangeDB</RootNamespace>
     </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\ChangeDB.Frame\ChangeDB.Frame.csproj" />
-    </ItemGroup>
-
 </Project>

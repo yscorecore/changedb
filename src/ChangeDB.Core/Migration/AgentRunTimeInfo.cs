@@ -4,9 +4,9 @@ namespace ChangeDB.Migration
 {
     public record AgentRunTimeInfo
     {
-        public string DatabaseType { get; init; }
-        public IMigrationAgent Agent { get; init; }
-        public DatabaseDescriptor Descriptor { get; init; }
-        public DbConnection Connection { get; init; }
+        public string DatabaseType { get; set; }
+        public IMigrationAgent Agent { get; set; }
+        public DatabaseDescriptor Descriptor { get; set; }
+        public DbConnection Connection { get; set; }
     }
 }

@@ -85,25 +85,55 @@ namespace ChangeDB
         {
             sqlFiles.Each(file => connection.ExecuteSqlFile(file, sqlSplit));
         }
-        public static void ExecuteSqlFile(this IDbConnection connection, string sqlFile, string sqlSplit)
+        public static void ExecuteSqlFile(this IDbConnection connection, string sqlFile, string sqlSplit = "")
         {
-            var allLines = File.ReadAllLines(sqlFile);
-            var stringBuilder = new StringBuilder();
-            var allSqls = new List<string>();
-            allLines.Each((line) =>
+            using (var reader = new StreamReader(sqlFile))
             {
-                if (sqlSplit.Equals(line.Trim(), StringComparison.InvariantCultureIgnoreCase))
+                ExecuteMutilSqls(connection, reader, sqlSplit);
+            }
+        }
+        public static void ExecuteMutilSqls(this IDbConnection connection, TextReader textReader, string sqlSplit)
+        {
+            var stringBuilder = new StringBuilder();
+
+            while (true)
+            {
+                string line = textReader.ReadLine()?.Trim();
+                if (line == null)
                 {
-                    allSqls.Add(stringBuilder.ToString().Trim());
-                    stringBuilder.Clear();
+                    ExecuteCurrentStringBuilder();
+                    break;
+                }
+                else if (line.Equals(sqlSplit, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    ExecuteCurrentStringBuilder();
                 }
                 else
                 {
                     stringBuilder.AppendLine(line);
                 }
-            });
-            allSqls.Append(stringBuilder.ToString());
-            connection.ExecuteNonQuery(allSqls.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray());
+            }
+
+
+            void ExecuteCurrentStringBuilder()
+            {
+                var sql = stringBuilder.ToString().Trim();
+                if (!string.IsNullOrWhiteSpace(sql))
+                {
+                    connection.ExecuteNonQuery(sql);
+                }
+                stringBuilder.Clear();
+            }
+
+        }
+        public static void ExecuteMutilSqls(this IDbConnection connection, string mutilSqls, string sqlSplit)
+        {
+
+            using (var reader = new StringReader(mutilSqls ?? string.Empty))
+            {
+                ExecuteMutilSqls(connection, reader, sqlSplit);
+            }
+
         }
         public static bool ExecuteExists(this IDbConnection connection, string sql, Func<DataRow, bool> condition = null)
         {

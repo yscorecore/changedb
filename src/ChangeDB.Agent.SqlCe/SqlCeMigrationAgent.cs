@@ -5,7 +5,6 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlCe
 {
-    [Service(typeof(IMigrationAgent), Name = "sqlce")]
     public class SqlCeMigrationAgent : IMigrationAgent
     {
         public IDataMigrator DataMigrator { get => SqlCeDataMigrator.Default; }

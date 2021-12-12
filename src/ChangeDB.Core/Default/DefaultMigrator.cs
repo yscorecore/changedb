@@ -8,7 +8,6 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Default
 {
-    [Service(typeof(IDatabaseMigrate))]
     public class DefaultMigrator : IDatabaseMigrate
     {
 
@@ -26,14 +25,17 @@ namespace ChangeDB.Default
             await using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
             await using var targetConnection = targetAgent.CreateConnection(context.TargetDatabase.ConnectionString);
 
-            var sourceDatabaseDescriptor = await GetSourceDatabaseDescriptor(sourceAgent, sourceConnection, context);
+
             context.Source = new AgentRunTimeInfo
             {
                 Agent = sourceAgent,
                 DatabaseType = context.SourceDatabase.DatabaseType,
                 Connection = sourceConnection,
-                Descriptor = sourceDatabaseDescriptor,
+                Descriptor = null,
             };
+            var sourceDatabaseDescriptor = await GetSourceDatabaseDescriptor(sourceAgent, sourceConnection, context);
+
+            context.Source.Descriptor = sourceDatabaseDescriptor;
             context.Target = new AgentRunTimeInfo
             {
                 Agent = targetAgent,
@@ -152,7 +154,6 @@ namespace ChangeDB.Default
                 maxRowSize = Math.Max(maxRowSize, dataTable.MaxRowSize());
                 fetchCount = Math.Min(fetchCount * migrationSetting.GrowthSpeed, Math.Max(1, migrationSetting.FetchDataMaxSize / maxRowSize));
                 Log($"migrating table {tableName} ......{migratedCount * 1.0 / totalCount:p2} [{migratedCount}/{totalCount}].");
-                Console.SetCursorPosition(0, Console.CursorTop - 1);
                 if (dataTable.Rows.Count < pageInfo.Limit)
                 {
                     Log($"data of table {tableName} migration succeeded, {migratedCount} rows migrated.");

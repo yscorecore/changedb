@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>ChangeDB</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\ChangeDB.Agent.Postgres\ChangeDB.Agent.Postgres.csproj" />
+      <ProjectReference Include="..\..\src\ChangeDB.Agent.SqlServer\ChangeDB.Agent.SqlServer.csproj" />
+      <ProjectReference Include="..\..\src\ChangeDB.Extenstions.DependencyInjection\ChangeDB.Extenstions.DependencyInjection.csproj" />
+      <ProjectReference Include="..\ChangeDB.Test\ChangeDB.Test.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="migrations\basic_sqlserver.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+</Project>

@@ -5,7 +5,6 @@ using Microsoft.Data.SqlClient;
 namespace ChangeDB.Agent.SqlServer
 {
 
-    [Service(typeof(IMigrationAgent), Name = "sqlserver")]
     public class SqlServerMigrationAgent : IMigrationAgent
     {
         public IDataMigrator DataMigrator { get => SqlServerDataMigrator.Default; }
