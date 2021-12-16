@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Data;
 using System.Data.Common;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using ChangeDB.Migration;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -73,6 +77,62 @@ namespace ChangeDB.IntegrationTest
 
         private void AssertTargetDatabase(XElement xElement, MigrationContext migrationContext)
         {
+            var dbConnection = RandomDbConnection(migrationContext.TargetDatabase.DatabaseType);
+            dbConnection.ConnectionString = migrationContext.TargetDatabase.ConnectionString;
+            foreach (var tableElement in xElement.XPathSelectElements("table"))
+            {
+                AssertTargetTable(tableElement, dbConnection);
+            }
+        }
+        private void AssertTargetTable(XElement tableElement, DbConnection connection)
+        {
+            var schema = tableElement.Attribute("schema")?.Value;
+            var name = tableElement.Attribute("name")?.Value;
+            var tableFullName = string.IsNullOrEmpty(schema) ? $"\"{name}\"" : $"\"{schema}\".\"{name}\"";
+
+            AssertDataCount(tableElement, tableFullName, connection);
+            AssertMetaData(tableElement, tableFullName, connection);
+            AssertData(tableElement, tableFullName, connection);
+
+        }
+        private void AssertDataCount(XElement tableElement, string tableName, DbConnection connection)
+        {
+            var count = int.Parse(tableElement.Attribute("count").Value);
+            var countInDatabase = connection.ExecuteScalar<int>($"Select count(1) from {tableName}");
+            countInDatabase.Should().Be(count, $"the data total count in table {tableName} should be same.");
+        }
+        private void AssertMetaData(XElement tableElement, string tableName, DbConnection connection)
+        {
+            using var reader = connection.ExecuteReader($"select * from {tableName}");
+            var querySchema = reader.GetSchemaTable();
+            var expectedColumns = tableElement.XPathSelectElements("meta/column")
+                .Select(p => new
+                {
+                    Name = p.Attribute("name").Value,
+                    Type = Type.GetType(p.Attribute("type").Value)
+                }).ToDictionary(p => p.Name);
+            querySchema.Rows.Count.Should().Be(expectedColumns.Count(), $"the column count in table {tableName} should be same.");
+
+
+            var actualColumns =
+                querySchema.Rows.OfType<DataRow>()
+                .Select(p => new
+                {
+                    Name = p.Field<string>("ColumnName"),
+                    Type = p.Field<Type>("DataType")
+                }).ToDictionary(p => p.Name);
+
+            actualColumns.Should().BeEquivalentTo(expectedColumns, $"the columns in table {tableName} should be same.");
+        }
+        private void AssertData(XElement tableElement, string tableName, DbConnection connection)
+        {
+            var dataTable = connection.ExecuteReaderAsTable($"select * from {tableName}");
+            var dataInDataBase = dataTable.Rows.OfType<DataRow>().Select(p => p.ItemArray).ToArray();
+            var dataJsonInDataBase = JsonSerializer.Serialize(dataInDataBase);
+
+            var dataExpected = JsonSerializer.Deserialize(tableElement.Element("data").Value, typeof(object));
+            var dataJsonExpected = JsonSerializer.Serialize(dataExpected);
+            dataJsonInDataBase.Should().Be(dataJsonExpected, $"the data in table {tableName} should be same.");
 
         }
 

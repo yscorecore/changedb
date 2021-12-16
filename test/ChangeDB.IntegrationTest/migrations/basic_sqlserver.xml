@@ -13,7 +13,19 @@
     <targets>
         <target type="postgres">
             <table schema ="dbo" name="abc" count="2">
-
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.Int32"/>
+                </meta>
+                <data>
+                <![CDATA[
+                [
+                    [1,1],
+                    [2,2]
+                ]
+                ]]>
+                </data>
+                
             </table>
         </target>
     </targets>

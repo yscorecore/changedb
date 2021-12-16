@@ -144,14 +144,18 @@ namespace ChangeDB
             }
             return table.AsEnumerable().Any();
         }
-
-        public static DataTable ExecuteReaderAsTable(this IDbConnection connection, string sql)
+        public static IDataReader ExecuteReader(this IDbConnection connection, string sql)
         {
             AlterOpen(connection);
             using var command = connection.CreateCommand();
             command.CommandText = sql;
             command.CommandType = CommandType.Text;
-            using var reader = command.ExecuteReader();
+            return command.ExecuteReader();
+
+        }
+        public static DataTable ExecuteReaderAsTable(this IDbConnection connection, string sql)
+        {
+            using var reader = ExecuteReader(connection, sql);
             return reader.LoadDataTable();
         }
         public static List<Tuple<T1, T2>> ExecuteReaderAsList<T1, T2>(this IDbConnection connection, string sql)
