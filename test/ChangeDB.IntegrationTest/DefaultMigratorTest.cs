@@ -24,7 +24,8 @@ namespace ChangeDB.IntegrationTest
         }
 
         [Theory]
-        [InlineData("migrations/basic_sqlserver.xml")]
+        [InlineData("migrations/sqlserver_datatype.xml")]
+        [InlineData("migrations/sqlserver_basic.xml")]
         public async Task ShouldMigrationDatabaseAs(string xmlFile)
         {
             var serviceProvider = BuildServiceProvider();

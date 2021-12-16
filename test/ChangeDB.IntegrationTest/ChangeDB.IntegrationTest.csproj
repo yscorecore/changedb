@@ -12,7 +12,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="migrations\basic_sqlserver.xml">
+      <None Update="migrations\sqlserver_basic.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="migrations\sqlserver_datatype.xml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>

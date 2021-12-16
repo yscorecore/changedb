@@ -9,18 +9,22 @@ namespace ChangeDB.Agent.SqlServer
     public class SqlServerDataMigrator : IDataMigrator
     {
         public static readonly IDataMigrator Default = new SqlServerDataMigrator();
+        private static HashSet<string> canNotOrderByTypes = new HashSet<string>() { "image", "text", "ntext", "xml" };
         private static string BuildTableName(TableDescriptor table) => SqlServerUtils.IdentityName(table.Schema, table.Name);
         private static string BuildColumnNames(IEnumerable<string> names) => string.Join(", ", names.Select(p => $"[{p}]"));
         private static string BuildColumnNames(TableDescriptor table) =>
             BuildColumnNames(table.Columns.Select(p => p.Name));
         private string BuildParameterValueNames(TableDescriptor table) => string.Join(", ", table.Columns.Select(p => $"@{p.Name}"));
-        private static string BuildPrimaryKeyColumnNames(TableDescriptor table)
+        private static string BuildOrderByColumnNames(TableDescriptor table)
         {
             if (table.PrimaryKey?.Columns?.Count > 0)
             {
                 return BuildColumnNames(table.PrimaryKey?.Columns.ToArray());
             }
-            return BuildColumnNames(table);
+
+            var names = table.Columns.Where(p => !canNotOrderByTypes.Contains(p.StoreType.ToLower())).Select(p => p.Name);
+
+            return BuildColumnNames(names);
         }
 
         public Task<long> CountSourceTable(TableDescriptor table, MigrationContext migrationContext)
@@ -33,7 +37,7 @@ namespace ChangeDB.Agent.SqlServer
         public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, MigrationContext migrationContext)
         {
             var sql =
-                $"select * from {BuildTableName(table)} order by {BuildPrimaryKeyColumnNames(table)} offset {pageInfo.Offset} row fetch next {pageInfo.Limit} row only";
+                $"select * from {BuildTableName(table)} order by {BuildOrderByColumnNames(table)} offset {pageInfo.Offset} row fetch next {pageInfo.Limit} row only";
             return Task.FromResult(migrationContext.SourceConnection.ExecuteReaderAsTable(sql));
         }
 

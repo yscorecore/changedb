@@ -1,0 +1,381 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<root>
+    <source type="sqlserver" split="go">
+        <![CDATA[
+    create table test_bit(val bit);
+    GO
+    insert into test_bit(val) values(1);
+    GO         
+        
+    create table test_tinyint(val tinyint);
+    GO
+    insert into test_tinyint(val) values(123);
+    GO        
+  
+    create table test_smallint(val smallint);
+    GO
+    insert into test_smallint(val) values(123);
+    GO
+    
+    create table test_int(val int);
+    GO
+    insert into test_int(val) values(123);
+    GO
+    
+    create table test_bigint(val bigint);
+    GO
+    insert into test_bigint(val) values(123);
+    GO
+    
+    create table test_uuid(val uniqueidentifier);
+    GO
+    insert into test_uuid(val) values('AEBD4A2C-D6A7-4F9A-889C-CF1AA8145D78');
+    GO
+    
+    create table test_char(val char, val2 char(5), val3 nchar, val4 nchar(5));
+    GO
+    insert into test_char(val, val2, val3, val4) values('a', 'b', 'c', N'的的的');
+    GO
+    
+    create table test_varchar(val varchar, val2 varchar(5), val3 nvarchar, val4 nvarchar(5));
+    GO
+    insert into test_varchar(val, val2, val3, val4) values('a', 'b', 'c', N'的的的');
+    GO
+    
+    create table test_text(id int, val text, val2 ntext);
+    GO
+    insert into test_text(id, val, val2) values(1, 'a', N'的的的');
+    GO
+    
+    create table test_xml(id int, val xml);
+    GO
+    insert into test_xml(id, val) values(1, '<a>abc</a>');
+    GO
+    
+    create table test_binary(val binary,val2 binary(5));
+    GO
+    insert into test_binary(val, val2) values(0x01,0x02);
+    GO
+    
+    create table test_varbinary(val varbinary,val2 varbinary(5));
+    GO
+    insert into test_varbinary(val, val2) values(0x01,0x02);
+    GO
+    
+    
+    create table test_timestamp(id int,val timestamp);
+    GO
+    insert into test_timestamp(id) values(1);
+    GO
+    
+    create table test_rowversion(id int,val rowversion);
+    GO
+    insert into test_rowversion(id) values(1);
+    GO
+    
+    create table test_image(id int,val image);
+    GO
+    insert into test_image(id, val) values(1,0x0102);
+    GO
+    
+    create table test_money(id int identity(1,1) primary key, val money);
+    GO
+    insert into test_money(val) values(1);
+    insert into test_money(val) values(1.2345);
+    insert into test_money(val) values(1.23456);
+    insert into test_money(val) values(123456789012345.67891);
+     insert into test_money(val) values(-123456789012345.67891);
+    GO
+    
+    create table test_smallmoney(id int identity(1,1) primary key,val money);
+    GO
+    insert into test_smallmoney(val) values(1);
+    insert into test_smallmoney(val) values(1.2345);
+    insert into test_smallmoney(val) values(1.23456);
+    insert into test_smallmoney(val) values(123456789.01234);
+    insert into test_smallmoney(val) values(-123456789.01234);
+    GO
+    
+    create table test_defaultdecimal(id int identity(1,1) primary key, val decimal);
+    GO
+    insert into test_defaultdecimal(val) values(1);
+    insert into test_defaultdecimal(val) values(123456789012345678);
+    insert into test_defaultdecimal(val) values(-123456789012345678);
+    GO
+    
+    create table test_decimal(id int identity(1,1) primary key, val decimal(38,20));
+    GO
+    insert into test_decimal(val) values(1);
+    insert into test_decimal(val) values(12345678.12345678901234567890);
+    insert into test_decimal(val) values(-12345678.12345678901234567890);
+    GO
+    
+    create table test_real(id int identity(1,1) primary key, val real);
+    GO
+    insert into test_real(val) values(1);
+    insert into test_real(val) values(123.4567);
+    insert into test_real(val) values(-123.4567);
+    GO
+    
+    create table test_float(id int identity(1,1) primary key, val float);
+    GO
+    insert into test_float(val) values(1);
+    insert into test_float(val) values(12345.0123456789012345);
+    insert into test_float(val) values(-12345.0123456789012345);
+    GO
+    
+    create table test_float23(id int identity(1,1) primary key, val float(23));
+    GO
+    insert into test_float23(val) values(1);
+    insert into test_float23(val) values(12345.01);
+    insert into test_float23(val) values(-12345.01);
+    GO
+    ]]>
+    </source>
+
+    <targets>
+        <target type="postgres">
+            <table schema ="dbo" name="test_bit" count="1">
+                <meta>
+                    <column name="val" type="System.Boolean"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[true]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_tinyint" count="1">
+                <meta>
+                    <column name="val" type="System.Int16"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[123]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_smallint" count="1">
+                <meta>
+                    <column name="val" type="System.Int16"/>
+                </meta>
+                <data><![CDATA[
+                [[123]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_int" count="1">
+                <meta>
+                    <column name="val" type="System.Int32"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[123]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_bigint" count="1">
+                <meta>
+                    <column name="val" type="System.Int64"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[123]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_uuid" count="1">
+                <meta>
+                    <column name="val" type="System.Guid"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [["aebd4a2c-d6a7-4f9a-889c-cf1aa8145d78"]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_char" count="1">
+                <meta>
+                    <column name="val" type="System.String"/>
+                    <column name="val2" type="System.String"/>
+                    <column name="val3" type="System.String"/>
+                    <column name="val4" type="System.String"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [["a","b    ","c","的的的  "]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_varchar" count="1">
+                <meta>
+                    <column name="val" type="System.String"/>
+                    <column name="val2" type="System.String"/>
+                    <column name="val3" type="System.String"/>
+                    <column name="val4" type="System.String"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [["a","b","c","的的的"]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_text" count="1">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.String"/>
+                    <column name="val2" type="System.String"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,"a","的的的"]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_xml" count="1">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.String"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1, "<a>abc</a>"]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_binary" count="1">
+                <meta>
+                    <column name="val" type="System.Byte[]"/>
+                    <column name="val2" type="System.Byte[]"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [["AQ==","AgAAAAA="]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_varbinary" count="1">
+                <meta>
+                    <column name="val" type="System.Byte[]"/>
+                    <column name="val2" type="System.Byte[]"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [["AQ==","Ag=="]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_timestamp" count="1">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.Byte[]"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,"AAAAAAAAB9M="]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_rowversion" count="1">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.Byte[]"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,"AAAAAAAAB9Q="]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_image" count="1">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.Byte[]"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,"AQI="]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_money" count="5">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.Decimal"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,1.0000],[2,1.2345],[3,1.2346],[4,123456789012345.6789],[5,-123456789012345.6789]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_smallmoney" count="5">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.Decimal"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,1.0000],[2,1.2345],[3,1.2346],[4,123456789.0123],[5,-123456789.0123]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_defaultdecimal" count="3">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.Decimal"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,1],[2,123456789012345678],[3,-123456789012345678]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_decimal" count="3">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.Decimal"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,1.00000000000000000000],[2,12345678.12345678901234567890],[3,-12345678.12345678901234567890]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_real" count="3">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.Single"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,1],[2,123.4567],[3,-123.4567]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_float" count="3">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.Double"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,1],[2,12345.0123456789],[3,-12345.0123456789]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_float23" count="3">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.Single"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,1],[2,12345.01],[3,-12345.01]]
+                ]]>
+                </data>
+            </table>
+        </target>
+    </targets>
+    
+</root>
