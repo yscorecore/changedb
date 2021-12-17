@@ -130,6 +130,22 @@
     insert into test_float23(val) values(12345.01);
     insert into test_float23(val) values(-12345.01);
     GO
+    
+    create table test_smalldatetime(id int identity(1,1) primary key, val smalldatetime);
+    GO
+    -- https://docs.microsoft.com/zh-cn/sql/t-sql/data-types/smalldatetime-transact-sql?view=sql-server-ver15
+    insert into test_smalldatetime(val) values('2021-12-16 18:26:00');
+    insert into test_smalldatetime(val) values('1900-01-01 01:02:00');
+    insert into test_smalldatetime(val) values('2079-06-06 01:02:00');
+    GO
+    
+    create table test_datetime(id int identity(1,1) primary key, val datetime);
+    GO
+    -- https://docs.microsoft.com/zh-cn/sql/t-sql/data-types/datetime-transact-sql?view=sql-server-ver15
+    insert into test_datetime(val) values('2021-12-16 18:26:23.456');
+    insert into test_datetime(val) values('1753-01-01 18:26:23.456');
+    insert into test_datetime(val) values('9999-12-31 18:26:23.456');
+    GO
     ]]>
     </source>
 
@@ -375,6 +391,28 @@
                 ]]>
                 </data>
             </table>
+            <!--<table schema ="dbo" name="test_smalldatetime" count="3">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.DateTime"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,"2021-12-16T18:26:00"],[2,"1900-01-01T01:02:00"],[3,"2079-06-06T01:02:00"]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_datetime" count="3">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.DateTime"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,"2021-12-16T18:26:23.456"],[2,"1753-01-01T18:26:23.456"],[3,"1753-01-01T18:26:23.456"]]
+                ]]>
+                </data>
+            </table>-->
         </target>
     </targets>
     
