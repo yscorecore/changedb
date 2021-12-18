@@ -84,7 +84,7 @@ namespace ChangeDB.Agent.Postgres
             var dic = new Dictionary<string, object>();
             foreach (var column in tableDescriptor.Columns)
             {
-                dic[$"@{column.Name}"] = GetRowColumnValue(row,column.Name);
+                dic[$"@{column.Name}"] = GetRowColumnValue(row, column.Name);
             }
             return dic;
         }

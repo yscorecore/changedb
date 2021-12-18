@@ -64,7 +64,7 @@ namespace ChangeDB
             {
                 foreach (var kv in args)
                 {
-                    if (kv.Value is IDbDataParameter  dataParameter)
+                    if (kv.Value is IDbDataParameter dataParameter)
                     {
                         dataParameter.ParameterName = kv.Key;
                         command.Parameters.Add(dataParameter);
