@@ -49,8 +49,8 @@ datetimeoffset	34	10	datetimeoffset({0})	scale	System.DateTimeOffset
             string arg1 = match.Groups["arg1"].Value;
             string arg2 = match.Groups["arg2"].Value;
             bool isMax = arg1 == "max";
-            int length = (isMax || string.IsNullOrEmpty(arg1)) ? default : int.Parse(arg1);
-            int scale = string.IsNullOrEmpty(arg2) ? default : int.Parse(arg2);
+            int? length = (isMax || string.IsNullOrEmpty(arg1)) ? null : int.Parse(arg1);
+            int? scale = string.IsNullOrEmpty(arg2) ? null : int.Parse(arg2);
             return type switch
             {
                 "bit" => DataTypeDescriptor.Boolean(),
@@ -58,8 +58,8 @@ datetimeoffset	34	10	datetimeoffset({0})	scale	System.DateTimeOffset
                 "smallint" => DataTypeDescriptor.SmallInt(),
                 "int" => DataTypeDescriptor.Int(),
                 "bigint" => DataTypeDescriptor.BigInt(),
-                "decimal" => DataTypeDescriptor.Decimal(length, scale),
-                "numeric" => DataTypeDescriptor.Decimal(length, scale),
+                "decimal" => DataTypeDescriptor.Decimal(length??0, scale??0),
+                "numeric" => DataTypeDescriptor.Decimal(length??0, scale??0),
                 "timestamp" => DataTypeDescriptor.Binary(8),
                 "rowversion" => DataTypeDescriptor.Binary(8),
                 "uniqueidentifier" => DataTypeDescriptor.Uuid(),
@@ -70,19 +70,19 @@ datetimeoffset	34	10	datetimeoffset({0})	scale	System.DateTimeOffset
                 "float" => DataTypeDescriptor.Double(),
                 "smallmoney" => DataTypeDescriptor.Decimal(10, 4),
                 "money" => DataTypeDescriptor.Decimal(19, 4),
-                "binary" => DataTypeDescriptor.Binary(length),
-                "varbinary" => isMax ? DataTypeDescriptor.Blob() : DataTypeDescriptor.Varbinary(length),
-                "char" => DataTypeDescriptor.Char(length),
-                "nchar" => DataTypeDescriptor.NChar(length),
-                "varchar" => isMax ? DataTypeDescriptor.Text() : DataTypeDescriptor.Varchar(length),
-                "nvarchar" => isMax ? DataTypeDescriptor.NText() : DataTypeDescriptor.NVarchar(length),
+                "binary" => DataTypeDescriptor.Binary(length??1),
+                "varbinary" => isMax ? DataTypeDescriptor.Blob() : DataTypeDescriptor.Varbinary(length??1),
+                "char" => DataTypeDescriptor.Char(length??1),
+                "nchar" => DataTypeDescriptor.NChar(length??1),
+                "varchar" => isMax ? DataTypeDescriptor.Text() : DataTypeDescriptor.Varchar(length??1),
+                "nvarchar" => isMax ? DataTypeDescriptor.NText() : DataTypeDescriptor.NVarchar(length??1),
                 "xml" => DataTypeDescriptor.NText(),
                 "date" => DataTypeDescriptor.Date(),
-                "time" => DataTypeDescriptor.Time(length),
-                "datetime" => DataTypeDescriptor.DateTime(0),
+                "time" => DataTypeDescriptor.Time(length??7),
+                "datetime" => DataTypeDescriptor.DateTime(3),
                 "smalldatetime" => DataTypeDescriptor.DateTime(0),
-                "datetime2" => DataTypeDescriptor.DateTime(length),
-                "datetimeoffset" => DataTypeDescriptor.DateTimeOffset(length),
+                "datetime2" => DataTypeDescriptor.DateTime(length??7),
+                "datetimeoffset" => DataTypeDescriptor.DateTimeOffset(length??7),
                 _ => throw new System.NotSupportedException($"not support dbtype {storeType}.")
             };
         }

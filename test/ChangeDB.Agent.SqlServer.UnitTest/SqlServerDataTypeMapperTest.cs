@@ -74,10 +74,10 @@ namespace ChangeDB.Agent.SqlServer
         [InlineData("uniqueidentifier", CommonDataType.Uuid, null, null)]
 
         [InlineData("date", CommonDataType.Date, null, null)]
-        [InlineData("time", CommonDataType.Time, 0, null)]
-        [InlineData("datetime", CommonDataType.DateTime, 0, null)]
-        [InlineData("datetime2", CommonDataType.DateTime, 0, null)]
-        [InlineData("datetimeoffset", CommonDataType.DateTimeOffset, 0, null)]
+        [InlineData("time", CommonDataType.Time, 7, null)]
+        [InlineData("datetime", CommonDataType.DateTime, 3, null)]
+        [InlineData("datetime2", CommonDataType.DateTime, 7, null)]
+        [InlineData("datetimeoffset", CommonDataType.DateTimeOffset, 7, null)]
 
         [InlineData("time(1)", CommonDataType.Time, 1, null)]
         [InlineData("datetime2(1)", CommonDataType.DateTime, 1, null)]

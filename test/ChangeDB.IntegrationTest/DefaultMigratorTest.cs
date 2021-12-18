@@ -128,13 +128,21 @@ namespace ChangeDB.IntegrationTest
         private void AssertData(XElement tableElement, string tableName, DbConnection connection)
         {
             var dataTable = connection.ExecuteReaderAsTable($"select * from {tableName}");
-            var dataInDataBase = dataTable.Rows.OfType<DataRow>().Select(p => p.ItemArray).ToArray();
+            var dataInDataBase = dataTable.Rows.OfType<DataRow>().Select(p => p.ItemArray.Select(ConvertToJsonText).ToArray()).ToArray();
             var dataJsonInDataBase = JsonSerializer.Serialize(dataInDataBase);
 
             var dataExpected = JsonSerializer.Deserialize(tableElement.Element("data").Value, typeof(object));
             var dataJsonExpected = JsonSerializer.Serialize(dataExpected);
             dataJsonInDataBase.Should().Be(dataJsonExpected, $"the data in table {tableName} should be same.");
 
+        }
+        private object ConvertToJsonText(object value)
+        {
+            if (value is TimeSpan ts)
+            {
+                return ts.ToString();
+            }
+            return value;
         }
 
         private IServiceProvider BuildServiceProvider()

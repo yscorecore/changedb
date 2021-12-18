@@ -91,9 +91,9 @@ namespace ChangeDB.Agent.Postgres
                 CommonDataType.Blob => "bytea",
                 CommonDataType.Decimal => $"numeric({dataType.Arg1},{dataType.Arg2})",
                 CommonDataType.Date => "date",
-                CommonDataType.Time => $"TIME({dataType.Arg1}) WITHOUT TIME ZONE",
-                CommonDataType.DateTime => $"TIMESTAMP({dataType.Arg1}) WITHOUT TIME ZONE",
-                CommonDataType.DateTimeOffset => $"TIMESTAMP({dataType.Arg1}) WITH TIME ZONE",
+                CommonDataType.Time => $"TIME({Math.Min(dataType?.Arg1??6,6)}) WITHOUT TIME ZONE",
+                CommonDataType.DateTime => $"TIMESTAMP({Math.Min(dataType?.Arg1??6,6)}) WITHOUT TIME ZONE",
+                CommonDataType.DateTimeOffset => $"TIMESTAMP({Math.Min(dataType?.Arg1??6,6)}) WITH TIME ZONE",
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

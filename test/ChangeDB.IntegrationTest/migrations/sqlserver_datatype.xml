@@ -134,6 +134,7 @@
     create table test_smalldatetime(id int identity(1,1) primary key, val smalldatetime);
     GO
     -- https://docs.microsoft.com/zh-cn/sql/t-sql/data-types/smalldatetime-transact-sql?view=sql-server-ver15
+    -- Accuracy	One minute
     insert into test_smalldatetime(val) values('2021-12-16 18:26:00');
     insert into test_smalldatetime(val) values('1900-01-01 01:02:00');
     insert into test_smalldatetime(val) values('2079-06-06 01:02:00');
@@ -142,9 +143,43 @@
     create table test_datetime(id int identity(1,1) primary key, val datetime);
     GO
     -- https://docs.microsoft.com/zh-cn/sql/t-sql/data-types/datetime-transact-sql?view=sql-server-ver15
-    insert into test_datetime(val) values('2021-12-16 18:26:23.456');
-    insert into test_datetime(val) values('1753-01-01 18:26:23.456');
-    insert into test_datetime(val) values('9999-12-31 18:26:23.456');
+    -- datetime values are rounded to increments of .000, .003, or .007 seconds, as shown in the following table.
+    insert into test_datetime(val) values('2021-12-16 18:26:23.450');
+    insert into test_datetime(val) values('1753-01-01 18:26:23.453');
+    insert into test_datetime(val) values('9999-12-31 18:26:23.457');
+    GO
+    
+    create table test_datetime2(id int identity(1,1) primary key, val0 datetime2, val1 datetime2(0), val2 datetime2(1), val3 datetime2(3), val4 datetime2(6),val5 datetime2(7));
+    GO
+    -- https://docs.microsoft.com/zh-cn/sql/t-sql/data-types/datetime2-transact-sql?view=sql-server-ver15
+    insert into test_datetime2(val0,val1,val2,val3,val4,val5) values('2021-12-16T18:26:23.1234567','2021-12-16T18:26:23.1234567','2021-12-16T18:26:23.1234567','2021-12-16T18:26:23.1234567','2021-12-16T18:26:23.1234567','2021-12-16T18:26:23.1234567');
+    insert into test_datetime2(val0,val1,val2,val3,val4,val5) values('0001-01-01T00:00:00.1234567','0001-01-01T00:00:00.1234567','0001-01-01T00:00:00.1234567','0001-01-01T00:00:00.1234567','0001-01-01T00:00:00.1234567','0001-01-01T00:00:00.1234567');
+    insert into test_datetime2(val0,val1,val2,val3,val4,val5) values('9999-12-31T18:26:23.1234567','9999-12-31T18:26:23.1234567','9999-12-31T18:26:23.1234567','9999-12-31T18:26:23.1234567','9999-12-31T18:26:23.1234567','9999-12-31T18:26:23.1234567');
+    GO
+    
+    create table test_date(id int identity(1,1) primary key, val date);
+    GO
+    -- https://docs.microsoft.com/zh-cn/sql/t-sql/data-types/date-transact-sql?view=sql-server-ver15
+    insert into test_date(val) values('2021-12-16');
+    insert into test_date(val) values('0001-01-01');
+    insert into test_date(val) values('9999-12-31');
+    GO
+    
+    create table test_time(id int identity(1,1) primary key, val1 time, val2 time(0), val3 time(1), val4 time(3), val5 time(6), val6 time(7));
+    GO
+    -- https://docs.microsoft.com/zh-cn/sql/t-sql/time-types/date-transact-sql?view=sql-server-ver15
+    insert into test_time(val1,val2,val3,val4,val5,val6) values('12:34:56.7890123','12:34:56.7890123','12:34:56.7890123','12:34:56.7890123','12:34:56.7890123','12:34:56.7890123');
+    insert into test_time(val1,val2,val3,val4,val5,val6) values('00:00:00.0000000','00:00:00.0000000','00:00:00.0000000','00:00:00.0000000','00:00:00.0000000','00:00:00.0000000');
+    insert into test_time(val1,val2,val3,val4,val5,val6) values('23:59:59.9999999','23:59:59.9999999','23:59:59.9999999','23:59:59.9999999','23:59:59.9999999','23:59:59.9999999');
+    GO
+    
+    create table test_datetimeoffset(id int identity(1,1) primary key, val0 datetimeoffset, val1 datetimeoffset(0), val2 datetimeoffset(1), val3 datetimeoffset(3), val4 datetimeoffset(6),val5 datetimeoffset(7));
+    GO
+    -- https://docs.microsoft.com/zh-cn/sql/t-sql/data-types/datetimeoffset-transact-sql?view=sql-server-ver15
+    insert into test_datetimeoffset(val0,val1,val2,val3,val4,val5) values('2021-12-16 18:26:23.1234567 +08:00','2021-12-16 18:26:23.1234567 +08:00','2021-12-16 18:26:23.1234567 +08:00','2021-12-16 18:26:23.1234567 +08:00','2021-12-16 18:26:23.1234567 +08:00','2021-12-16 18:26:23.1234567 +08:00');
+    insert into test_datetimeoffset(val0,val1,val2,val3,val4,val5) values('2021-12-16 18:26:23.1234567 -14:00','2021-12-16 18:26:23.1234567 +14:00','2021-12-16 18:26:23.1234567 -08:00','2021-12-16 18:26:23.1234567 +08:00','2021-12-16 18:26:23.1234567 -04:30','2021-12-16 18:26:23.1234567 +08:00');
+    insert into test_datetimeoffset(val0,val1,val2,val3,val4,val5) values('0001-01-02 00:00:00.1234567 +08:00','0001-01-02 00:00:00.1234567 +08:00','0001-01-02 00:00:00.1234567 +08:00','0001-01-02 00:00:00.1234567 +08:00','0001-01-02 00:00:00.1234567 +08:00','0001-01-02 00:00:00.1234567 +08:00');
+    insert into test_datetimeoffset(val0,val1,val2,val3,val4,val5) values('9999-12-31 18:26:23.1234567 +08:00','9999-12-31 18:26:23.1234567 +08:00','9999-12-31 18:26:23.1234567 +08:00','9999-12-31 18:26:23.1234567 +08:00','9999-12-31 18:26:23.1234567 +08:00','9999-12-31 18:26:23.1234567 +08:00');
     GO
     ]]>
     </source>
@@ -391,7 +426,7 @@
                 ]]>
                 </data>
             </table>
-            <!--<table schema ="dbo" name="test_smalldatetime" count="3">
+            <table schema ="dbo" name="test_smalldatetime" count="3">
                 <meta>
                     <column name="id" type="System.Int32"/>
                     <column name="val" type="System.DateTime"/>
@@ -409,10 +444,83 @@
                 </meta>
                 <data>
                     <![CDATA[
-                [[1,"2021-12-16T18:26:23.456"],[2,"1753-01-01T18:26:23.456"],[3,"1753-01-01T18:26:23.456"]]
+                [[1,"2021-12-16T18:26:23.45"],[2,"1753-01-01T18:26:23.453"],[3,"9999-12-31T18:26:23.457"]]
                 ]]>
                 </data>
-            </table>-->
+            </table>
+            <table schema ="dbo" name="test_datetime2" count="3">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val0" type="System.DateTime"/>
+                    <column name="val1" type="System.DateTime"/>
+                    <column name="val2" type="System.DateTime"/>
+                    <column name="val3" type="System.DateTime"/>
+                    <column name="val4" type="System.DateTime"/>
+                    <column name="val5" type="System.DateTime"/>
+                </meta>
+                <data>
+                    <!-- postgres lost 1 accuracy, the max accuracy in postgres is 6 -->
+                    <![CDATA[
+                [[1,"2021-12-16T18:26:23.123456","2021-12-16T18:26:23","2021-12-16T18:26:23.1","2021-12-16T18:26:23.123","2021-12-16T18:26:23.123457","2021-12-16T18:26:23.123456"],
+                 [2,"0001-01-01T00:00:00.123457","0001-01-01T00:00:00","0001-01-01T00:00:00.1","0001-01-01T00:00:00.123","0001-01-01T00:00:00.123457","0001-01-01T00:00:00.123457"],
+                 [3,"9999-12-31T18:26:23.123456","9999-12-31T18:26:23","9999-12-31T18:26:23.1","9999-12-31T18:26:23.123","9999-12-31T18:26:23.123457","9999-12-31T18:26:23.123456"]]
+                ]]>
+                </data>
+            </table>
+
+            <table schema ="dbo" name="test_date" count="3">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val" type="System.DateTime"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,"2021-12-16T00:00:00"],
+                 [2,"0001-01-01T00:00:00"],
+                 [3,"9999-12-31T00:00:00"]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_time" count="3">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val1" type="System.TimeSpan"/>
+                    <column name="val2" type="System.TimeSpan"/>
+                    <column name="val3" type="System.TimeSpan"/>
+                    <column name="val4" type="System.TimeSpan"/>
+                    <column name="val5" type="System.TimeSpan"/>
+                    <column name="val6" type="System.TimeSpan"/>
+                </meta>
+                <data>
+                    <![CDATA[
+                [[1,"12:34:56.7890120","12:34:57","12:34:56.8000000","12:34:56.7890000","12:34:56.7890120","12:34:56.7890120"],
+                 [2,"00:00:00","00:00:00","00:00:00","00:00:00","00:00:00","00:00:00"],
+                 [3,"23:59:59.9999990","23:59:59","23:59:59.9000000","23:59:59.9990000","23:59:59.9999990","23:59:59.9999990"]]
+                ]]>
+                </data>
+            </table>
+            <table schema ="dbo" name="test_datetimeoffset" count="4">
+                <meta>
+                    <column name="id" type="System.Int32"/>
+                    <column name="val0" type="System.DateTime"/>
+                    <column name="val1" type="System.DateTime"/>
+                    <column name="val2" type="System.DateTime"/>
+                    <column name="val3" type="System.DateTime"/>
+                    <column name="val4" type="System.DateTime"/>
+                    <column name="val5" type="System.DateTime"/>
+                </meta>
+                <data>
+                    <!-- postgres lost 1 accuracy, the max accuracy in postgres is 6 -->
+                    <![CDATA[
+[
+	[1, "2021-12-16T18:26:23.123456", "2021-12-16T18:26:23", "2021-12-16T18:26:23.1", "2021-12-16T18:26:23.123", "2021-12-16T18:26:23.123457", "2021-12-16T18:26:23.123456"],
+	[2, "2021-12-17T16:26:23.123456", "2021-12-16T12:26:23", "2021-12-17T10:26:23.1", "2021-12-16T18:26:23.123", "2021-12-17T06:56:23.123457", "2021-12-16T18:26:23.123456"],
+	[3, "0001-01-02T00:05:00.123456", "0001-01-02T00:05:00", "0001-01-02T00:05:00.1", "0001-01-02T00:05:00.123", "0001-01-02T00:05:00.123457", "0001-01-02T00:05:00.123456"],
+	[4, "9999-12-31T18:26:23.123456", "9999-12-31T18:26:23", "9999-12-31T18:26:23.1", "9999-12-31T18:26:23.123", "9999-12-31T18:26:23.123457", "9999-12-31T18:26:23.123456"]
+]
+                                ]]>
+                </data>
+            </table>
         </target>
     </targets>
     

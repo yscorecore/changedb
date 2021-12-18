@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
+using Npgsql;
 
 namespace ChangeDB.Agent.Postgres
 {
@@ -83,13 +84,20 @@ namespace ChangeDB.Agent.Postgres
             var dic = new Dictionary<string, object>();
             foreach (var column in tableDescriptor.Columns)
             {
-                dic[$"@{column.Name}"] = row[column.Name];
+                dic[$"@{column.Name}"] = GetRowColumnValue(row,column.Name);
             }
             return dic;
         }
 
+        private object GetRowColumnValue(DataRow dataRow, string columnName)
+        {
+            return dataRow[columnName];
+        }
+
         public Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
         {
+            // var npgsqlConnection = migrationContext.TargetConnection as NpgsqlConnection;
+            // npgsqlConnection!.TypeMapper.UseNodaTime();
             return Task.CompletedTask;
         }
 

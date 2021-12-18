@@ -64,10 +64,18 @@ namespace ChangeDB
             {
                 foreach (var kv in args)
                 {
-                    var parameter = command.CreateParameter();
-                    parameter.Value = kv.Value;
-                    parameter.ParameterName = kv.Key;
-                    command.Parameters.Add(parameter);
+                    if (kv.Value is IDbDataParameter  dataParameter)
+                    {
+                        dataParameter.ParameterName = kv.Key;
+                        command.Parameters.Add(dataParameter);
+                    }
+                    else
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.Value = kv.Value;
+                        parameter.ParameterName = kv.Key;
+                        command.Parameters.Add(parameter);
+                    }
                 }
             }
             return command.ExecuteNonQuery();
