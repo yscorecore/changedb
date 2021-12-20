@@ -13,6 +13,8 @@ namespace ChangeDB.Migration
 
         public event EventHandler<TableDataInfo> TableDataMigrated;
 
+        public event EventHandler<StageKind> StageChanged;
+
         public void RaiseObjectCreated(ObjectInfo objectInfo)
         {
             ObjectCreated?.Invoke(this, objectInfo);
@@ -26,6 +28,17 @@ namespace ChangeDB.Migration
             TableDataMigrated?.Invoke(this, tableDataInfo);
         }
 
+        public void RaiseTableDataMigrated(TableDescriptor table, long totalCount, long migratedCount, bool completed) =>
+            RaiseTableDataMigrated(new TableDataInfo
+            {
+                Table = table,
+                TotalCount = totalCount,
+                MigratedCount = migratedCount,
+                Completed = completed
+            });
+
+
+        public void RaiseStageChanged(StageKind stageKind) => this.StageChanged?.Invoke(this, stageKind);
         public AgentRunTimeInfo Source { get; set; }
         public AgentRunTimeInfo Target { get; set; }
 
@@ -73,8 +86,27 @@ namespace ChangeDB.Migration
 
     public class TableDataInfo
     {
-        public int TotalCount { get; set; }
-        public int MigratedCount { get; set; }
-        public string TableFullName { get; set; }
+        public long TotalCount { get; set; }
+        public long MigratedCount { get; set; }
+        public TableDescriptor Table { get; set; }
+
+        public bool Completed { get; set; }
+
+        public double GetProgressValue()
+        {
+            if (TotalCount == 0) return 0;
+            return Math.Min(1.0, 1.0 * MigratedCount / TotalCount);
+        }
+
+    }
+
+    public enum StageKind
+    {
+        StartingPreMeta,
+        FinishedPreMeta,
+        StartingTableData,
+        FinishedTableData,
+        StartingPostMeta,
+        FinishedPostMeta
     }
 }

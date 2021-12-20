@@ -20,7 +20,7 @@ namespace ChangeDB.ConsoleApp
         private IServiceProvider serviceProvider;
         public object GetService(Type serviceType)
         {
-            return serviceProvider;
+            return serviceProvider.GetService(serviceType);
         }
     }
 }

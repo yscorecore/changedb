@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Runtime.InteropServices.ComTypes;
+using System.Runtime.Loader;
 using ChangeDB.Migration;
 using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
@@ -65,21 +69,41 @@ namespace ChangeDB.ConsoleApp.Commands
                 SourceDatabase = new DatabaseInfo { DatabaseType = SourceType, ConnectionString = SourceConnectionString },
                 TargetDatabase = new DatabaseInfo { DatabaseType = TargetType, ConnectionString = TargetConnectionString }
             };
-            context.ObjectCreated += Context_ObjectCreated;
-            context.TableDataMigrated += Context_TableDataMigrated;
+            ConsoleProgressBarManager consoleProgressBarManager = new ConsoleProgressBarManager();
+            context.StageChanged += (sender, e) =>
+            {
+                if (e == StageKind.StartingTableData)
+                {
+                    consoleProgressBarManager.Start();
+                }
+                else if (e == StageKind.FinishedTableData)
+                {
+                    consoleProgressBarManager.End();
+                }
+            };
+            context.ObjectCreated += (sender, e) =>
+            {
+                if (string.IsNullOrEmpty(e.OwnerName))
+                {
+                    Console.WriteLine($"{e.ObjectType} {e.FullName} created.");
+                }
+                else
+                {
+                    Console.WriteLine($"{e.ObjectType} {e.FullName} on {e.OwnerName} created.");
+                }
+            };
+            context.TableDataMigrated += (sender, e) =>
+            {
+                string tableName = string.IsNullOrEmpty(e.Table.Schema) ? $"\"{e.Table.Name}\"" : $"\"{e.Table.Schema}\".\"{e.Table.Name}\"";
+                consoleProgressBarManager.ReportProgress(tableName,
+                    e.Completed ? $"table {tableName} migrated." : $"migrating table {tableName}"
+                    , e.TotalCount, e.MigratedCount, e.Completed);
+
+            };
             var task = service.MigrateDatabase(context);
             task.Wait();
             return 0;
         }
 
-        private void Context_TableDataMigrated(object sender, TableDataInfo e)
-        {
-
-        }
-
-        private void Context_ObjectCreated(object sender, ObjectInfo e)
-        {
-
-        }
     }
 }

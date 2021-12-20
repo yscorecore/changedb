@@ -17,7 +17,8 @@ namespace ChangeDB.Default
         {
             AgentFactory = agentFactory;
         }
-        protected static Action<string> Log = Console.WriteLine;
+
+        protected static Action<string> Log = (a) => { };
         public virtual async Task MigrateDatabase(MigrationContext context)
         {
             var sourceAgent = AgentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
@@ -115,11 +116,12 @@ namespace ChangeDB.Default
         }
         protected virtual async Task MigrationData(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationContext migrationContext)
         {
-            Log("start migrating data.");
+            migrationContext.RaiseStageChanged(StageKind.StartingTableData);
             foreach (var sourceTable in source.Descriptor.Tables)
             {
                 await MigrationTable(source, target, migrationContext, sourceTable);
             }
+            migrationContext.RaiseStageChanged(StageKind.FinishedTableData);
         }
         protected virtual Task ApplyCustomScripts(MigrationContext migrationContext)
         {
@@ -136,8 +138,9 @@ namespace ChangeDB.Default
             var migrationSetting = migrationContext.Setting;
             var targetTableName = migrationSetting.TargetNameStyle.TableNameFunc(sourceTable.Name);
             var targetTableDesc = target.Descriptor.GetTable(targetTableName);
+
+
             await target.Agent.DataMigrator.BeforeWriteTargetTable(targetTableDesc, migrationContext);
-            var tableName = string.IsNullOrEmpty(sourceTable.Schema) ? $"\"{sourceTable.Name}\"" : $"\"{sourceTable.Schema}\".\"{sourceTable.Name}\"";
             var totalCount = await source.Agent.DataMigrator.CountSourceTable(sourceTable, migrationContext);
             var (migratedCount, maxRowSize, fetchCount) = (0, 1, 1);
 
@@ -151,16 +154,20 @@ namespace ChangeDB.Default
                 await target.Agent.DataMigrator.WriteTargetTable(dataTable, targetTableDesc, migrationContext);
 
                 migratedCount += dataTable.Rows.Count;
+                totalCount = Math.Max(totalCount, migratedCount);
                 maxRowSize = Math.Max(maxRowSize, dataTable.MaxRowSize());
                 fetchCount = Math.Min(fetchCount * migrationSetting.GrowthSpeed, Math.Max(1, migrationSetting.FetchDataMaxSize / maxRowSize));
-                Log($"migrating table {tableName} ......{migratedCount * 1.0 / totalCount:p2} [{migratedCount}/{totalCount}].");
+
                 if (dataTable.Rows.Count < pageInfo.Limit)
                 {
-                    Log($"data of table {tableName} migration succeeded, {migratedCount} rows migrated.");
+                    migrationContext.RaiseTableDataMigrated(targetTableDesc, migratedCount, migratedCount, false);
                     break;
                 }
+                migrationContext.RaiseTableDataMigrated(targetTableDesc, totalCount, migratedCount, false);
             }
             await target.Agent.DataMigrator.AfterWriteTargetTable(targetTableDesc, migrationContext);
+
+            migrationContext.RaiseTableDataMigrated(targetTableDesc, migratedCount, migratedCount, true);
         }
 
 
