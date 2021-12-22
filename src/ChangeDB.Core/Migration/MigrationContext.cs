@@ -3,12 +3,38 @@ using System.Data.Common;
 
 namespace ChangeDB.Migration
 {
-    public record MigrationContext
+    public record MigrationContext : System.IDisposable
     {
         public DatabaseInfo SourceDatabase { get; init; }
         public DatabaseInfo TargetDatabase { get; init; }
         public MigrationSetting Setting { get; init; } = new MigrationSetting();
+        public EventReporter EventReporter { get; set; } = new EventReporter();
+        public AgentRunTimeInfo Source { get; set; }
+        public AgentRunTimeInfo Target { get; set; }
 
+        public DbConnection TargetConnection { get; set; }
+        public DbConnection SourceConnection { get; set; }
+
+        public void Dispose()
+        {
+            TargetConnection?.Dispose();
+            SourceConnection?.Dispose();
+        }
+
+        public MigrationContext Fork()
+        {
+            return this with
+            {
+                TargetConnection = Target?.Agent?.CreateConnection(TargetDatabase.ConnectionString),
+                SourceConnection = Source?.Agent?.CreateConnection(SourceDatabase.ConnectionString),
+            };
+        }
+    }
+
+
+
+    public record EventReporter
+    {
         public event EventHandler<ObjectInfo> ObjectCreated;
 
         public event EventHandler<TableDataInfo> TableDataMigrated;
@@ -39,20 +65,34 @@ namespace ChangeDB.Migration
 
 
         public void RaiseStageChanged(StageKind stageKind) => this.StageChanged?.Invoke(this, stageKind);
-        public AgentRunTimeInfo Source { get; set; }
-        public AgentRunTimeInfo Target { get; set; }
-
-        public DbConnection TargetConnection { get => Target.Connection; }
-        public DbConnection SourceConnection { get => Source.Connection; }
     }
+
     public static class MigrationContextExtensions
     {
         public static void CreateTargetObject(this MigrationContext context, string sql, ObjectType objectType, string fullName, string ownerName = null)
         {
             context.TargetConnection.ExecuteNonQuery(sql);
-            context.RaiseObjectCreated(new ObjectInfo { ObjectType = objectType, FullName = fullName, OwnerName = ownerName });
+            context.EventReporter.RaiseObjectCreated(new ObjectInfo { ObjectType = objectType, FullName = fullName, OwnerName = ownerName });
 
         }
+
+        public static void RaiseObjectCreated(this MigrationContext context, ObjectType objectType, string objectName, string ownerName = null)
+        {
+            context.EventReporter.RaiseObjectCreated(objectType, objectName, ownerName);
+        }
+        public static void RaiseTableDataMigrated(this MigrationContext context, TableDataInfo tableDataInfo)
+        {
+            context.EventReporter.RaiseTableDataMigrated(tableDataInfo);
+        }
+
+        public static void RaiseTableDataMigrated(this MigrationContext context, TableDescriptor table, long totalCount,
+            long migratedCount, bool completed) =>
+            context.EventReporter.RaiseTableDataMigrated(table, totalCount, migratedCount, completed);
+
+
+        public static void RaiseStageChanged(this MigrationContext context, StageKind stageKind) =>
+            context.EventReporter.RaiseStageChanged(stageKind);
+
 
     }
     public class ObjectInfo
@@ -91,12 +131,6 @@ namespace ChangeDB.Migration
         public TableDescriptor Table { get; set; }
 
         public bool Completed { get; set; }
-
-        public double GetProgressValue()
-        {
-            if (TotalCount == 0) return 0;
-            return Math.Min(1.0, 1.0 * MigratedCount / TotalCount);
-        }
 
     }
 

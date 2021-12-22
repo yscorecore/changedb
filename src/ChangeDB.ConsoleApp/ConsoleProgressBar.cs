@@ -71,8 +71,10 @@ namespace ChangeDB.ConsoleApp
             }
         }
 
+        private DateTime startTime;
         public void Start()
         {
+            startTime = DateTime.Now;
             this._timer.Start();
             Console.CursorVisible = false;
         }
@@ -81,6 +83,7 @@ namespace ChangeDB.ConsoleApp
             this._timer.Stop();
             RenderProgressBars();
             Console.CursorVisible = true;
+            Console.WriteLine($"TotalTime: {DateTime.Now - startTime}");
         }
 
         private string[] workingText = new string[0];

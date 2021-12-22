@@ -70,7 +70,7 @@ namespace ChangeDB.ConsoleApp.Commands
                 TargetDatabase = new DatabaseInfo { DatabaseType = TargetType, ConnectionString = TargetConnectionString }
             };
             ConsoleProgressBarManager consoleProgressBarManager = new ConsoleProgressBarManager();
-            context.StageChanged += (sender, e) =>
+            context.EventReporter.StageChanged += (sender, e) =>
             {
                 if (e == StageKind.StartingTableData)
                 {
@@ -81,18 +81,13 @@ namespace ChangeDB.ConsoleApp.Commands
                     consoleProgressBarManager.End();
                 }
             };
-            context.ObjectCreated += (sender, e) =>
+            context.EventReporter.ObjectCreated += (sender, e) =>
             {
-                if (string.IsNullOrEmpty(e.OwnerName))
-                {
-                    Console.WriteLine($"{e.ObjectType} {e.FullName} created.");
-                }
-                else
-                {
-                    Console.WriteLine($"{e.ObjectType} {e.FullName} on {e.OwnerName} created.");
-                }
+                Console.WriteLine(string.IsNullOrEmpty(e.OwnerName)
+                    ? $"{e.ObjectType} {e.FullName} created."
+                    : $"{e.ObjectType} {e.FullName} on {e.OwnerName} created.");
             };
-            context.TableDataMigrated += (sender, e) =>
+            context.EventReporter.TableDataMigrated += (sender, e) =>
             {
                 string tableName = string.IsNullOrEmpty(e.Table.Schema) ? $"\"{e.Table.Name}\"" : $"\"{e.Table.Schema}\".\"{e.Table.Name}\"";
                 consoleProgressBarManager.ReportProgress(tableName,

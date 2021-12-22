@@ -23,8 +23,7 @@ namespace ChangeDB.Default
             context.Source = new AgentRunTimeInfo
             {
                 Agent = sourceAgent,
-                DatabaseType = context.SourceDatabase.DatabaseType,
-                Connection = sourceConnection,
+                //Connection = sourceConnection,
                 Descriptor = null,
             };
             var sourceDatabaseDescriptor = await GetSourceDatabaseDescriptor(sourceAgent, sourceConnection, context);
@@ -34,8 +33,7 @@ namespace ChangeDB.Default
             context.Target = new AgentRunTimeInfo
             {
                 Agent = targetAgent,
-                DatabaseType = context.DumpInfo.DatabaseType,
-                Connection = new Fakes.SqlScriptDbConnection(context.DumpInfo.SqlScriptFile, (val) => targetAgent.Repr.ReprValue(val)),
+                //Connection = new Fakes.SqlScriptDbConnection(context.DumpInfo.SqlScriptFile, (val) => targetAgent.Repr.ReprValue(val)),
                 Descriptor = sourceDatabaseDescriptor.DeepClone(),
             };
 
@@ -61,7 +59,7 @@ namespace ChangeDB.Default
             if (migrationContext.Setting.IncludeData)
             {
 
-                await MigrationData(source, target, migrationContext);
+                await MigrationData(migrationContext);
             }
 
             if (migrationContext.Setting.IncludeMeta)

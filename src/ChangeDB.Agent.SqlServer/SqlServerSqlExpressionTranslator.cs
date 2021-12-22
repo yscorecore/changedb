@@ -31,7 +31,7 @@ namespace ChangeDB.Agent.SqlServer
             else
             {
                 var sql = $"select cast({trimmedExpression} as {context.StoreType})";
-                var value = ValueCache.GetOrAdd(sql, (s) => context.AgentInfo.Connection.ExecuteScalar(s));
+                var value = ValueCache.GetOrAdd(sql, (s) => context.Connection.ExecuteScalar(s));
                 return new SqlExpressionDescriptor() { Constant = value };
             }
         }

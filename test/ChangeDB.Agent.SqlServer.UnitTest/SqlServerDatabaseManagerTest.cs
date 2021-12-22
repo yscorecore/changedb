@@ -20,7 +20,7 @@ namespace ChangeDB.Agent.SqlServer
             _dbConnection = databaseEnvironment.NewDatabaseConnection();
             _migrationContext = new MigrationContext
             {
-                Target = new AgentRunTimeInfo { Connection = _dbConnection }
+                TargetConnection = _dbConnection
             };
             _dbConnection.CreateDatabase();
         }

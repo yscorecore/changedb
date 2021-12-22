@@ -10,9 +10,10 @@ namespace ChangeDB.Default
     class SettingsApplier
     {
 
-        public static void ApplySettingForTarget(AgentRunTimeInfo source, AgentRunTimeInfo target, MigrationSetting migrationSetting)
+        public static void ApplySettingForTarget(MigrationContext migrationContext)
         {
-            var isSameDbType = string.Equals(source.DatabaseType, target.DatabaseType, StringComparison.InvariantCultureIgnoreCase);
+            var (source, target, migrationSetting) = (migrationContext.Source, migrationContext.Target, migrationContext.Setting);
+            var isSameDbType = string.Equals(migrationContext.SourceDatabase.DatabaseType, migrationContext.TargetDatabase.DatabaseType, StringComparison.InvariantCultureIgnoreCase);
             var clonedDescriptor = target.Descriptor;
 
             FixDuplicateObjectName();
@@ -52,13 +53,15 @@ namespace ChangeDB.Default
                             var sourceContext = new SqlExpressionTranslatorContext
                             {
                                 StoreType = sourceDataType,
-                                AgentInfo = source
+                                AgentInfo = source,
+                                Connection = migrationContext.SourceConnection
                             };
 
                             var targetContext = new SqlExpressionTranslatorContext
                             {
                                 StoreType = targetDataType,
-                                AgentInfo = target
+                                AgentInfo = target,
+                                Connection = migrationContext.TargetConnection
                             };
                             if (!string.IsNullOrEmpty(column.DefaultValueSql))
                             {

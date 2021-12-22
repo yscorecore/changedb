@@ -75,7 +75,7 @@ namespace ChangeDB.Agent.Postgres
             }
 
             var sql = $"select cast({sqlExpression} as {context.StoreType})";
-            var val = ValueCache.GetOrAdd(sql, (s) => context.AgentInfo.Connection.ExecuteScalar(s));
+            var val = ValueCache.GetOrAdd(sql, (s) => context.Connection.ExecuteScalar(s));
             return new SqlExpressionDescriptor { Constant = val };
         }
 

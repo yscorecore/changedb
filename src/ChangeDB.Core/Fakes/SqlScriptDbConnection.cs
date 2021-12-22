@@ -22,7 +22,7 @@ namespace ChangeDB.Fakes
         public override string DataSource { get; }
         public override string ServerVersion { get; }
         public override ConnectionState State { get; }
-        public Func<object, string> Repr { get; }
+        private Func<object, string> Repr { get; }
         public string SplitText { get; set; } = string.Empty;
 
         private readonly Lazy<StreamWriter> fileStream;
@@ -34,8 +34,6 @@ namespace ChangeDB.Fakes
         public override void Open() { }
 
         protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel) => throw new NotImplementedException();
-
-
         protected override DbCommand CreateDbCommand() => new SqlScriptDbCommand(this.fileStream, this.Repr);
     }
 
@@ -47,8 +45,9 @@ namespace ChangeDB.Fakes
             this.Writer = writer;
             Repr = repr;
         }
-        public Lazy<StreamWriter> Writer { get; set; }
-        public Func<object, string> Repr { get; }
+
+        private Lazy<StreamWriter> Writer { get; set; }
+        private Func<object, string> Repr { get; }
         public override string CommandText { get; set; }
         public override int CommandTimeout { get; set; }
         public override CommandType CommandType { get; set; }
@@ -62,7 +61,6 @@ namespace ChangeDB.Fakes
 
         public override int ExecuteNonQuery()
         {
-
             var line = BuildCommandText();
             this.Writer.Value.WriteLine(line);
             this.Writer.Value.WriteLine();
@@ -82,34 +80,26 @@ namespace ChangeDB.Fakes
                 return m.Value;
             });
         }
-
-
         public override object ExecuteScalar() => throw new NotImplementedException();
-
-
         public override void Prepare() { }
-
         protected override DbParameter CreateDbParameter() => new SqlScriptDbParameter();
-
         protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) => throw new NotImplementedException();
     }
 
     internal class SqlScriptDbParameterCollection : DbParameterCollection
     {
-        List<DbParameter> dbParameters = new List<DbParameter>();
-        public override int Count { get => dbParameters.Count; }
+        readonly List<DbParameter> _dbParameters = new List<DbParameter>();
+        public override int Count { get => _dbParameters.Count; }
         public override object SyncRoot { get => this; }
 
         public override int Add(object value)
         {
-            if (value is DbParameter dbParameter)
-            {
-                dbParameters.Add(dbParameter);
-            }
-            else
+            if (value is not DbParameter dbParameter)
             {
                 throw new ArgumentException($"value should be of type '{typeof(DbParameter)}'");
             }
+
+            _dbParameters.Add(dbParameter);
             return 1;
         }
 
@@ -121,7 +111,7 @@ namespace ChangeDB.Fakes
             }
         }
 
-        public override void Clear() => dbParameters.Clear();
+        public override void Clear() => _dbParameters.Clear();
 
         public override bool Contains(object value) => throw new NotImplementedException();
 
@@ -129,7 +119,7 @@ namespace ChangeDB.Fakes
 
         public override void CopyTo(Array array, int index) { }
 
-        public override IEnumerator GetEnumerator() => this.dbParameters.GetEnumerator();
+        public override IEnumerator GetEnumerator() => this._dbParameters.GetEnumerator();
 
         public override int IndexOf(object value) => throw new NotImplementedException();
         public override int IndexOf(string parameterName) => throw new NotImplementedException();
@@ -142,7 +132,7 @@ namespace ChangeDB.Fakes
 
         public override void RemoveAt(string parameterName) => throw new NotImplementedException();
 
-        protected override DbParameter GetParameter(int index) => dbParameters[index];
+        protected override DbParameter GetParameter(int index) => _dbParameters[index];
 
         protected override DbParameter GetParameter(string parameterName) => throw new NotImplementedException();
 
@@ -162,7 +152,6 @@ namespace ChangeDB.Fakes
         public override string SourceColumn { get; set; }
         public override bool SourceColumnNullMapping { get; set; }
         public override object Value { get; set; }
-
         public override void ResetDbType() { }
     }
 }

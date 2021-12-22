@@ -27,7 +27,7 @@ namespace ChangeDB.Agent.SqlServer
 
         public void ShouldMapToCommonSqlExpression(string sqlExpression, string storeType, SqlExpressionDescriptor sqlExpressionDescriptor)
         {
-            sqlTranslator.ToCommonSqlExpression(sqlExpression, new SqlExpressionTranslatorContext { StoreType = storeType, AgentInfo = new AgentRunTimeInfo { Connection = _dbConnection } })
+            sqlTranslator.ToCommonSqlExpression(sqlExpression, new SqlExpressionTranslatorContext { StoreType = storeType, Connection = _dbConnection })
                 .Should().BeEquivalentTo(sqlExpressionDescriptor);
         }
         [Theory]
@@ -35,7 +35,7 @@ namespace ChangeDB.Agent.SqlServer
         public void ShouldMapFromCommonSqlExpression(SqlExpressionDescriptor sourceSqlExpression, string sqlExpression)
         {
             var targetSqlExpression = sqlTranslator
-                 .FromCommonSqlExpression(sourceSqlExpression, new SqlExpressionTranslatorContext { AgentInfo = new AgentRunTimeInfo { Connection = _dbConnection } });
+                 .FromCommonSqlExpression(sourceSqlExpression, new SqlExpressionTranslatorContext { Connection = _dbConnection });
             targetSqlExpression.Should().Be(sqlExpression);
             Action executeExpression = () => _dbConnection.ExecuteScalar($"select {targetSqlExpression}");
             executeExpression.Should().NotThrow();
