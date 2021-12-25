@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using ChangeDB.Default;
 using ChangeDB.Dump;
+using ChangeDB.Import;
 using ChangeDB.Migration;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -18,6 +17,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton<IDatabaseMigrate, DefaultMigrator>();
             services.AddSingleton<IAgentFactory, DefaultAgentFactory>();
             services.AddSingleton<IDatabaseSqlDumper, DefaultSqlDumper>();
+            services.AddSingleton<IDatabaseSqlImporter, DefaultSqlImporter>();
             AddAgentFactory(services);
             return services;
         }
