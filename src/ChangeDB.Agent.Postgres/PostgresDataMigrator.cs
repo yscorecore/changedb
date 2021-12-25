@@ -27,7 +27,7 @@ namespace ChangeDB.Agent.Postgres
 
         public Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
         {
-            if (table.Columns.Count == 0 || data.Rows.Count==0)
+            if (table.Columns.Count == 0 || data.Rows.Count == 0)
             {
                 return Task.CompletedTask;
             }
@@ -63,7 +63,7 @@ namespace ChangeDB.Agent.Postgres
             }
         }
 
-       
+
 
         private string BuildColumnNames(TableDescriptor table)
         {
@@ -100,11 +100,11 @@ namespace ChangeDB.Agent.Postgres
                 });
             return Task.CompletedTask;
         }
-        
-        private  string IdentityName(string schema, string objectName)=>PostgresUtils.IdentityName(schema, objectName);
 
-        private  string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
-     
-        private  string IdentityName(string objectName)=> PostgresUtils.IdentityName(objectName);
+        private string IdentityName(string schema, string objectName) => PostgresUtils.IdentityName(schema, objectName);
+
+        private string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
+
+        private string IdentityName(string objectName) => PostgresUtils.IdentityName(objectName);
     }
 }
