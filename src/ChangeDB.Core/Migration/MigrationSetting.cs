@@ -18,6 +18,8 @@ namespace ChangeDB.Migration
         public bool IncludeData { get => MigrationType.HasFlag(MigrationType.MetaData); }
 
         public int GrowthSpeed { get => 10; }
+
+        public int MaxTaskCount { get; set; } = 5;
     }
 
     [Flags]
@@ -80,13 +82,5 @@ namespace ChangeDB.Migration
             };
         }
 
-
-    }
-    public static class DelegateExtensions
-    {
-        public static Func<T, T> Then<T>(this Func<T, T> first, Func<T, T> second)
-        {
-            return p => second(first(p));
-        }
     }
 }

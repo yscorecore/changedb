@@ -85,7 +85,7 @@ namespace ChangeDB.ConsoleApp.Commands
             {
                 Console.WriteLine(string.IsNullOrEmpty(e.OwnerName)
                     ? $"{e.ObjectType} {e.FullName} created."
-                    : $"{e.ObjectType} {e.FullName} on {e.OwnerName} created.");
+                    : $"\t{e.ObjectType} {e.FullName} on {e.OwnerName} created.");
             };
             context.EventReporter.TableDataMigrated += (sender, e) =>
             {

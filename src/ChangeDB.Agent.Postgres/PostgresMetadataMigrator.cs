@@ -206,20 +206,26 @@ namespace ChangeDB.Agent.Postgres
             {
                 foreach (var table in databaseDescriptor.Tables)
                 {
-                    var tableFullName = PostgresUtils.IdentityName(table.Schema, table.Name);
                     foreach (var foreignKey in table.ForeignKeys)
                     {
                         var foreignKeyName = PostgresUtils.IdentityName(foreignKey.Name);
                         var foreignColumns = string.Join(", ", foreignKey.ColumnNames.Select(PostgresUtils.IdentityName));
                         var principalColumns = string.Join(", ", foreignKey.PrincipalNames.Select(PostgresUtils.IdentityName));
                         var principalTable = PostgresUtils.IdentityName(foreignKey.PrincipalSchema, foreignKey.PrincipalTable);
-                        dbConnection.ExecuteNonQuery($"ALTER TABLE {PostgresUtils.IdentityName(table.Schema, table.Name)} ADD CONSTRAINT {foreignKeyName}" +
+                        dbConnection.ExecuteNonQuery($"ALTER TABLE {this.IdentityName(table.Schema, table.Name)} ADD CONSTRAINT {foreignKeyName}" +
                             $"FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})");
                     }
                 }
             }
             return Task.CompletedTask;
         }
-
+        protected virtual string IdentityName(string schema, string objectName)
+        {
+            return PostgresUtils.IdentityName(schema, objectName);
+        }
+        protected virtual string IdentityName(string objectName)
+        {
+            return PostgresUtils.IdentityName(objectName);
+        }
     }
 }

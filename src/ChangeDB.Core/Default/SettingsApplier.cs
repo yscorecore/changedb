@@ -15,7 +15,7 @@ namespace ChangeDB.Default
             var (source, target, migrationSetting) = (migrationContext.Source, migrationContext.Target, migrationContext.Setting);
             var isSameDbType = string.Equals(migrationContext.SourceDatabase.DatabaseType, migrationContext.TargetDatabase.DatabaseType, StringComparison.InvariantCultureIgnoreCase);
             var clonedDescriptor = target.Descriptor;
-
+            RemoveBrokenForeignKeys();
             FixDuplicateObjectName();
             ApplyNamingRules();
             ConvertDataTypeAndExpressions();
@@ -165,6 +165,24 @@ namespace ChangeDB.Default
                     sequence.Name = sequenceConvertFunc(sequence.Name);
                 }
 
+            }
+
+            void RemoveBrokenForeignKeys()
+            {
+                // when custom filter some objects, maybe happen
+                var allTables = clonedDescriptor.Tables.Select(p => Key(p.Schema, p.Name)).ToHashSet();
+                clonedDescriptor.Tables.ForEach((t) =>
+                {
+                    if (t.ForeignKeys == null)
+                    {
+                        return;
+                    }
+
+                    var brokenForeignKeys = t.ForeignKeys
+                        .Where(f => !allTables.Contains(Key(f.PrincipalSchema, f.PrincipalTable))).ToList();
+                    brokenForeignKeys.ForEach(f => t.ForeignKeys.Remove(f));
+                });
+                string Key(string schema, string name) => $"\"{schema}\".\"{name}\"";
             }
         }
 

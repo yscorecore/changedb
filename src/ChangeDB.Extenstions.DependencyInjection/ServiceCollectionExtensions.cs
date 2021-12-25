@@ -18,10 +18,10 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton<IDatabaseMigrate, DefaultMigrator>();
             services.AddSingleton<IAgentFactory, DefaultAgentFactory>();
             services.AddSingleton<IDatabaseSqlDumper, DefaultSqlDumper>();
-            AddAgentFactorys(services);
+            AddAgentFactory(services);
             return services;
         }
-        private static void AddAgentFactorys(ServiceCollection services)
+        private static void AddAgentFactory(ServiceCollection services)
         {
             var rootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var agentDlls = Directory.GetFiles(rootPath, "ChangeDB.Agent.*.dll");

@@ -29,6 +29,7 @@ namespace ChangeDB.Migration
                 SourceConnection = Source?.Agent?.CreateConnection(SourceDatabase.ConnectionString),
             };
         }
+
     }
 
 
@@ -65,6 +66,10 @@ namespace ChangeDB.Migration
 
 
         public void RaiseStageChanged(StageKind stageKind) => this.StageChanged?.Invoke(this, stageKind);
+
+        public void RaiseWarning(string text)
+        {
+        }
     }
 
     public static class MigrationContextExtensions
@@ -92,6 +97,11 @@ namespace ChangeDB.Migration
 
         public static void RaiseStageChanged(this MigrationContext context, StageKind stageKind) =>
             context.EventReporter.RaiseStageChanged(stageKind);
+
+        public static void RaiseWarning(this MigrationContext context, string message)
+        {
+
+        }
 
 
     }

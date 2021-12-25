@@ -163,7 +163,6 @@ namespace ChangeDB.Agent.SqlServer
             {
                 foreach (var table in databaseDescriptor.Tables)
                 {
-                    var tableFullName = IdentityName(table.Schema, table.Name);
                     foreach (var foreignKey in table.ForeignKeys)
                     {
                         var foreignKeyName = IdentityName(foreignKey.Name);
@@ -177,7 +176,6 @@ namespace ChangeDB.Agent.SqlServer
             }
             return Task.CompletedTask;
         }
-
         protected virtual string IdentityName(string schema, string objectName)
         {
             return SqlServerUtils.IdentityName(schema, objectName);

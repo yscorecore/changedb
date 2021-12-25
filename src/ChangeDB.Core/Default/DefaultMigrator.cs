@@ -10,7 +10,6 @@ namespace ChangeDB.Default
 {
     public class DefaultMigrator : IDatabaseMigrate
     {
-
         protected IAgentFactory AgentFactory { get; }
 
         public DefaultMigrator(IAgentFactory agentFactory)
@@ -81,7 +80,6 @@ namespace ChangeDB.Default
 
             if (migrationContext.Setting.IncludeData)
             {
-
                 await MigrationData(migrationContext);
             }
 
@@ -114,19 +112,27 @@ namespace ChangeDB.Default
         protected virtual async Task MigrationData(MigrationContext migrationContext)
         {
             migrationContext.EventReporter.RaiseStageChanged(StageKind.StartingTableData);
-            foreach (var sourceTable in migrationContext.Source.Descriptor.Tables)
+            if (migrationContext.Setting.MaxTaskCount > 1)
             {
-                await MigrationTable(migrationContext, sourceTable);
-            }
+                var options = new ParallelOptions()
+                {
+                    MaxDegreeOfParallelism = migrationContext.Setting.MaxTaskCount
+                };
+                _ = Parallel.ForEach(migrationContext.Source.Descriptor.Tables, options, async (table) =>
+                {
+                    using var fordedContext = migrationContext.Fork();
+                    await MigrationTable(fordedContext, table);
+                });
 
-            // await migrationContext.Source.Descriptor.Tables.RunDependency(p => $"{p.Schema}.{p.Name}",
-            //     p => p.ForeignKeys?.Select(f => $"{f.PrincipalSchema}.{f.PrincipalTable}"),
-            //     async (table) =>
-            //     {
-            //         using var fordedContext = migrationContext.Fork();
-            //         await MigrationTable(fordedContext, table);
-            //     }
-            // );
+            }
+            else
+            {
+                // single task
+                foreach (var sourceTable in migrationContext.Source.Descriptor.Tables)
+                {
+                    await MigrationTable(migrationContext, sourceTable);
+                }
+            }
             migrationContext.EventReporter.RaiseStageChanged(StageKind.FinishedTableData);
         }
         protected virtual Task ApplyCustomScripts(MigrationContext migrationContext)
@@ -151,8 +157,9 @@ namespace ChangeDB.Default
             var totalCount = await source.Agent.DataMigrator.CountSourceTable(sourceTable, migrationContext);
             var (migratedCount, maxRowSize, fetchCount) = (0, 1, 1);
 
-            while (true)
+            while (totalCount > 0)
             {
+
 
                 var pageInfo = new PageInfo { Offset = migratedCount, Limit = Math.Max(1, fetchCount) };
                 var dataTable = await source.Agent.DataMigrator.ReadSourceTable(sourceTable, pageInfo, migrationContext);
