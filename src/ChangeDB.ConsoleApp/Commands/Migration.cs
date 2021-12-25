@@ -85,20 +85,28 @@ namespace ChangeDB.ConsoleApp.Commands
             {
                 Console.WriteLine(string.IsNullOrEmpty(e.OwnerName)
                     ? $"{e.ObjectType} {e.FullName} created."
-                    : $"\t{e.ObjectType} {e.FullName} on {e.OwnerName} created.");
+                    : $"{e.ObjectType} {e.FullName} on {e.OwnerName} created.");
             };
             context.EventReporter.TableDataMigrated += (sender, e) =>
             {
-                string tableName = string.IsNullOrEmpty(e.Table.Schema) ? $"\"{e.Table.Name}\"" : $"\"{e.Table.Schema}\".\"{e.Table.Name}\"";
-                consoleProgressBarManager.ReportProgress(tableName,
-                    e.Completed ? $"table {tableName} migrated." : $"migrating table {tableName}"
+                consoleProgressBarManager.ReportProgress(e.Table,
+                    e.Completed ? $"Data of table {e.Table} migrated." : $"Migrating data of table {e.Table}"
                     , e.TotalCount, e.MigratedCount, e.Completed);
 
             };
+            var startTime = DateTime.Now;
             var task = service.MigrateDatabase(context);
             task.Wait();
+            Console.WriteLine();
+            var totalTime = DateTime.Now - startTime;
+            Console.WriteLine($"database migration succeeded, total time: {FormatTimeSpan(totalTime)}.");
             return 0;
         }
 
+        private string FormatTimeSpan(TimeSpan timeSpan)
+        {
+
+            return $"{timeSpan.Hours} Hour {timeSpan.Minutes} Min {timeSpan.Seconds} Sec";
+        }
     }
 }

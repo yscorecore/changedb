@@ -17,35 +17,11 @@ namespace ChangeDB.Agent.SqlServer
 {
     public class SqlServerUtils
     {
-        public static string IdentityName(string objectName)
-        {
-            _ = objectName ?? throw new ArgumentNullException(nameof(objectName));
+        public static string IdentityName(string objectName) => $"[{objectName}]";
 
-            return $"[{objectName}]";
+        public static string IdentityName(string schema, string objectName) => string.IsNullOrEmpty(schema) ? IdentityName(objectName) : $"{IdentityName(schema)}.{IdentityName(objectName)}";
 
-        }
-        public static string IdentityName(string schema, string objectName)
-        {
-            if (string.IsNullOrEmpty(schema))
-            {
-                return IdentityName(objectName);
-            }
-            else
-            {
-                return $"{IdentityName(schema)}.{IdentityName(objectName)}";
-            }
-        }
-        public static string IdentityName(string schema, string objectName, string subObjectName)
-        {
-            if (string.IsNullOrEmpty(schema))
-            {
-                return IdentityName(objectName, subObjectName);
-            }
-            else
-            {
-                return $"{IdentityName(schema)}.{IdentityName(objectName)}.{IdentityName(subObjectName)}";
-            }
-        }
+        public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)

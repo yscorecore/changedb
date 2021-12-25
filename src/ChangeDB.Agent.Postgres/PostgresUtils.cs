@@ -21,38 +21,12 @@ namespace ChangeDB.Agent.Postgres
     {
         public const string IdentityNumbersToCache = "Npgsql::IdentityNumbersToCache";
         public const string IdentityType = "Npgsql::IdentityType";
-        public const string IDENTITY_BYDEFAULT = "BY DEFAULT";
-        public const string IDENTITY_ALWAYS = "ALWAYS";
+        public const string IdentityByDefault = "BY DEFAULT";
+        public const string IdentityAlways = "ALWAYS";
 
-        public static string IdentityName(string objectName)
-        {
-            _ = objectName ?? throw new ArgumentNullException(nameof(objectName));
-
-            return $"\"{objectName}\"";
-
-        }
-        public static string IdentityName(string schema, string objectName)
-        {
-            if (string.IsNullOrEmpty(schema))
-            {
-                return IdentityName(objectName);
-            }
-            else
-            {
-                return $"{IdentityName(schema)}.{IdentityName(objectName)}";
-            }
-        }
-        public static string IdentityName(string schema, string objectName, string subObjectName)
-        {
-            if (string.IsNullOrEmpty(schema))
-            {
-                return IdentityName(objectName, subObjectName);
-            }
-            else
-            {
-                return $"{IdentityName(schema)}.{IdentityName(objectName)}.{IdentityName(subObjectName)}";
-            }
-        }
+        public static string IdentityName(string objectName) => $"\"{objectName}\"";
+        public static string IdentityName(string schema, string objectName) => string.IsNullOrEmpty(schema) ? IdentityName(objectName) : $"{IdentityName(schema)}.{IdentityName(objectName)}";
+        public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
@@ -212,12 +186,12 @@ namespace ChangeDB.Agent.Postgres
                 identityType = string.Empty;
                 if (npgsqlIdentityStrategy == NpgsqlValueGenerationStrategy.IdentityAlwaysColumn)
                 {
-                    identityType = IDENTITY_ALWAYS;
+                    identityType = IdentityAlways;
                     return true;
                 }
                 if (npgsqlIdentityStrategy == NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 {
-                    identityType = IDENTITY_BYDEFAULT;
+                    identityType = IdentityByDefault;
                     return true;
                 }
                 else

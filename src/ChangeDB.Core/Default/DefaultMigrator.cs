@@ -151,7 +151,7 @@ namespace ChangeDB.Default
             var migrationSetting = migrationContext.Setting;
             var targetTableName = migrationSetting.TargetNameStyle.TableNameFunc(sourceTable.Name);
             var targetTableDesc = target.Descriptor.GetTable(targetTableName);
-
+            var targetTableFullName = migrationContext.Target.Agent.AgentSetting.IdentityName(targetTableDesc.Schema, targetTableDesc.Name);
 
             await target.Agent.DataMigrator.BeforeWriteTargetTable(targetTableDesc, migrationContext);
             var totalCount = await source.Agent.DataMigrator.CountSourceTable(sourceTable, migrationContext);
@@ -175,14 +175,14 @@ namespace ChangeDB.Default
 
                 if (dataTable.Rows.Count < pageInfo.Limit)
                 {
-                    migrationContext.EventReporter.RaiseTableDataMigrated(targetTableDesc, migratedCount, migratedCount, false);
+                    migrationContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, migratedCount, migratedCount, false);
                     break;
                 }
-                migrationContext.EventReporter.RaiseTableDataMigrated(targetTableDesc, totalCount, migratedCount, false);
+                migrationContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, totalCount, migratedCount, false);
             }
             await target.Agent.DataMigrator.AfterWriteTargetTable(targetTableDesc, migrationContext);
 
-            migrationContext.EventReporter.RaiseTableDataMigrated(targetTableDesc, migratedCount, migratedCount, true);
+            migrationContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, migratedCount, migratedCount, true);
         }
 
 

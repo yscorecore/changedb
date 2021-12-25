@@ -23,8 +23,8 @@ namespace ChangeDB.Agent.SqlCe
 
             _migrationContext = new MigrationContext
             {
-                Target = new AgentRunTimeInfo { Connection = _dbConnection },
-                Source = new AgentRunTimeInfo { Connection = _dbConnection }
+                TargetConnection = _dbConnection,
+                SourceConnection = _dbConnection
             };
 
             _dbConnection.ExecuteNonQuery(

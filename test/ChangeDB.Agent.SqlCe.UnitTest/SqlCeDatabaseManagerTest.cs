@@ -19,7 +19,7 @@ namespace ChangeDB.Agent.SqlCe
             _dbConnection = new SqlCeConnection($"Data Source={Utility.RandomDatabaseName()}.sdf;Persist Security Info=False;");
             _migrationContext = new MigrationContext
             {
-                Target = new AgentRunTimeInfo { Connection = _dbConnection }
+                TargetConnection = _dbConnection
             };
             _dbConnection.CreateDatabase();
         }

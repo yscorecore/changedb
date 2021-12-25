@@ -55,10 +55,10 @@ namespace ChangeDB.Migration
             TableDataMigrated?.Invoke(this, tableDataInfo);
         }
 
-        public void RaiseTableDataMigrated(TableDescriptor table, long totalCount, long migratedCount, bool completed) =>
+        public void RaiseTableDataMigrated(string tableName, long totalCount, long migratedCount, bool completed) =>
             RaiseTableDataMigrated(new TableDataInfo
             {
-                Table = table,
+                Table = tableName,
                 TotalCount = totalCount,
                 MigratedCount = migratedCount,
                 Completed = completed
@@ -76,7 +76,8 @@ namespace ChangeDB.Migration
     {
         public static void CreateTargetObject(this MigrationContext context, string sql, ObjectType objectType, string fullName, string ownerName = null)
         {
-            context.TargetConnection.ExecuteNonQuery(sql);
+            _ = context.TargetConnection.ExecuteNonQuery(sql);
+
             context.EventReporter.RaiseObjectCreated(new ObjectInfo { ObjectType = objectType, FullName = fullName, OwnerName = ownerName });
 
         }
@@ -90,7 +91,7 @@ namespace ChangeDB.Migration
             context.EventReporter.RaiseTableDataMigrated(tableDataInfo);
         }
 
-        public static void RaiseTableDataMigrated(this MigrationContext context, TableDescriptor table, long totalCount,
+        public static void RaiseTableDataMigrated(this MigrationContext context, string table, long totalCount,
             long migratedCount, bool completed) =>
             context.EventReporter.RaiseTableDataMigrated(table, totalCount, migratedCount, completed);
 
@@ -130,7 +131,8 @@ namespace ChangeDB.Migration
         Index,
         ForeignKey,
         PrimaryKey,
-        Unique
+        Unique,
+        UniqueIndex
 
     }
 
@@ -138,7 +140,7 @@ namespace ChangeDB.Migration
     {
         public long TotalCount { get; set; }
         public long MigratedCount { get; set; }
-        public TableDescriptor Table { get; set; }
+        public string Table { get; set; }
 
         public bool Completed { get; set; }
 

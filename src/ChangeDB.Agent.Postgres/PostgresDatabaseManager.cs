@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using ChangeDB.Migration;
-
+using static ChangeDB.Agent.Postgres.PostgresUtils;
 namespace ChangeDB.Agent.Postgres
 {
     public class PostgresDatabaseManager : IDatabaseManager
@@ -15,7 +15,7 @@ namespace ChangeDB.Agent.Postgres
         public Task CreateTargetDatabase(MigrationContext migrationContext)
         {
             migrationContext.TargetConnection.CreateDatabase();
-            migrationContext.RaiseObjectCreated(ObjectType.Database, migrationContext.TargetConnection.Database);
+            migrationContext.RaiseObjectCreated(ObjectType.Database, IdentityName(migrationContext.TargetConnection.Database));
             return Task.CompletedTask;
         }
     }

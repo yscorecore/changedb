@@ -4,6 +4,8 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
+using static ChangeDB.Agent.Postgres.PostgresUtils;
+
 
 
 namespace ChangeDB.Agent.Postgres
@@ -54,7 +56,7 @@ namespace ChangeDB.Agent.Postgres
                     if (column.IsIdentity && column.IdentityInfo != null)
                     {
                         var identityInfo = column.IdentityInfo;
-                        var identityType = PostgresUtils.IDENTITY_ALWAYS;
+                        var identityType = PostgresUtils.IdentityAlways;
 
                         if (identityInfo.Values != null && identityInfo.Values.TryGetValue(PostgresUtils.IdentityType, out var type))
                         {
@@ -156,11 +158,13 @@ namespace ChangeDB.Agent.Postgres
                         var indexColumns = string.Join(",", index.Columns.Select(p => PostgresUtils.IdentityName(p)));
                         if (index.IsUnique)
                         {
-                            dbConnection.ExecuteNonQuery($"CREATE UNIQUE INDEX {indexName} ON {tableFullName}({indexColumns});");
+                            var sql = $"CREATE UNIQUE INDEX {indexName} ON {tableFullName}({indexColumns})";
+                            migrationContext.CreateTargetObject(sql, ObjectType.UniqueIndex, indexName, tableFullName);
                         }
                         else
                         {
-                            dbConnection.ExecuteNonQuery($"CREATE INDEX {indexName} ON {tableFullName}({indexColumns});");
+                            var sql = $"CREATE INDEX {indexName} ON {tableFullName}({indexColumns})";
+                            migrationContext.CreateTargetObject(sql, ObjectType.Index, indexName, tableFullName);
                         }
                     }
                 }
@@ -206,26 +210,21 @@ namespace ChangeDB.Agent.Postgres
             {
                 foreach (var table in databaseDescriptor.Tables)
                 {
+                    var tableName = IdentityName(table);
                     foreach (var foreignKey in table.ForeignKeys)
                     {
                         var foreignKeyName = PostgresUtils.IdentityName(foreignKey.Name);
                         var foreignColumns = string.Join(", ", foreignKey.ColumnNames.Select(PostgresUtils.IdentityName));
                         var principalColumns = string.Join(", ", foreignKey.PrincipalNames.Select(PostgresUtils.IdentityName));
                         var principalTable = PostgresUtils.IdentityName(foreignKey.PrincipalSchema, foreignKey.PrincipalTable);
-                        dbConnection.ExecuteNonQuery($"ALTER TABLE {this.IdentityName(table.Schema, table.Name)} ADD CONSTRAINT {foreignKeyName}" +
-                            $"FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})");
+                        var sql =
+                            $"ALTER TABLE {tableName} ADD CONSTRAINT {foreignKeyName}" +
+                            $"FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})";
+                        migrationContext.CreateTargetObject(sql, ObjectType.ForeignKey, foreignKeyName, tableName);
                     }
                 }
             }
             return Task.CompletedTask;
-        }
-        protected virtual string IdentityName(string schema, string objectName)
-        {
-            return PostgresUtils.IdentityName(schema, objectName);
-        }
-        protected virtual string IdentityName(string objectName)
-        {
-            return PostgresUtils.IdentityName(objectName);
         }
     }
 }

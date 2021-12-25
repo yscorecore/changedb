@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using ChangeDB.Migration;
+using static ChangeDB.Agent.SqlCe.SqlCeUtils;
 
 namespace ChangeDB.Agent.SqlCe
 {
@@ -16,7 +17,7 @@ namespace ChangeDB.Agent.SqlCe
         public Task CreateTargetDatabase(MigrationContext migrationContext)
         {
             migrationContext.TargetConnection.CreateDatabase();
-            migrationContext.RaiseObjectCreated(ObjectType.Database, migrationContext.TargetConnection.Database);
+            migrationContext.RaiseObjectCreated(ObjectType.Database, IdentityName(migrationContext.TargetConnection.Database));
             return Task.CompletedTask;
         }
     }

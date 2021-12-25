@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using Npgsql;
+using static ChangeDB.Agent.Postgres.PostgresUtils;
 
 namespace ChangeDB.Agent.Postgres
 {
@@ -48,16 +49,16 @@ namespace ChangeDB.Agent.Postgres
                 {
                     return string.Empty;
                 }
-                var identityType = PostgresUtils.IDENTITY_ALWAYS;
+                var identityType = IdentityAlways;
 
-                if (identityInfo.Values != null && identityInfo.Values.TryGetValue(PostgresUtils.IdentityType, out var type))
+                if (identityInfo.Values != null && identityInfo.Values.TryGetValue(IdentityType, out var type))
                 {
                     identityType = Convert.ToString(type);
                 }
                 return identityType switch
                 {
-                    PostgresUtils.IDENTITY_ALWAYS => "OVERRIDING SYSTEM VALUE",
-                    PostgresUtils.IDENTITY_BYDEFAULT => "OVERRIDING USER VALUE",
+                    IdentityAlways => "OVERRIDING SYSTEM VALUE",
+                    IdentityByDefault => "OVERRIDING USER VALUE",
                     _ => string.Empty
                 };
             }
@@ -101,10 +102,5 @@ namespace ChangeDB.Agent.Postgres
             return Task.CompletedTask;
         }
 
-        private string IdentityName(string schema, string objectName) => PostgresUtils.IdentityName(schema, objectName);
-
-        private string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
-
-        private string IdentityName(string objectName) => PostgresUtils.IdentityName(objectName);
     }
 }

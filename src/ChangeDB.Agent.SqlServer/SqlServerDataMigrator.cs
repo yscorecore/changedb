@@ -3,6 +3,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
+using static ChangeDB.Agent.SqlServer.SqlServerUtils;
 
 namespace ChangeDB.Agent.SqlServer
 {
@@ -10,7 +11,6 @@ namespace ChangeDB.Agent.SqlServer
     {
         public static readonly IDataMigrator Default = new SqlServerDataMigrator();
         private static HashSet<string> canNotOrderByTypes = new HashSet<string>() { "image", "text", "ntext", "xml" };
-        private static string BuildTableName(TableDescriptor table) => SqlServerUtils.IdentityName(table.Schema, table.Name);
         private static string BuildColumnNames(IEnumerable<string> names) => string.Join(", ", names.Select(p => $"[{p}]"));
         private static string BuildColumnNames(TableDescriptor table) =>
             BuildColumnNames(table.Columns.Select(p => p.Name));
@@ -29,7 +29,7 @@ namespace ChangeDB.Agent.SqlServer
 
         public Task<long> CountSourceTable(TableDescriptor table, MigrationContext migrationContext)
         {
-            var sql = $"select count_big(1) from {BuildTableName(table)}";
+            var sql = $"select count_big(1) from {IdentityName(table)}";
             var val = migrationContext.SourceConnection.ExecuteScalar<long>(sql);
             return Task.FromResult(val);
         }
@@ -37,7 +37,7 @@ namespace ChangeDB.Agent.SqlServer
         public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, MigrationContext migrationContext)
         {
             var sql =
-                $"select * from {BuildTableName(table)} order by {BuildOrderByColumnNames(table)} offset {pageInfo.Offset} row fetch next {pageInfo.Limit} row only";
+                $"select * from {IdentityName(table)} order by {BuildOrderByColumnNames(table)} offset {pageInfo.Offset} row fetch next {pageInfo.Limit} row only";
             return Task.FromResult(migrationContext.SourceConnection.ExecuteReaderAsTable(sql));
         }
 
@@ -47,7 +47,7 @@ namespace ChangeDB.Agent.SqlServer
             {
                 return Task.CompletedTask;
             }
-            var insertSql = $"INSERT INTO {BuildTableName(table)}({BuildColumnNames(table)}) VALUES ({BuildParameterValueNames(table)});";
+            var insertSql = $"INSERT INTO {IdentityName(table)}({BuildColumnNames(table)}) VALUES ({BuildParameterValueNames(table)});";
             foreach (DataRow row in data.Rows)
             {
                 var rowData = GetRowData(row, table);

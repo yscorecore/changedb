@@ -3,13 +3,12 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
-
+using static ChangeDB.Agent.SqlCe.SqlCeUtils;
 namespace ChangeDB.Agent.SqlCe
 {
     public class SqlCeDataMigrator : IDataMigrator
     {
         public static readonly IDataMigrator Default = new SqlCeDataMigrator();
-        private static string BuildTableName(TableDescriptor table) => SqlCeUtils.IdentityName(table.Name);
         private static string BuildColumnNames(IEnumerable<string> names) => string.Join(", ", names.Select(p => $"[{p}]"));
         private static string BuildColumnNames(TableDescriptor table) =>
             BuildColumnNames(table.Columns.Select(p => p.Name));
@@ -25,7 +24,7 @@ namespace ChangeDB.Agent.SqlCe
 
         public Task<long> CountSourceTable(TableDescriptor table, MigrationContext migrationContext)
         {
-            var sql = $"select count(1) from {BuildTableName(table)}";
+            var sql = $"select count(1) from {IdentityName(table)}";
             var val = migrationContext.SourceConnection.ExecuteScalar<long>(sql);
             return Task.FromResult(val);
         }
@@ -33,7 +32,7 @@ namespace ChangeDB.Agent.SqlCe
         public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, MigrationContext migrationContext)
         {
             var sql =
-                $"select * from {BuildTableName(table)} order by {BuildPrimaryKeyColumnNames(table)} offset {pageInfo.Offset} row fetch next {pageInfo.Limit} row only";
+                $"select * from {IdentityName(table)} order by {BuildPrimaryKeyColumnNames(table)} offset {pageInfo.Offset} row fetch next {pageInfo.Limit} row only";
             return Task.FromResult(migrationContext.SourceConnection.ExecuteReaderAsTable(sql));
         }
 
@@ -43,7 +42,7 @@ namespace ChangeDB.Agent.SqlCe
             {
                 return Task.CompletedTask;
             }
-            var insertSql = $"INSERT INTO {BuildTableName(table)}({BuildColumnNames(table)}) VALUES ({BuildParameterValueNames(table)});";
+            var insertSql = $"INSERT INTO {IdentityName(table)}({BuildColumnNames(table)}) VALUES ({BuildParameterValueNames(table)});";
             foreach (DataRow row in data.Rows)
             {
                 var rowData = GetRowData(row, table);
