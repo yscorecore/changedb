@@ -20,6 +20,8 @@ namespace ChangeDB.Migration
         public int GrowthSpeed { get => 10; }
 
         public int MaxTaskCount { get; set; } = 5;
+
+        public bool IsDumpMode { get; set; } = false;
     }
 
     [Flags]

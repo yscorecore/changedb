@@ -12,28 +12,27 @@ namespace ChangeDB.Agent.Postgres
     {
         public static readonly PostgresDataMigrator Default = new PostgresDataMigrator();
 
-
         public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, MigrationContext migrationContext)
         {
-            var sql = $"select * from {BuildTableName(table)} limit {pageInfo.Limit} offset {pageInfo.Offset}";
+            var sql = $"select * from {IdentityName(table)} limit {pageInfo.Limit} offset {pageInfo.Offset}";
             return Task.FromResult(migrationContext.SourceConnection.ExecuteReaderAsTable(sql));
         }
 
         public Task<long> CountSourceTable(TableDescriptor table, MigrationContext migrationContext)
         {
-            var sql = $"select count(1) from {BuildTableName(table)}";
-            var val = migrationContext.SourceConnection.ExecuteScalar<long>(sql);
-            return Task.FromResult(val);
+            var sql = $"select count(1) from {IdentityName(table)}";
+            var totalCount = migrationContext.SourceConnection.ExecuteScalar<long>(sql);
+            return Task.FromResult(totalCount);
         }
 
         public Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
         {
-            if (table.Columns.Count == 0)
+            if (table.Columns.Count == 0 || data.Rows.Count==0)
             {
                 return Task.CompletedTask;
             }
             var overIdentity = OverIdentityType(table);
-            var insertSql = $"INSERT INTO {BuildTableName(table)}({BuildColumnNames(table)}) {overIdentity} VALUES ({BuildParameterValueNames(table)});";
+            var insertSql = $"INSERT INTO {IdentityName(table)}({BuildColumnNames(table)}) {overIdentity} VALUES ({BuildParameterValueNames(table)});";
             foreach (DataRow row in data.Rows)
             {
                 var rowData = GetRowData(row, table);
@@ -64,14 +63,11 @@ namespace ChangeDB.Agent.Postgres
             }
         }
 
-        private string BuildTableName(TableDescriptor table)
-        {
-            return $"\"{table.Schema}\".\"{table.Name}\"";
-        }
+       
 
         private string BuildColumnNames(TableDescriptor table)
         {
-            return string.Join(", ", table.Columns.Select(p => $"\"{p.Name}\""));
+            return string.Join(", ", table.Columns.Select(p => $"{IdentityName(p.Name)}"));
         }
 
         private string BuildParameterValueNames(TableDescriptor table)
@@ -84,20 +80,13 @@ namespace ChangeDB.Agent.Postgres
             var dic = new Dictionary<string, object>();
             foreach (var column in tableDescriptor.Columns)
             {
-                dic[$"@{column.Name}"] = GetRowColumnValue(row, column.Name);
+                dic[$"@{column.Name}"] = row[column.Name];
             }
             return dic;
         }
 
-        private object GetRowColumnValue(DataRow dataRow, string columnName)
-        {
-            return dataRow[columnName];
-        }
-
         public Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
         {
-            // var npgsqlConnection = migrationContext.TargetConnection as NpgsqlConnection;
-            // npgsqlConnection!.TypeMapper.UseNodaTime();
             return Task.CompletedTask;
         }
 
@@ -111,5 +100,11 @@ namespace ChangeDB.Agent.Postgres
                 });
             return Task.CompletedTask;
         }
+        
+        private  string IdentityName(string schema, string objectName)=>PostgresUtils.IdentityName(schema, objectName);
+
+        private  string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
+     
+        private  string IdentityName(string objectName)=> PostgresUtils.IdentityName(objectName);
     }
 }

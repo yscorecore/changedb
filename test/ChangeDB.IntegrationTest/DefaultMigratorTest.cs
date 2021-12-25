@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Xaml.Permissions;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using ChangeDB.Migration;
@@ -26,6 +27,7 @@ namespace ChangeDB.IntegrationTest
         [Theory]
         [InlineData("migrations/sqlserver_datatype.xml")]
         [InlineData("migrations/sqlserver_basic.xml")]
+        [InlineData("migrations/sqlserver_northwind.xml")]
         public async Task ShouldMigrationDatabaseAs(string xmlFile)
         {
             var serviceProvider = BuildServiceProvider();
@@ -60,7 +62,53 @@ namespace ChangeDB.IntegrationTest
             var sql = xElement.Value;
             CreateSourceDatabase(agentType, dbConnection);
             dbConnection.ExecuteMutilSqls(sql, split);
+            //OutputTestData(dbConnection,"postgres");
         }
+
+        private void OutputTestData(DbConnection dbConnection, string dbType)
+        {
+            var allTables = dbConnection.ExecuteReaderAsList<string, String>(
+                "select t.table_schema,t.table_name  from information_schema.tables t  where t.table_type ='BASE TABLE'");
+            //<target type="postgres">
+            var rootElement = new XElement("target");
+            rootElement.Add(new XAttribute("type", dbType));
+
+            foreach (var table in allTables)
+            {
+                var tableFullName = $"\"{table.Item1}\".\"{table.Item2}\"";
+                int totalCount =
+                    dbConnection.ExecuteScalar<int>($"select count(1) from {tableFullName}");
+                var schemas = dbConnection.ExecuteAsSchema(tableFullName);
+                var dataTable = dbConnection.ExecuteReaderAsTable($"select * from {tableFullName}");
+
+                var allDataJson = dataTable.Rows.OfType<DataRow>().Select(p => p.ItemArray.Select(ConvertToJsonText).ToArray()).ToArray();
+                var serializeOptions = new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                };
+                var dataJson = JsonSerializer.Serialize(allDataJson, serializeOptions);
+                var metaDataElement = new XElement("meta",
+                    schemas.Select(p => new XElement("column",
+                        new XAttribute("name", p.Name),
+                        new XAttribute("type", p.Type.FullName)
+                        )).OfType<object>().ToArray()
+                    );
+                var dataElement = new XElement("data", new XCData(dataJson));
+                var tableElement = new XElement("table",
+                    new XAttribute("schema", table.Item1),
+                    new XAttribute("name", table.Item2),
+                    new XAttribute("count", totalCount),
+                    metaDataElement,
+                    dataElement
+
+                );
+                rootElement.Add(tableElement);
+            }
+
+            var text = rootElement.ToString();
+            Console.WriteLine(text);
+        }
+
         private void CreateSourceDatabase(string agentType, DbConnection dbConnection)
         {
             switch (agentType?.ToLowerInvariant())
@@ -100,44 +148,43 @@ namespace ChangeDB.IntegrationTest
         {
             var count = int.Parse(tableElement.Attribute("count").Value);
             var countInDatabase = connection.ExecuteScalar<int>($"Select count(1) from {tableName}");
-            countInDatabase.Should().Be(count, $"the data total count in table {tableName} should be same.");
+            countInDatabase.Should().Be(count, $"the data total count in table {tableName} should be same");
         }
         private void AssertMetaData(XElement tableElement, string tableName, DbConnection connection)
         {
-            using var reader = connection.ExecuteReader($"select * from {tableName}");
-            var querySchema = reader.GetSchemaTable();
+            var actualColumns = connection.ExecuteAsSchema(tableName).ToDictionary(p => p.Name);
+
             var expectedColumns = tableElement.XPathSelectElements("meta/column")
                 .Select(p => new
                 {
                     Name = p.Attribute("name").Value,
                     Type = Type.GetType(p.Attribute("type").Value)
                 }).ToDictionary(p => p.Name);
-            querySchema.Rows.Count.Should().Be(expectedColumns.Count(), $"the column count in table {tableName} should be same.");
 
-
-            var actualColumns =
-                querySchema.Rows.OfType<DataRow>()
-                .Select(p => new
-                {
-                    Name = p.Field<string>("ColumnName"),
-                    Type = p.Field<Type>("DataType")
-                }).ToDictionary(p => p.Name);
-
-            actualColumns.Should().BeEquivalentTo(expectedColumns, $"the columns in table {tableName} should be same.");
+            actualColumns.Should().BeEquivalentTo(expectedColumns, $"the columns in table {tableName} should be same");
         }
         private void AssertData(XElement tableElement, string tableName, DbConnection connection)
         {
             var dataTable = connection.ExecuteReaderAsTable($"select * from {tableName}");
             var dataInDataBase = dataTable.Rows.OfType<DataRow>().Select(p => p.ItemArray.Select(ConvertToJsonText).ToArray()).ToArray();
-            var dataJsonInDataBase = JsonSerializer.Serialize(dataInDataBase);
+            var serializeOptions = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+            var dataJsonInDataBase = JsonSerializer.Serialize(dataInDataBase, serializeOptions);
 
-            var dataExpected = JsonSerializer.Deserialize(tableElement.Element("data").Value, typeof(object));
-            var dataJsonExpected = JsonSerializer.Serialize(dataExpected);
-            dataJsonInDataBase.Should().Be(dataJsonExpected, $"the data in table {tableName} should be same.");
+            var dataExpected = JsonSerializer.Deserialize(tableElement.Element("data").Value, typeof(object), serializeOptions);
+            var dataJsonExpected = JsonSerializer.Serialize(dataExpected, serializeOptions);
+            dataJsonInDataBase.Should().Be(dataJsonExpected, $"the data in table {tableName} should be same");
 
         }
         private object ConvertToJsonText(object value)
         {
+            if (Convert.IsDBNull(value))
+            {
+                return null;
+            }
             if (value is TimeSpan ts)
             {
                 return ts.ToString();

@@ -112,7 +112,7 @@ namespace ChangeDB.Default
         protected virtual async Task MigrationData(MigrationContext migrationContext)
         {
             migrationContext.EventReporter.RaiseStageChanged(StageKind.StartingTableData);
-            if (migrationContext.Setting.MaxTaskCount > 1)
+            if (!migrationContext.Setting.IsDumpMode && migrationContext.Setting.MaxTaskCount > 1)
             {
                 var options = new ParallelOptions()
                 {

@@ -21,6 +21,9 @@
       <None Update="migrations\sqlserver_foreignkey.xml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="migrations\sqlserver_northwind.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

@@ -29,7 +29,7 @@ namespace ChangeDB.Agent.SqlServer
 
         public Task<long> CountSourceTable(TableDescriptor table, MigrationContext migrationContext)
         {
-            var sql = $"select count(1) from {BuildTableName(table)}";
+            var sql = $"select count_big(1) from {BuildTableName(table)}";
             var val = migrationContext.SourceConnection.ExecuteScalar<long>(sql);
             return Task.FromResult(val);
         }

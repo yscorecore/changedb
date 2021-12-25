@@ -61,7 +61,7 @@ namespace ChangeDB.ConsoleApp.Commands
                         SqlFiles = string.IsNullOrEmpty(PostSqlFile) ? new List<string>() : new List<string>() { PostSqlFile },
                         SqlSplit = PostSqlSplit,
                     },
-                    MaxTaskCount = 1
+                    IsDumpMode = true
 
                 },
                 SourceDatabase = new DatabaseInfo { DatabaseType = SourceType, ConnectionString = SourceConnectionString },
