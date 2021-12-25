@@ -11,7 +11,7 @@ namespace ChangeDB
     {
         public static object ExecuteScalar(this IDbConnection connection, string sql, IDictionary<string, object> args = null)
         {
-            AlterOpen(connection);
+            TryOpen(connection);
             using var command = connection.CreateCommand();
             command.CommandText = sql;
             command.CommandType = CommandType.Text;
@@ -56,7 +56,7 @@ namespace ChangeDB
         public static int ExecuteNonQuery(this IDbConnection connection, string sql, IDictionary<string, object> args)
         {
             _ = sql ?? throw new ArgumentNullException(nameof(sql));
-            AlterOpen(connection);
+            TryOpen(connection);
             using var command = connection.CreateCommand();
             command.CommandText = sql.EndsWith(';') ? sql : sql + ';';
             command.CommandType = CommandType.Text;
@@ -154,7 +154,7 @@ namespace ChangeDB
         }
         public static IDataReader ExecuteReader(this IDbConnection connection, string sql)
         {
-            AlterOpen(connection);
+            TryOpen(connection);
             using var command = connection.CreateCommand();
             command.CommandText = sql;
             command.CommandType = CommandType.Text;
@@ -205,7 +205,7 @@ namespace ChangeDB
             return table.AsEnumerable().Select(p => p.FieldValue<T>(columnName)).ToList();
         }
 
-        private static void AlterOpen(IDbConnection connection)
+        public static void TryOpen(this IDbConnection connection)
         {
             if (connection.State == ConnectionState.Closed)
             {

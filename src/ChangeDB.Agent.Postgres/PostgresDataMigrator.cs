@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using Npgsql;
+using NpgsqlTypes;
 using static ChangeDB.Agent.Postgres.PostgresUtils;
 
 namespace ChangeDB.Agent.Postgres
@@ -26,14 +27,30 @@ namespace ChangeDB.Agent.Postgres
             return Task.FromResult(totalCount);
         }
 
-        public Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
+        public async Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
         {
             if (table.Columns.Count == 0 || data.Rows.Count == 0)
             {
-                return Task.CompletedTask;
+                return;
             }
+
+            if (migrationContext.Setting.IsDumpMode)
+            {
+                await InsertTable(data, table, migrationContext);
+            }
+            else
+            {
+                await BulkInsertTable(data, table, migrationContext);
+
+            }
+        }
+
+        private Task InsertTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
+        {
             var overIdentity = OverIdentityType(table);
-            var insertSql = $"INSERT INTO {IdentityName(table)}({BuildColumnNames(table)}) {overIdentity} VALUES ({BuildParameterValueNames(table)});";
+            var insertSql = string.IsNullOrEmpty(overIdentity) ? $"INSERT INTO {IdentityName(table)}({BuildColumnNames(table)}) VALUES ({BuildParameterValueNames(table)});"
+                    : $"INSERT INTO {IdentityName(table)}({BuildColumnNames(table)}) {overIdentity} VALUES ({BuildParameterValueNames(table)});";
+
             foreach (DataRow row in data.Rows)
             {
                 var rowData = GetRowData(row, table);
@@ -64,25 +81,72 @@ namespace ChangeDB.Agent.Postgres
             }
         }
 
-
-
-        private string BuildColumnNames(TableDescriptor table)
+        private Task BulkInsertTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
         {
-            return string.Join(", ", table.Columns.Select(p => $"{IdentityName(p.Name)}"));
+            var conn = migrationContext.TargetConnection as NpgsqlConnection;
+            conn.TryOpen();
+            using var writer = conn.BeginBinaryImport($"COPY {IdentityName(table)}({BuildColumnNames(table)}) FROM STDIN BINARY");
+
+            var typeMapper = (from column in table.Columns
+                              let normalizeStoreType = NormalizeStoreType(column.StoreType ?? string.Empty)
+                              where NpgsqlTypeMapper.ContainsKey(normalizeStoreType)
+                              select new { column.Name, NpgSqlType = NpgsqlTypeMapper[normalizeStoreType] })
+                .ToDictionary(p => p.Name, p => p.NpgSqlType);
+
+
+            foreach (DataRow row in data.Rows)
+            {
+                writer.StartRow();
+
+                foreach (var column in table.Columns)
+                {
+                    var val = row[column.Name];
+                    if (typeMapper.TryGetValue(column.Name, out var npgsqlDbType))
+                    {
+                        writer.Write(val, npgsqlDbType);
+                    }
+                    else
+                    {
+                        writer.Write(val);
+                    }
+                }
+            }
+
+            writer.Complete();
+            return Task.CompletedTask;
+
         }
 
-        private string BuildParameterValueNames(TableDescriptor table)
+        private static string NormalizeStoreType(string storeType)
         {
-            return string.Join(", ", table.Columns.Select(p => $"@{p.Name}"));
+            // abc(1,2) t
+            var startIndex = storeType.IndexOf('(');
+            var endIndex = storeType.LastIndexOf(')');
+            if (startIndex > 0 && endIndex > startIndex)
+            {
+                return storeType[..startIndex].ToUpper() + storeType[(endIndex + 1)..].ToUpper();
+            }
+            return storeType.ToUpper();
+
         }
+
+        private static readonly Dictionary<string, NpgsqlDbType> NpgsqlTypeMapper = new Dictionary<string, NpgsqlDbType>(StringComparer.InvariantCultureIgnoreCase)
+        {
+            ["DATE"] = NpgsqlDbType.Date,
+            ["TIME WITHOUT TIME ZONE"] = NpgsqlDbType.Time,
+            ["TIME WITH TIME ZONE"] = NpgsqlDbType.TimeTz,
+            ["TIMESTAMP WITHOUT TIME ZONE"] = NpgsqlDbType.Timestamp,
+            ["TIMESTAMP WITH TIME ZONE"] = NpgsqlDbType.TimestampTz,
+        };
+
+        private string BuildColumnNames(TableDescriptor table) => string.Join(", ", table.Columns.Select(p => $"{IdentityName(p.Name)}"));
+
+        private string BuildParameterValueNames(TableDescriptor table) => string.Join(", ", table.Columns.Select(p => $"@{p.Name}"));
 
         private IDictionary<string, object> GetRowData(DataRow row, TableDescriptor tableDescriptor)
         {
             var dic = new Dictionary<string, object>();
-            foreach (var column in tableDescriptor.Columns)
-            {
-                dic[$"@{column.Name}"] = row[column.Name];
-            }
+            tableDescriptor.Columns.Each(column => { dic[$"@{column.Name}"] = row[column.Name]; });
             return dic;
         }
 
@@ -97,7 +161,7 @@ namespace ChangeDB.Agent.Postgres
             tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)
                 .Each((column) =>
                 {
-                    migrationContext.TargetConnection.ExecuteNonQuery($"SELECT setval(pg_get_serial_sequence('{tableFullName}','{column.Name}'),{column.IdentityInfo.CurrentValue})");
+                    migrationContext.TargetConnection.ExecuteNonQuery($"SELECT SETVAL(PG_GET_SERIAL_SEQUENCE('{tableFullName}','{column.Name}'),{column.IdentityInfo.CurrentValue})");
                 });
             return Task.CompletedTask;
         }

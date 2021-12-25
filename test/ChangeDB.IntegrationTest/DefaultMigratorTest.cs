@@ -32,8 +32,8 @@ namespace ChangeDB.IntegrationTest
         {
             var serviceProvider = BuildServiceProvider();
             var migrate = serviceProvider.GetRequiredService<IDatabaseMigrate>();
-            var xdocument = XDocument.Load(xmlFile);
-            var sourceNode = xdocument.XPathSelectElement("root/source");
+            var xDocument = XDocument.Load(xmlFile);
+            var sourceNode = xDocument.XPathSelectElement("root/source");
             var sourceType = sourceNode.Attribute("type").Value;
 
             using var sourceConnection = RandomDbConnection(sourceType);
@@ -41,12 +41,12 @@ namespace ChangeDB.IntegrationTest
 
             InitSourceDatabase(sourceType, sourceConnection, sourceNode);
 
-            foreach (var targetNode in xdocument.XPathSelectElements("root/targets/target"))
+            foreach (var targetNode in xDocument.XPathSelectElements("root/targets/target"))
             {
                 var targetType = targetNode.Attribute("type").Value;
                 var migrationContext = new MigrationContext()
                 {
-                    Setting = new MigrationSetting(),
+                    Setting = new MigrationSetting() { MaxTaskCount = 1 },
                     SourceDatabase = new DatabaseInfo() { DatabaseType = sourceType, ConnectionString = sourceConnectionString },
                     TargetDatabase = new DatabaseInfo() { DatabaseType = targetType, ConnectionString = RandomDbConnectionString(targetType) }
 
