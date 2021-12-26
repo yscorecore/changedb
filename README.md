@@ -1,6 +1,6 @@
 # CHANGEDB
 
-ChangeDB is a database migration cli tool, made database migration easier. 
+ChangeDB is a muti-database convert cli tool, it's all about making database migration much more easier. 
 
 ![build](https://github.com/yscorecore/changedb/workflows/build/badge.svg)
 [![codecov](https://codecov.io/gh/yscorecore/changedb/branch/master/graph/badge.svg)](https://codecov.io/gh/yscorecore/changedb) 
@@ -11,37 +11,35 @@ ChangeDB is a database migration cli tool, made database migration easier.
 ## How to use
 
 
-1. Install the dotnet (net5/net6), `ChangeDB` need dotnet runtime support, so you need install the dotnet first, you can install the dotnet runtime in [Here](https://dotnet.microsoft.com/download/dotnet) .
-1. Install the ChangeDB tool, you can use the follow command to install the tool.
+1. Install Dotnet (net5/net6). `ChangeDB` is supported by dotnet runtime, please check the link [Here](https://dotnet.microsoft.com/download/dotnet) to setup your personal dotnet runtime.
+1. Install ChangeDB tool. you can follow the command below to setup tool quite easily.
    ```shell
    dotnet tool install ChangeDB.ConsoleApp -g
    ``` 
-1. Migration you database, you can use `changedb migration` command. In the follow command, you just need provide source database type, source database connection string, target database type, target database connection string. For the target database, you don't create a empty database first, just give a connection string, `changedb` will create a new target database if not exists.
-
+1. Database converting. you can use `changedb migration` command convert database. Like the example command below, you need to provide source database type, source database connection string, target database type and target database connection string to establish migrate task. and for target database, `changedb` tool has the ability to create a new target database even if not exists. so you don't create a empty database everytime first.
     ```shell
    changedb migration {source-database-type} "{source-connection-string}" {target-database-type} "{target-connection-string}" 
    ```
-1. Dump database as sql scripts, you can use `changedb dumpsql` command.
-
+1. Dump database to sql scripts, `changedb` tool also has the ability to generate sql scripts. you can use `changedb dumpsql` command，Like the example example below to create sql scripts.
    ```shell
    changedb dumpsql {source-database-type} "{source-connection-string}" {target-database-type} "{output-file}" 
    ```
-## Support database types
+## Database Supported 
 
  - **Sql Server**
  - **Postgres**
- - **Sql Server Compact** (only can run in windows)
+ - **Sql Server Compact** (only supported in windows)
 
-## Database connection string format
+## Database Formate Connection String 
 
-|database | connection string format | more usages | 
+|Database | Format connection string  | Extend usages | 
 |---|---|---|
-|sqlserver| `Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword;` |[Link](https://www.connectionstrings.com/microsoft-data-sqlclient/) |
-|postgres| `Server=127.0.0.1;Port=5432;Database=myDataBase;User Id=myUsername;Password=myPassword;` |[Link](https://www.connectionstrings.com/npgsql/) |
-|sqlce| `Data Source=MyData.sdf;Persist Security Info=False;` |[Link](https://www.connectionstrings.com/sqlserverce-sqlceconnection/)|
+|MS SQL| `Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword;` |[Link](https://www.connectionstrings.com/microsoft-data-sqlclient/) |
+|Postgres| `Server=127.0.0.1;Port=5432;Database=myDataBase;User Id=myUsername;Password=myPassword;` |[Link](https://www.connectionstrings.com/npgsql/) |
+|SQL CE| `Data Source=MyData.sdf;Persist Security Info=False;` |[Link](https://www.connectionstrings.com/sqlserverce-sqlceconnection/)|
     
-## Support Database Object
-| Category | Object | Sql Server| Postgres`| `Sql Server Compact` |
+## Database Object Supported
+| Category | Object | Sql Server| Postgres| `Sql Server Compact` |
 |---|---|---|---|---|
 | Table|`identity`|✔️|✔️|✔️|
 | Table|`index`|✔️|✔️|✔️|
