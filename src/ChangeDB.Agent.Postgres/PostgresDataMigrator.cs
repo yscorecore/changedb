@@ -41,7 +41,6 @@ namespace ChangeDB.Agent.Postgres
             else
             {
                 await BulkInsertTable(data, table, migrationContext);
-
             }
         }
 

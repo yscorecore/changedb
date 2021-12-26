@@ -24,16 +24,8 @@ namespace ChangeDB.Agent.SqlServer
             {
                 TargetConnection = _dbConnection,
                 SourceConnection = _dbConnection
-                //Target = new AgentRunTimeInfo { Connection = _dbConnection },
-                //Source = new AgentRunTimeInfo { Connection = _dbConnection }
             };
-            _dbConnection.ExecuteNonQuery(
-               "create schema ts",
-               "create table ts.table1(id int primary key,nm varchar(64));",
-               "insert into ts.table1(id,nm) VALUES(1,'name1');",
-               "insert into ts.table1(id,nm) VALUES(2,'name2');",
-               "insert into ts.table1(id,nm) VALUES(3,'name3');"
-           );
+
         }
         public void Dispose()
         {
@@ -43,7 +35,13 @@ namespace ChangeDB.Agent.SqlServer
         public async Task ShouldReturnTableRowCountWhenCountTable()
         {
 
-
+            _dbConnection.ExecuteNonQuery(
+                "create schema ts",
+                "create table ts.table1(id int primary key,nm varchar(64));",
+                "insert into ts.table1(id,nm) VALUES(1,'name1');",
+                "insert into ts.table1(id,nm) VALUES(2,'name2');",
+                "insert into ts.table1(id,nm) VALUES(3,'name3');"
+            );
             var rows = await _dataMigrator.CountSourceTable(new TableDescriptor
             {
                 Name = "table1",
@@ -56,7 +54,13 @@ namespace ChangeDB.Agent.SqlServer
         public async Task ShouldReturnDataTableWhenReadTableData()
         {
 
-
+            _dbConnection.ExecuteNonQuery(
+                "create schema ts",
+                "create table ts.table1(id int primary key,nm varchar(64));",
+                "insert into ts.table1(id,nm) VALUES(1,'name1');",
+                "insert into ts.table1(id,nm) VALUES(2,'name2');",
+                "insert into ts.table1(id,nm) VALUES(3,'name3');"
+            );
             var table = await _dataMigrator.ReadSourceTable(new TableDescriptor { Name = "table1", Schema = "ts", PrimaryKey = new PrimaryKeyDescriptor { Columns = new List<string> { "id" } } },
                 new PageInfo() { Limit = 1, Offset = 1 }, _migrationContext);
             table.Rows.Count.Should().Be(1);
@@ -66,7 +70,10 @@ namespace ChangeDB.Agent.SqlServer
         [Fact]
         public async Task ShouldSuccessWhenWriteTableData()
         {
-
+            _dbConnection.ExecuteNonQuery(
+                "create schema ts",
+                "create table ts.table1(id int primary key,nm varchar(64));"
+            );
 
             var table = new DataTable();
             table.Columns.Add("id", typeof(int));
@@ -81,14 +88,59 @@ namespace ChangeDB.Agent.SqlServer
                 Name = "table1",
                 Columns = new List<ColumnDescriptor>
                 {
-                    new ColumnDescriptor{ Name = "id"},
-                    new ColumnDescriptor{Name = "nm"}
+                    new ColumnDescriptor{ Name = "id", StoreType = "int"},
+                    new ColumnDescriptor{Name = "nm", StoreType = "varchar(64)"}
                 }
             };
-            await _dataMigrator.WriteTargetTable(table, tableDescriptor, _migrationContext);
-            var totalRows = await _dataMigrator.CountSourceTable(tableDescriptor, _migrationContext);
-            totalRows.Should().Be(4);
+            await WriteTargetTable(table, tableDescriptor, _migrationContext);
+            var data = _dbConnection.ExecuteReaderAsList<int, string>("select * from ts.table1");
+            data.Should().BeEquivalentTo(new List<Tuple<int, string>> { new Tuple<int, string>(4, "name4") });
         }
 
+        [Fact]
+        public async Task ShouldInsertIdentityColumn()
+        {
+            _dbConnection.ExecuteNonQuery(
+                "create schema ts;",
+                "create table ts.table1(id int identity(1,1) primary key ,nm varchar(64));"
+            );
+            var table = new DataTable();
+            table.Columns.Add("id", typeof(int));
+            table.Columns.Add("nm", typeof(string));
+            var row = table.NewRow();
+            row["id"] = 1;
+            row["nm"] = "name1";
+            table.Rows.Add(row);
+            var tableDescriptor = new TableDescriptor
+            {
+                Schema = "ts",
+                Name = "table1",
+                Columns = new List<ColumnDescriptor>
+                {
+                    new ColumnDescriptor
+                    {
+                        Name = "id", StoreType  = "integer", IsIdentity = true,
+                        IdentityInfo = new IdentityDescriptor
+                        {
+                            IsCyclic =false,
+                            CurrentValue = 5
+                        }
+                    },
+                    new ColumnDescriptor{Name = "nm",StoreType = "varchar(64)"}
+                }
+            };
+            await WriteTargetTable(table, tableDescriptor, _migrationContext);
+            _dbConnection.ExecuteNonQuery("insert into ts.table1(nm) values('name6')");
+            var data = _dbConnection.ExecuteReaderAsList<int, string>("select * from ts.table1");
+            data.Should().BeEquivalentTo(new List<Tuple<int, string>> { new(1, "name1"), new(6, "name6") });
+        }
+
+        private async Task WriteTargetTable(DataTable data, TableDescriptor tableDescriptor,
+            MigrationContext migrationContext)
+        {
+            await _dataMigrator.BeforeWriteTargetTable(tableDescriptor, _migrationContext);
+            await _dataMigrator.WriteTargetTable(data, tableDescriptor, _migrationContext);
+            await _dataMigrator.AfterWriteTargetTable(tableDescriptor, _migrationContext);
+        }
     }
 }

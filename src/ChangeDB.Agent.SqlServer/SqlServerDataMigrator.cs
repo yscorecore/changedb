@@ -3,6 +3,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
+using Microsoft.Data.SqlClient;
 using static ChangeDB.Agent.SqlServer.SqlServerUtils;
 
 namespace ChangeDB.Agent.SqlServer
@@ -41,12 +42,25 @@ namespace ChangeDB.Agent.SqlServer
             return Task.FromResult(migrationContext.SourceConnection.ExecuteReaderAsTable(sql));
         }
 
-        public Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
+        public async Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
         {
             if (table.Columns.Count == 0)
             {
-                return Task.CompletedTask;
+                return;
             }
+
+            if (migrationContext.Setting.IsDumpMode)
+            {
+                await InsertTable(data, table, migrationContext);
+            }
+            else
+            {
+                await BulkInsertTable(data, table, migrationContext);
+            }
+        }
+
+        private Task InsertTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
+        {
             var insertSql = $"INSERT INTO {IdentityName(table)}({BuildColumnNames(table)}) VALUES ({BuildParameterValueNames(table)});";
             foreach (DataRow row in data.Rows)
             {
@@ -55,6 +69,23 @@ namespace ChangeDB.Agent.SqlServer
             }
             return Task.CompletedTask;
         }
+
+        private Task BulkInsertTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
+        {
+            migrationContext.TargetConnection.TryOpen();
+            var options = SqlBulkCopyOptions.Default | SqlBulkCopyOptions.KeepIdentity | SqlBulkCopyOptions.KeepNulls;
+            using var bulkCopy = new SqlBulkCopy(migrationContext.TargetConnection as SqlConnection, options, null)
+            {
+                DestinationTableName = IdentityName(table),
+                BatchSize = data.Rows.Count,
+            };
+            bulkCopy.WriteToServer(data);
+            return Task.CompletedTask;
+        }
+
+
+
+
 
         private IDictionary<string, object> GetRowData(DataRow row, TableDescriptor tableDescriptor)
         {
