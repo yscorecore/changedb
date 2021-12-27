@@ -39,7 +39,7 @@ namespace ChangeDB
         }
         public DbConnection NewSqlServerConnection()
         {
-            return new SqlConnection($"Server=127.0.0.1,1433;Database={Utility.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;");
+            return new SqlConnection($"Server=127.0.0.1,{SqlServerPort};Database={Utility.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;");
         }
 
         public void Dispose()

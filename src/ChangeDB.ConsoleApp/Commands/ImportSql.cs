@@ -22,7 +22,7 @@ namespace ChangeDB.ConsoleApp.Commands
         [Value(3, MetaName = "script-file", Required = true, HelpText = "the script file path")]
         public string TargetScriptFile { get; set; }
 
-        [Option("sql-file-split", HelpText = "sql file split chars, default value is \"\"")]
+        [Option("sql-file-split", Required = false, HelpText = "sql file split chars, default value is \"\"", Default = "")]
         public string SqlSplit { get; set; } = string.Empty;
 
         [Option('r', "recreate-new", HelpText = "recreate new database", Default = false)]

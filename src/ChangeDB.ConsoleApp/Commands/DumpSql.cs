@@ -40,7 +40,7 @@ namespace ChangeDB.ConsoleApp.Commands
           HelpText = "post sql file, execute these sql script after the migration one-by-one.")]
         public string PostSqlFile { get; set; }
 
-        [Option("post-sql-file-split", HelpText = "sql file split chars, default value is \"\"")]
+        [Option("post-sql-file-split", Required = false, HelpText = "sql file split chars, default value is \"\"", Default = "")]
         public string PostSqlSplit { get; set; } = "";
 
 
