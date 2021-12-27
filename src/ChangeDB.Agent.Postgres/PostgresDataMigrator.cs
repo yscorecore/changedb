@@ -34,7 +34,7 @@ namespace ChangeDB.Agent.Postgres
                 return;
             }
 
-            if (migrationContext.Setting.IsDumpMode)
+            if (migrationContext.MigrationType == MigrationType.SqlScript)
             {
                 await InsertTable(data, table, migrationContext);
             }

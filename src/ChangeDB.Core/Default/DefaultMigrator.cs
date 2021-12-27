@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
@@ -47,8 +49,6 @@ namespace ChangeDB.Default
             await DoMigrateDatabase(context);
             await ApplyCustomScripts(context);
 
-            Log("migration succeeded.");
-
         }
 
         protected virtual async Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(IMigrationAgent sourceAgent, DbConnection sourceConnection, MigrationContext migrationContext)
@@ -71,7 +71,10 @@ namespace ChangeDB.Default
         protected virtual async Task DoMigrateDatabase(MigrationContext migrationContext)
         {
             var (target, source, migrationSetting) = (migrationContext.Target, migrationContext.Source, migrationContext.Setting);
-            await CreateTargetDatabase(migrationContext);
+            if (migrationContext.MigrationType == MigrationType.Database && migrationContext.Setting.IncludeMeta)
+            {
+                await CreateTargetDatabase(migrationContext);
+            }
 
             if (migrationContext.Setting.IncludeMeta)
             {
@@ -101,18 +104,49 @@ namespace ChangeDB.Default
         }
         protected virtual async Task PreMigrationMetadata(AgentRunTimeInfo target, MigrationContext migrationContext)
         {
-            Log("start pre migration metadata.");
+            migrationContext.RaiseStageChanged(StageKind.StartingPreMeta);
             await target.Agent.MetadataMigrator.PreMigrateTargetMetadata(target.Descriptor, migrationContext);
+            migrationContext.RaiseStageChanged(StageKind.FinishedPreMeta);
         }
         protected virtual async Task PostMigrationMetadata(AgentRunTimeInfo target, MigrationContext migrationContext)
         {
-            Log("start post migration metadata.");
+            migrationContext.RaiseStageChanged(StageKind.StartingPostMeta);
             await target.Agent.MetadataMigrator.PostMigrateTargetMetadata(target.Descriptor, migrationContext);
+            migrationContext.RaiseStageChanged(StageKind.FinishedPostMeta);
         }
         protected virtual async Task MigrationData(MigrationContext migrationContext)
         {
             migrationContext.EventReporter.RaiseStageChanged(StageKind.StartingTableData);
-            if (!migrationContext.Setting.IsDumpMode && migrationContext.Setting.MaxTaskCount > 1)
+            if (NeedOrderByDependency())
+            {
+                await MigrateTableInSingleTask(OrderByDependency(migrationContext.Source.Descriptor.Tables));
+            }
+            else
+            {
+                if (NeedMultiTask())
+                {
+                    await MigrateTableInParallelTasks();
+                }
+                else
+                {
+                    await MigrateTableInSingleTask(migrationContext.Source.Descriptor.Tables);
+                }
+            }
+            migrationContext.EventReporter.RaiseStageChanged(StageKind.FinishedTableData);
+
+            bool NeedOrderByDependency() => migrationContext.Setting.MigrationScope == MigrationScope.Data;
+
+            bool NeedMultiTask() => migrationContext.MigrationType == MigrationType.Database && migrationContext.Setting.MaxTaskCount > 1;
+
+            async Task MigrateTableInSingleTask(IEnumerable<TableDescriptor> tables)
+            {
+                // single task
+                foreach (var sourceTable in tables)
+                {
+                    await MigrationTable(migrationContext, sourceTable);
+                }
+            }
+            Task MigrateTableInParallelTasks()
             {
                 var options = new ParallelOptions()
                 {
@@ -123,25 +157,71 @@ namespace ChangeDB.Default
                     using var fordedContext = migrationContext.Fork();
                     await MigrationTable(fordedContext, table);
                 });
+                return Task.CompletedTask;
+            }
 
-            }
-            else
+            IEnumerable<TableDescriptor> OrderByDependency(List<TableDescriptor> tableDescriptors)
             {
-                // single task
-                foreach (var sourceTable in migrationContext.Source.Descriptor.Tables)
+                var cloneTables = tableDescriptors.ToArray().ToList();
+                List<TableDescriptor> results = new List<TableDescriptor>();
+                HashSet<string> resultKeys = new HashSet<string>();
+                while (cloneTables.Count > 0)
                 {
-                    await MigrationTable(migrationContext, sourceTable);
+                    var picked = cloneTables.Where(AllDependenciesOk).ToArray();
+                    if (picked.Length == 0)
+                    {
+                        // dependency loop, A->B, B->C, C->A, in this case can't handle
+                        // TOTO REPORT WARNing
+                        migrationContext.RaiseWarning($"Cyclic dependence in tables [{BuildTableNames(cloneTables)}]");
+                        AddResults(cloneTables.ToArray());
+                        break;
+                    }
+                    else
+                    {
+                        AddResults(picked);
+                    }
                 }
+                Debug.Assert(results.Count == tableDescriptors.Count);
+                return results;
+
+                bool AllDependenciesOk(TableDescriptor table)
+                {
+                    if (table.ForeignKeys == null || table.ForeignKeys.Count == 0)
+                    {
+                        return true;
+                    }
+
+                    var tableKey = TableKey(table.Schema, table.Name);
+                    return table.ForeignKeys.All(p =>
+                    {
+                        var dependencyKey = TableKey(p.PrincipalSchema, p.PrincipalTable);
+                        return dependencyKey == tableKey || resultKeys.Contains(dependencyKey);
+                    });
+                }
+
+                string TableKey(string schema, string name) => string.IsNullOrEmpty(schema) ? $"\"{name}\"" : $"\"{schema}\".\"{name}\"";
+
+                void AddResults(IEnumerable<TableDescriptor> pickedTables)
+                {
+                    pickedTables.Each(p =>
+                    {
+                        results.Add(p);
+                        resultKeys.Add(TableKey(p.Schema, p.Name));
+                        cloneTables.Remove(p);
+                    });
+                }
+
+                string BuildTableNames(IEnumerable<TableDescriptor> tables) => string.Join(",", tables.Select(p => TableKey(p.Schema, p.Name)));
             }
-            migrationContext.EventReporter.RaiseStageChanged(StageKind.FinishedTableData);
         }
+
+
         protected virtual Task ApplyCustomScripts(MigrationContext migrationContext)
         {
             var migrationSetting = migrationContext.Setting;
-            if (migrationSetting.PostScripts?.SqlFiles?.Count > 0)
+            if (!string.IsNullOrEmpty(migrationSetting.PostScript?.SqlFile))
             {
-                Log("apply custom sql scripts");
-                migrationContext.TargetConnection.ExecuteSqlFiles(migrationSetting.PostScripts.SqlFiles, migrationSetting.PostScripts.SqlSplit);
+                migrationContext.TargetConnection.ExecuteSqlScriptFile(migrationSetting.PostScript.SqlFile, migrationSetting.PostScript.SqlSplit);
             }
             return Task.CompletedTask;
         }

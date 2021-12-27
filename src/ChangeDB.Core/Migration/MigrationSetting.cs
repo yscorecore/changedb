@@ -6,26 +6,24 @@ namespace ChangeDB.Migration
     public class MigrationSetting
     {
         public int FetchDataMaxSize { get; set; } = 1024 * 10;
-        public MigrationType MigrationType { get; set; } = MigrationType.All;
+        public MigrationScope MigrationScope { get; set; } = MigrationScope.All;
         public bool DropTargetDatabaseIfExists { get; set; } = true;
         public SourceFilter SourceFilter { get; set; } = new SourceFilter();
-        public CustomSqlScripts PostScripts { get; set; } = new CustomSqlScripts();
+        public CustomSqlScript PostScript { get; set; } = new CustomSqlScript();
         public TargetNameStyle TargetNameStyle { get; set; } = new TargetNameStyle();
 
         public bool FixObjectNameMaxLength { get; set; } = true;
 
-        public bool IncludeMeta { get => MigrationType.HasFlag(MigrationType.MetaData); }
-        public bool IncludeData { get => MigrationType.HasFlag(MigrationType.MetaData); }
+        public bool IncludeMeta { get => MigrationScope.HasFlag(MigrationScope.MetaData); }
+        public bool IncludeData { get => MigrationScope.HasFlag(MigrationScope.Data); }
 
         public int GrowthSpeed { get => 10; }
 
         public int MaxTaskCount { get; init; } = 8;
-
-        public bool IsDumpMode { get; init; } = false;
     }
 
     [Flags]
-    public enum MigrationType
+    public enum MigrationScope
     {
         MetaData = 1,
         Data = 2,
@@ -33,9 +31,9 @@ namespace ChangeDB.Migration
     }
 
 
-    public class CustomSqlScripts
+    public class CustomSqlScript
     {
-        public List<string> SqlFiles { get; set; }
+        public string SqlFile { get; set; }
 
         public string SqlSplit { get; set; } = ";;";
     }

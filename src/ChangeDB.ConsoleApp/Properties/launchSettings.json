@@ -4,6 +4,14 @@
       "commandName": "Project",
       "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" -f "
     },
+    "mssql_postgres_metadata_only": {
+      "commandName": "Project",
+      "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" -f --migration-scope MetaData "
+    },
+    "mssql_postgres_data_only": {
+      "commandName": "Project",
+      "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" --migration-scope Data "
+    },
     "mssql_mssql": {
       "commandName": "Project",
       "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" sqlserver \"Server=127.0.0.1,1433;Database=Northwind2;User Id=sa;Password=myStrong(!)Password;\" -f"
@@ -27,6 +35,10 @@
     "dump_mssql_sqlce": {
       "commandName": "Project",
       "commandLineArgs": "dumpsql sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" sqlce sqlce.sql"
+    },
+    "import_postgres": {
+      "commandName": "Project",
+      "commandLineArgs": "importsql postgres \"Server=127.0.0.1;Port=5432;Database=NorthwindImported;User Id=postgres;Password=mypassword;\" postgres.sql -r"
     }
   }
 }

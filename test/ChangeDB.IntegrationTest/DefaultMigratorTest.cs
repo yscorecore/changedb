@@ -61,7 +61,7 @@ namespace ChangeDB.IntegrationTest
             var split = xElement.Attribute("split").Value;
             var sql = xElement.Value;
             CreateSourceDatabase(agentType, dbConnection);
-            dbConnection.ExecuteMutilSqls(sql, split);
+            dbConnection.ExecuteSqlScript(sql, split);
             //OutputTestData(dbConnection,"postgres");
         }
 

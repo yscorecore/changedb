@@ -89,21 +89,17 @@ namespace ChangeDB
                 );
             }
         }
-        public static void ExecuteSqlFiles(this IDbConnection connection, IEnumerable<string> sqlFiles, string sqlSplit)
-        {
-            sqlFiles.Each(file => connection.ExecuteSqlFile(file, sqlSplit));
-        }
-        public static void ExecuteSqlFile(this IDbConnection connection, string sqlFile, string sqlSplit = "")
-        {
-            using (var reader = new StreamReader(sqlFile))
-            {
-                ExecuteMutilSqls(connection, reader, sqlSplit);
-            }
-        }
-        public static void ExecuteMutilSqls(this IDbConnection connection, TextReader textReader, string sqlSplit)
-        {
-            var stringBuilder = new StringBuilder();
 
+        public static void ExecuteSqlScriptFile(this IDbConnection connection, string sqlFile, string sqlSplit = "", Action<(int StartLine, int LineCount, string Sql, int Result)> callback = null)
+        {
+            using var reader = new StreamReader(sqlFile);
+            ExecuteSqlScript(connection, reader, sqlSplit, callback);
+        }
+        public static void ExecuteSqlScript(this IDbConnection connection, TextReader textReader, string sqlSplit = "", Action<(int StartLine, int LineCount, string Sql, int Result)> callback = null)
+        {
+            var lines = new List<string>();
+            var seq = CollectionExtensions.NewSequence(1);
+            var (currentLine, segmentStartLine) = (1, 1);
             while (true)
             {
                 string line = textReader.ReadLine()?.Trim();
@@ -112,36 +108,36 @@ namespace ChangeDB
                     ExecuteCurrentStringBuilder();
                     break;
                 }
-                else if (line.Equals(sqlSplit, StringComparison.InvariantCultureIgnoreCase))
+                currentLine = seq();
+                if (line.Equals(sqlSplit ?? string.Empty, StringComparison.InvariantCultureIgnoreCase))
                 {
                     ExecuteCurrentStringBuilder();
                 }
                 else
                 {
-                    stringBuilder.AppendLine(line);
+                    lines.Add(line);
                 }
             }
 
 
             void ExecuteCurrentStringBuilder()
             {
-                var sql = stringBuilder.ToString().Trim();
+                var sql = string.Join('\n', lines);
                 if (!string.IsNullOrWhiteSpace(sql))
                 {
-                    connection.ExecuteNonQuery(sql);
+                    var result = connection.ExecuteNonQuery(sql);
+                    callback?.Invoke((segmentStartLine, lines.Count, sql, result));
                 }
-                stringBuilder.Clear();
+                lines.Clear();
+                segmentStartLine = currentLine + 1;
+
             }
 
         }
-        public static void ExecuteMutilSqls(this IDbConnection connection, string mutilSqls, string sqlSplit)
+        public static void ExecuteSqlScript(this IDbConnection connection, string sqlScripts, string sqlSplit = "", Action<(int StartLine, int LineCount, string Sql, int Result)> callback = null)
         {
-
-            using (var reader = new StringReader(mutilSqls ?? string.Empty))
-            {
-                ExecuteMutilSqls(connection, reader, sqlSplit);
-            }
-
+            using var reader = new StringReader(sqlScripts ?? string.Empty);
+            ExecuteSqlScript(connection, reader, sqlSplit, callback);
         }
         public static bool ExecuteExists(this IDbConnection connection, string sql, Func<DataRow, bool> condition = null)
         {

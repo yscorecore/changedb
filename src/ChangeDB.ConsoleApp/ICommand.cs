@@ -2,6 +2,7 @@
 {
     interface ICommand
     {
+        string CommandName { get; }
         int Run();
     }
 }

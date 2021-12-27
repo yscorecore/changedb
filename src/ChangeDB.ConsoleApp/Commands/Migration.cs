@@ -10,8 +10,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace ChangeDB.ConsoleApp.Commands
 {
     [Verb("migration", HelpText = "Migration database from source to target")]
-    public class Migration : ICommand
+    public class Migration : BaseCommand
     {
+        public override string CommandName { get => "migration"; }
         [Value(1, MetaName = "source-dbtype", Required = true, HelpText = "source database type.")]
         public string SourceType { get; set; }
 
@@ -28,40 +29,49 @@ namespace ChangeDB.ConsoleApp.Commands
         [Option('f', "force", HelpText = "drop target database if exists")]
         public bool DropTargetDatabaseIfExists { get; set; } = false;
 
-        [Option("metadata-only", HelpText = "only migrate metadata (true/false)")]
-        public bool MetadataOnly { get; set; } = false;
+
+
+        [Option("migration-scope", HelpText = "(All/Metadata/Data)", Default = MigrationScope.All)]
+        public MigrationScope MigrationScope { get; set; } = MigrationScope.All;
 
         [Option("name-style", HelpText = "target object name style (Original/Lower/Upper).")]
         public NameStyle NameStyle { get; set; } = NameStyle.Original;
 
-        [Option("max-fetch-bytes", HelpText = "max fetch bytes when read source database (unit KB), default value is 10 (10KB).")]
-        public int MaxFetchBytes { get; set; } = 10;
+        [Option("max-fetch-bytes", HelpText = "max fetch bytes when read source database (unit KB), default value is 100 (100KB).")]
+        public int MaxFetchBytes { get; set; } = 100;
 
         [Option("post-sql-file",
             HelpText = "post sql file, execute these sql script after the migration one-by-one.")]
         public string PostSqlFile { get; set; }
 
-        [Option("post-sql-file-split", HelpText = "sql file split chars, default value is ;;")]
-        public string PostSqlSplit { get; set; } = ";;";
+        [Option("post-sql-file-split", HelpText = "sql file split chars, default value is \"\"")]
+        public string PostSqlSplit { get; set; } = string.Empty;
 
-        public int Run()
+
+
+        protected override void OnRunCommand()
         {
-            var serviceHost = ServiceHost.Default;
-            var service = serviceHost.GetService<IDatabaseMigrate>();
+            var service = ServiceHost.Default.GetRequiredService<IDatabaseMigrate>();
+            var context = BuildMigrationContext();
+            service.MigrateDatabase(context).Wait();
+        }
+
+        private MigrationContext BuildMigrationContext()
+        {
             var context = new MigrationContext
             {
                 Setting = new MigrationSetting()
                 {
-                    MigrationType = MetadataOnly ? MigrationType.MetaData : MigrationType.All,
+                    MigrationScope = MigrationScope,
                     DropTargetDatabaseIfExists = DropTargetDatabaseIfExists,
                     TargetNameStyle = new TargetNameStyle
                     {
                         NameStyle = NameStyle
                     },
                     FetchDataMaxSize = MaxFetchBytes * 1024,
-                    PostScripts = new CustomSqlScripts()
+                    PostScript = new CustomSqlScript()
                     {
-                        SqlFiles = string.IsNullOrEmpty(PostSqlFile) ? new List<string>() : new List<string>() { PostSqlFile },
+                        SqlFile = PostSqlFile,
                         SqlSplit = PostSqlSplit,
                     }
                 },
@@ -92,21 +102,10 @@ namespace ChangeDB.ConsoleApp.Commands
                 consoleProgressBarManager.ReportProgress(e.Table,
                     e.Completed ? $"Data of table {e.Table} migrated." : $"Migrating data of table {e.Table}"
                     , e.TotalCount, e.MigratedCount, e.Completed);
-
             };
-            var startTime = DateTime.Now;
-            var task = service.MigrateDatabase(context);
-            task.Wait();
-            Console.WriteLine();
-            var totalTime = DateTime.Now - startTime;
-            Console.WriteLine($"database migration succeeded, total time: {FormatTimeSpan(totalTime)}.");
-            return 0;
+            return context;
         }
 
-        private string FormatTimeSpan(TimeSpan timeSpan)
-        {
 
-            return $"{timeSpan.Hours} Hour {timeSpan.Minutes} Min {timeSpan.Seconds} Sec";
-        }
     }
 }

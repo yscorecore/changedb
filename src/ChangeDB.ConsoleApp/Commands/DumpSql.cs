@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ChangeDB.Dump;
 using ChangeDB.Migration;
 using CommandLine;
@@ -7,8 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace ChangeDB.ConsoleApp.Commands
 {
     [Verb("dumpsql", HelpText = "Dump database as sql scripts")]
-    internal class DumpSql : ICommand
+    internal class DumpSql : BaseCommand
     {
+        public override string CommandName { get => "dumpsql"; }
 
         [Value(1, MetaName = "source-dbtype", Required = true, HelpText = "source database type.")]
         public string SourceType { get; set; }
@@ -26,49 +28,83 @@ namespace ChangeDB.ConsoleApp.Commands
         [Option('f', "force", HelpText = "drop target sql scripts file1 if exists", Default = false)]
         public bool DropTargetDatabaseIfExists { get; set; } = false;
 
-        [Option("metadata-only", HelpText = "only dump metadata (true/false)", Default = false)]
-        public bool MetadataOnly { get; set; } = false;
+        [Option("dump-scope", HelpText = "(All/Metadata/Data)", Default = MigrationScope.All)]
+        public MigrationScope DumpScope { get; set; } = MigrationScope.All;
 
         [Option("name-style", HelpText = "target object name style (Original/Lower/Upper).")]
         public NameStyle NameStyle { get; set; } = NameStyle.Original;
-        [Option("max-fetch-bytes", HelpText = "max fetch bytes when read source database (unit KB), default value is 10 (10KB).")]
-        public int MaxFetchBytes { get; set; } = 10;
+        [Option("max-fetch-bytes", HelpText = "max fetch bytes when read source database (unit KB), default value is 10 (100KB).")]
+        public int MaxFetchBytes { get; set; } = 100;
 
         [Option("post-sql-file",
           HelpText = "post sql file, execute these sql script after the migration one-by-one.")]
         public string PostSqlFile { get; set; }
 
-        [Option("post-sql-file-split", HelpText = "sql file split chars, default value is ;;")]
-        public string PostSqlSplit { get; set; } = ";;";
-        public int Run()
-        {
-            var serviceHost = ServiceHost.Default;
+        [Option("post-sql-file-split", HelpText = "sql file split chars, default value is \"\"")]
+        public string PostSqlSplit { get; set; } = "";
 
-            var service = serviceHost.GetService<IDatabaseSqlDumper>();
-            var task = service.DumpSql(new DumpContext
+
+
+
+
+        protected override void OnRunCommand()
+        {
+            var service = ServiceHost.Default.GetRequiredService<IDatabaseSqlDumper>();
+            var context = this.BuildDumpContext();
+            service.DumpSql(context).Wait();
+        }
+
+        private DumpContext BuildDumpContext()
+        {
+            var context = new DumpContext
             {
                 Setting = new MigrationSetting()
                 {
-                    MigrationType = MetadataOnly ? MigrationType.MetaData : MigrationType.All,
+                    MigrationScope = DumpScope,
                     DropTargetDatabaseIfExists = DropTargetDatabaseIfExists,
                     TargetNameStyle = new TargetNameStyle
                     {
                         NameStyle = NameStyle
                     },
                     FetchDataMaxSize = MaxFetchBytes * 1024,
-                    PostScripts = new CustomSqlScripts()
+                    PostScript = new CustomSqlScript()
                     {
-                        SqlFiles = string.IsNullOrEmpty(PostSqlFile) ? new List<string>() : new List<string>() { PostSqlFile },
+                        SqlFile = PostSqlFile,
                         SqlSplit = PostSqlSplit,
-                    },
-                    IsDumpMode = true
-
+                    }
                 },
+
                 SourceDatabase = new DatabaseInfo { DatabaseType = SourceType, ConnectionString = SourceConnectionString },
-                DumpInfo = new SqlScriptInfo { DatabaseType = TargetType, SqlScriptFile = TargetScript }
-            });
-            task.Wait();
-            return 0;
+                TargetDatabase = new DatabaseInfo { DatabaseType = TargetType, ConnectionString = String.Empty },
+                DumpInfo = new SqlScriptInfo { DatabaseType = TargetType, SqlScriptFile = TargetScript },
+                MigrationType = MigrationType.SqlScript
+            };
+            ConsoleProgressBarManager consoleProgressBarManager = new ConsoleProgressBarManager();
+            context.EventReporter.StageChanged += (sender, e) =>
+            {
+                if (e == StageKind.StartingTableData)
+                {
+                    consoleProgressBarManager.Start();
+                }
+                else if (e == StageKind.FinishedTableData)
+                {
+                    consoleProgressBarManager.End();
+                }
+            };
+            context.EventReporter.ObjectCreated += (sender, e) =>
+            {
+                Console.WriteLine(string.IsNullOrEmpty(e.OwnerName)
+                    ? $"{e.ObjectType} {e.FullName} dumped."
+                    : $"{e.ObjectType} {e.FullName} on {e.OwnerName} dumped.");
+            };
+            context.EventReporter.TableDataMigrated += (sender, e) =>
+            {
+                consoleProgressBarManager.ReportProgress(e.Table,
+                    e.Completed ? $"Data of table {e.Table} dumped." : $"Dumping data of table {e.Table}"
+                    , e.TotalCount, e.MigratedCount, e.Completed);
+            };
+            return context;
         }
+
     }
 }

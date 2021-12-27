@@ -49,7 +49,7 @@ namespace ChangeDB.Agent.SqlServer
                 return;
             }
 
-            if (migrationContext.Setting.IsDumpMode)
+            if (migrationContext.MigrationType == MigrationType.SqlScript)
             {
                 await InsertTable(data, table, migrationContext);
             }
