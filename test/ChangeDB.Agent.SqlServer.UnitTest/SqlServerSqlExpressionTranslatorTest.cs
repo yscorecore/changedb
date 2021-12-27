@@ -45,7 +45,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             public MapFromCommonSqlExpression()
             {
-                Add(null, "null");
+                Add(null!, "null");
                 Add(new SqlExpressionDescriptor(), "null");
                 Add(new SqlExpressionDescriptor { Function = Function.Now }, "getdate()");
                 Add(new SqlExpressionDescriptor { Function = Function.Uuid }, "newid()");
@@ -68,7 +68,7 @@ namespace ChangeDB.Agent.SqlServer
 
             }
 
-            private void Add(SqlExpressionDescriptor? descriptor, string targetSqlExpression)
+            private void Add(SqlExpressionDescriptor descriptor, string targetSqlExpression)
             {
                 this.Add(new Object[] { descriptor, targetSqlExpression });
             }
@@ -78,9 +78,9 @@ namespace ChangeDB.Agent.SqlServer
         {
             public MapToCommonSqlExpression()
             {
-                Add(null, "int", null);
-                Add("", "int", null);
-                Add("(())", "int", null);
+                Add(null!, "int", null!);
+                Add("", "int", null!);
+                Add("(())", "int", null!);
                 Add("(getdate())", "datetime", new SqlExpressionDescriptor() { Function = Function.Now });
                 Add("((GETDATE( )))", "datetime", new SqlExpressionDescriptor() { Function = Function.Now });
                 Add("(newid())", "uniqueidentifier", new SqlExpressionDescriptor() { Function = Function.Uuid });
@@ -108,7 +108,7 @@ namespace ChangeDB.Agent.SqlServer
                 Add("'2021-11-24 18:54:01 +08:00'", "datetimeoffset", new SqlExpressionDescriptor() { Constant = DateTimeOffset.Parse("2021-11-24 18:54:01 +08:00") });
 
             }
-            private void Add(string? sqlExpression, string storeType, SqlExpressionDescriptor? descriptor)
+            private void Add(string sqlExpression, string storeType, SqlExpressionDescriptor descriptor)
             {
                 this.Add(new Object[] { sqlExpression, storeType, descriptor });
             }

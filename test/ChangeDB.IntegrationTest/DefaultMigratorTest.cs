@@ -25,6 +25,7 @@ namespace ChangeDB.IntegrationTest
         }
 
         [Theory]
+        [InlineData("migrations/sqlserver_default_value.xml")]
         [InlineData("migrations/sqlserver_datatype.xml")]
         [InlineData("migrations/sqlserver_basic.xml")]
         [InlineData("migrations/sqlserver_northwind.xml")]
