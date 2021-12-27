@@ -16,8 +16,8 @@ namespace ChangeDB
 
         public DatabaseEnvironment()
         {
-            SqlServerPort = Utility.GetAvailableTcpPort(1433);
-            PostgresPort = Utility.GetAvailableTcpPort(5432);
+            SqlServerPort = Utility.GetAvailableTcpPort(2433);
+            PostgresPort = Utility.GetAvailableTcpPort(6432);
             DockerCompose.Up(new Dictionary<string, object>
             {
                 ["POSTGRES_PORT"] = PostgresPort,
