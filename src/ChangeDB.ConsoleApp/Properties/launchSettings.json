@@ -6,11 +6,11 @@
     },
     "mssql_postgres_metadata_only": {
       "commandName": "Project",
-      "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" -f --migration-scope MetaData "
+      "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" -f --migration-scope metadata "
     },
     "mssql_postgres_data_only": {
       "commandName": "Project",
-      "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" --migration-scope Data "
+      "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" --migration-scope data "
     },
     "mssql_mssql": {
       "commandName": "Project",

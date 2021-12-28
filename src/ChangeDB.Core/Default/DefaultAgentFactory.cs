@@ -6,15 +6,15 @@ namespace ChangeDB.Default
 {
     public class DefaultAgentFactory : IAgentFactory
     {
-        private readonly IDictionary<string, IMigrationAgent> allMigrators;
+        private readonly IDictionary<string, IMigrationAgent> _allMigrators;
 
         public DefaultAgentFactory(IDictionary<string, IMigrationAgent> allMigrators)
         {
-            this.allMigrators = allMigrators;
+            this._allMigrators = allMigrators;
         }
         public IMigrationAgent CreateAgent(string type)
         {
-            if (allMigrators.TryGetValue(type, out var migrator))
+            if (_allMigrators.TryGetValue(type, out var migrator))
             {
                 return migrator;
             }

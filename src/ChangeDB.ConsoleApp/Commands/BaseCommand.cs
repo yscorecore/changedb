@@ -19,7 +19,7 @@ namespace ChangeDB.ConsoleApp.Commands
             }
             catch
             {
-                WriteLineWithColor(ConsoleColor.DarkGreen, $"Execute {CommandName} failed.");
+                WriteLineWithColor(ConsoleColor.DarkRed, $"Execute {CommandName} failed.");
                 throw;
             }
         }

@@ -35,7 +35,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton<IDictionary<string, IMigrationAgent>>(sp =>
             {
                 var agentInstances = allAgentTypes.Select(p => sp.GetService(p) as IMigrationAgent);
-                return agentInstances.ToDictionary(p => GetAgentName(p), StringComparer.InvariantCultureIgnoreCase);
+                return agentInstances.ToDictionary(GetAgentName, StringComparer.InvariantCultureIgnoreCase);
             });
         }
         private static string GetAgentName(object agent)

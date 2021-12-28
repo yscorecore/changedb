@@ -9,18 +9,19 @@ namespace ChangeDB.ConsoleApp
 {
     internal class ServiceHost : IServiceProvider
     {
-        public static ServiceHost Default = new ServiceHost();
-        public ServiceHost()
+        public static readonly ServiceHost Default = new ServiceHost();
+
+        private ServiceHost()
         {
             ServiceCollection sc = new ServiceCollection();
             sc.AddChangeDb();
-            serviceProvider = sc.BuildServiceProvider();
+            _serviceProvider = sc.BuildServiceProvider();
 
         }
-        private IServiceProvider serviceProvider;
+        private readonly IServiceProvider _serviceProvider;
         public object GetService(Type serviceType)
         {
-            return serviceProvider.GetService(serviceType);
+            return _serviceProvider.GetService(serviceType);
         }
     }
 }

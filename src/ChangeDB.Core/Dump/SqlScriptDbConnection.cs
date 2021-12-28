@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace ChangeDB.Fakes
+namespace ChangeDB.Dump
 {
     internal class SqlScriptDbConnection : DbConnection
     {
