@@ -14,13 +14,13 @@ namespace ChangeDB.Default
             {
                 WordCase.Lower => ScanSql(sql, p => p.ToLowerInvariant()),
                 WordCase.Upper => ScanSql(sql, p => p.ToUpperInvariant()),
-                WordCase.Title => ScanSql(sql, p => p[0..1].ToUpperInvariant() + p[1..].ToLowerInvariant()),
+                WordCase.Title => ScanSql(sql, p => p[..1].ToUpperInvariant() + p[1..].ToLowerInvariant()),
                 _ => sql,
             };
             return Task.FromResult(result);
         }
 
-        private static string ScanSql(string sql, Func<string, string> NameFunc)
+        private static string ScanSql(string sql, Func<string, string> nameFunc)
         {
             var stringBuilder = new StringBuilder(sql.Length);
             var allChars = sql?.ToCharArray() ?? Array.Empty<char>();
@@ -28,9 +28,9 @@ namespace ChangeDB.Default
             while (sqlScan.IsNotEnd())
             {
                 var (startIndex, length, isKeyword) = sqlScan.Go();
-                if (isKeyword && NameFunc != null)
+                if (isKeyword && nameFunc != null)
                 {
-                    var text = NameFunc.Invoke(sql.Substring(startIndex, length));
+                    var text = nameFunc.Invoke(sql.Substring(startIndex, length));
                     stringBuilder.Append(text);
                 }
                 else

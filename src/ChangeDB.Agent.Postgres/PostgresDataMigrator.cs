@@ -160,7 +160,7 @@ namespace ChangeDB.Agent.Postgres
             tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)
                 .Each((column) =>
                 {
-                    migrationContext.TargetConnection.ExecuteNonQuery($"SELECT SETVAL(PG_GET_SERIAL_SEQUENCE('{tableFullName}','{column.Name}'),{column.IdentityInfo.CurrentValue})");
+                    migrationContext.TargetConnection.ExecuteNonQuery($"SELECT SETVAL(PG_GET_SERIAL_SEQUENCE('{tableFullName}', '{column.Name}'), {column.IdentityInfo.CurrentValue})");
                 });
             return Task.CompletedTask;
         }

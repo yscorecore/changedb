@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xaml.Permissions;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using ChangeDB.Import;
 using ChangeDB.Migration;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,37 +35,45 @@ namespace ChangeDB.IntegrationTest
         {
             var serviceProvider = BuildServiceProvider();
             var migrate = serviceProvider.GetRequiredService<IDatabaseMigrate>();
+            var importer = serviceProvider.GetRequiredService<IDatabaseSqlImporter>();
             var xDocument = XDocument.Load(xmlFile);
             var sourceNode = xDocument.XPathSelectElement("root/source");
             var sourceType = sourceNode.Attribute("type").Value;
 
-            using var sourceConnection = RandomDbConnection(sourceType);
-            var sourceConnectionString = sourceConnection.ConnectionString;
+            var sourceConnectionString = databaseEnvironment.NewConnectionString(sourceType);
 
-            InitSourceDatabase(sourceType, sourceConnection, sourceNode);
+            await InitSourceDatabase(importer, sourceType, sourceConnectionString, sourceNode);
 
             foreach (var targetNode in xDocument.XPathSelectElements("root/targets/target"))
             {
                 var targetType = targetNode.Attribute("type").Value;
+                var targetConnectionString = databaseEnvironment.NewConnectionString(targetType);
                 var migrationContext = new MigrationContext()
                 {
-                    Setting = new MigrationSetting() { MaxTaskCount = 1 },
+                    Setting = new MigrationSetting() { MaxTaskCount = 5 },
                     SourceDatabase = new DatabaseInfo() { DatabaseType = sourceType, ConnectionString = sourceConnectionString },
-                    TargetDatabase = new DatabaseInfo() { DatabaseType = targetType, ConnectionString = RandomDbConnectionString(targetType) }
-
+                    TargetDatabase = new DatabaseInfo() { DatabaseType = targetType, ConnectionString = targetConnectionString },
+                    MigrationType = MigrationType.Database
                 };
                 await migrate.MigrateDatabase(migrationContext);
                 AssertTargetDatabase(targetNode, migrationContext);
             }
         }
-        private void InitSourceDatabase(string agentType, DbConnection dbConnection, XElement xElement)
+        private async Task InitSourceDatabase(IDatabaseSqlImporter databaseSqlImporter, string agentType,
+            string dbConnectionString, XElement xElement)
         {
-
+            await using var dbConnection = databaseEnvironment.NewConnection(agentType, dbConnectionString);
             var split = xElement.Attribute("split").Value;
             var sql = xElement.Value;
-            CreateSourceDatabase(agentType, dbConnection);
-            dbConnection.ExecuteSqlScript(sql, split);
-            //OutputTestData(dbConnection,"postgres");
+            var tempFile = System.IO.Path.GetRandomFileName();
+            await File.WriteAllTextAsync(tempFile, sql);
+            var importContext = new ImportContext
+            {
+                TargetDatabase = new DatabaseInfo { DatabaseType = agentType, ConnectionString = dbConnectionString },
+                ReCreateTargetDatabase = true,
+                SqlScripts = new CustomSqlScript { SqlFile = tempFile, SqlSplit = split }
+            };
+            await databaseSqlImporter.Import(importContext);
         }
 
         private void OutputTestData(DbConnection dbConnection, string dbType)
@@ -110,25 +120,13 @@ namespace ChangeDB.IntegrationTest
             Console.WriteLine(text);
         }
 
-        private void CreateSourceDatabase(string agentType, DbConnection dbConnection)
-        {
-            switch (agentType?.ToLowerInvariant())
-            {
-                case "sqlserver":
-                    Agent.SqlServer.ConnectionExtensions.CreateDatabase(dbConnection);
-                    break;
-                case "postgres":
-                    Agent.Postgres.ConnectionExtensions.CreateDatabase(dbConnection);
-                    break;
-                default:
-                    throw new NotSupportedException($"not support database type {agentType}");
-            }
-        }
+
 
         private void AssertTargetDatabase(XElement xElement, MigrationContext migrationContext)
         {
-            var dbConnection = RandomDbConnection(migrationContext.TargetDatabase.DatabaseType);
-            dbConnection.ConnectionString = migrationContext.TargetDatabase.ConnectionString;
+            var dbConnection = databaseEnvironment.NewConnection(migrationContext.TargetDatabase.DatabaseType,
+                migrationContext.TargetDatabase.ConnectionString);
+
             foreach (var tableElement in xElement.XPathSelectElements("table"))
             {
                 AssertTargetTable(tableElement, dbConnection);
@@ -199,20 +197,7 @@ namespace ChangeDB.IntegrationTest
             sc.AddChangeDb();
             return sc.BuildServiceProvider();
         }
-        private DbConnection RandomDbConnection(string agentType)
-        {
-            return agentType?.ToLowerInvariant() switch
-            {
-                "sqlserver" => databaseEnvironment.NewSqlServerConnection(),
-                "postgres" => databaseEnvironment.NewPostgresConnection(),
-                _ => throw new NotSupportedException($"not support database type {agentType}")
-            };
-        }
-        private string RandomDbConnectionString(string agentType)
-        {
-            using var connection = RandomDbConnection(agentType);
-            return connection.ConnectionString;
-        }
+
 
     }
 }

@@ -28,16 +28,30 @@ namespace ChangeDB
         }
 
 
-        public DbConnection NewPostgresConnection()
+
+
+        public string NewConnectionString(string dbType)
         {
-            return new NpgsqlConnection(
-                $"Server=127.0.0.1;Port={PostgresPort};Database={Utility.RandomDatabaseName()};User Id=postgres;Password=mypassword;");
+            return dbType?.ToLowerInvariant() switch
+            {
+                "sqlserver" => $"Server=127.0.0.1,{SqlServerPort};Database={Utility.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;",
+                "postgres" => $"Server=127.0.0.1;Port={PostgresPort};Database={Utility.RandomDatabaseName()};User Id=postgres;Password=mypassword;",
+                _ => throw new NotSupportedException($"not support database type {dbType}")
+            };
         }
 
-        public DbConnection NewSqlServerConnection()
+        public DbConnection NewConnection(string dbType)
         {
-            return new SqlConnection(
-                $"Server=127.0.0.1,{SqlServerPort};Database={Utility.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;");
+            return NewConnection(dbType, NewConnectionString(dbType));
+        }
+        public DbConnection NewConnection(string dbType, string connectionString)
+        {
+            return dbType?.ToLowerInvariant() switch
+            {
+                "sqlserver" => new SqlConnection(connectionString),
+                "postgres" => new NpgsqlConnection(connectionString),
+                _ => throw new NotSupportedException($"not support database type {dbType}")
+            };
         }
     }
 }
