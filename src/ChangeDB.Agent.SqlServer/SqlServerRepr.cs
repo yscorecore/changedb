@@ -18,39 +18,26 @@ namespace ChangeDB.Agent.SqlServer
             {
                 return "null";
             }
-            else if (constant is string str)
+
+            switch (constant)
             {
-                return ReprString(str);
+                case string str:
+                    return ReprString(str);
+                case bool:
+                    return Convert.ToInt32(constant).ToString();
+                case double or float or long or int or short or char or byte or decimal:
+                    return constant.ToString();
+                case Guid guid:
+                    return $"'{guid}'";
+                case byte[] bytes:
+                    return $"0x{string.Join("", bytes.Select(p => p.ToString("X2")))}";
+                case DateTime dateTime:
+                    return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'"; ;
+                case DateTimeOffset dateTimeOffset:
+                    return $"'{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}'";
             }
-            else if (constant is bool)
-            {
-                return Convert.ToInt32(constant).ToString();
-            }
-            else if (constant is double || constant is float || constant is long || constant is int ||
-                     constant is short || constant is char || constant is byte || constant is decimal)
-            {
-                return constant.ToString();
-            }
-            else if (constant is Guid guid)
-            {
-                return $"'{guid}'";
-            }
-            else if (constant is byte[] bytes)
-            {
-                return $"0x{string.Join("", bytes.Select(p => p.ToString("X2")))}";
-            }
-            else if (constant is DateTime dateTime)
-            {
-                return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'"; ;
-            }
-            else if (constant is DateTimeOffset dateTimeOffset)
-            {
-                return $"'{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}'";
-            }
-            else
-            {
-                return constant.ToString();
-            }
+
+            return constant.ToString();
         }
 
         public static string ReprString(string input)

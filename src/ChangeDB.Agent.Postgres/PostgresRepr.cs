@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using ChangeDB.Migration;
 
@@ -7,6 +8,17 @@ namespace ChangeDB.Agent.Postgres
     public class PostgresRepr : IRepr
     {
         public static readonly IRepr Default = new PostgresRepr();
+
+        // https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-STRINGS-ESCAPE
+        private static Dictionary<string, string> ReplaceChars = new Dictionary<string, string>()
+        {
+            ["\'"] = @"''",
+            ["\n"] = @"\n",
+            ["\r"] = @"\r",
+            ["\t"] = @"\t",
+            ["\b"] = @"\b",
+            ["\f"] = @"\f"
+        };
         public string ReprValue(object value)
         {
             return ReprConstant(value);
@@ -15,7 +27,13 @@ namespace ChangeDB.Agent.Postgres
         public static string ReprString(string input)
         {
             if (input is null) return null;
-            return $"'{input.Replace("'", "''")}'";
+            var replaced = input.Replace(ReplaceChars);
+            return replaced == input ? $"'{ReplaceSingleQuote(replaced)}'" : $"E'{ReplaceSingleQuote(replaced)}'";
+
+            static string ReplaceSingleQuote(string text)
+            {
+                return text.Replace("\'", "\'\'");
+            }
         }
 
         public static string ReprConstant(object constant)
@@ -24,38 +42,24 @@ namespace ChangeDB.Agent.Postgres
             {
                 return "null";
             }
-            else if (constant is string str)
+            switch (constant)
             {
-                return ReprString(str);
-            }
-            else if (constant is bool)
-            {
-                return Convert.ToBoolean(constant).ToString().ToLowerInvariant();
-            }
-            else if (constant is double || constant is float || constant is long || constant is int ||
-                     constant is short || constant is char || constant is byte || constant is decimal || constant is bool)
-            {
-                return constant.ToString();
-            }
-            else if (constant is Guid guid)
-            {
-                return $"'{guid}'";
-            }
-            else if (constant is byte[] bytes)
-            {
-                return $"'\\x{string.Join("", bytes.Select(p => p.ToString("X2")))}'";
-            }
-            else if (constant is DateTime dateTime)
-            {
-                return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'"; ;
-            }
-            else if (constant is DateTimeOffset dateTimeOffset)
-            {
-                return $"'{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}'";
-            }
-            else
-            {
-                return constant.ToString();
+                case string str:
+                    return ReprString(str);
+                case bool:
+                    return Convert.ToBoolean(constant).ToString().ToLowerInvariant();
+                case double or float or long or int or short or char or byte or decimal or bool:
+                    return constant.ToString();
+                case Guid guid:
+                    return $"'{guid}'";
+                case byte[] bytes:
+                    return $"'\\x{string.Join("", bytes.Select(p => p.ToString("X2")))}'";
+                case DateTime dateTime:
+                    return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'"; ;
+                case DateTimeOffset dateTimeOffset:
+                    return $"'{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}'";
+                default:
+                    return constant.ToString();
             }
         }
     }

@@ -38,15 +38,10 @@ namespace Microsoft.Extensions.DependencyInjection
                 return agentInstances.ToDictionary(GetAgentName, StringComparer.InvariantCultureIgnoreCase);
             });
         }
-        private static string GetAgentName(object agent)
+        private static string GetAgentName(IMigrationAgent agent)
         {
-            var typeName = agent.GetType().Name.ToLowerInvariant();
-            if (typeName.EndsWith("migrationagent"))
-            {
-                return typeName.Substring(0, typeName.Length - "migrationagent".Length);
-            }
-            return typeName;
-
+            var typeName = agent.GetType().Name;
+            return typeName.EndsWith("migrationagent", StringComparison.InvariantCultureIgnoreCase) ? typeName[..^"migrationagent".Length] : typeName;
         }
     }
 }
