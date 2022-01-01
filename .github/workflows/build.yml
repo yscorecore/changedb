@@ -3,8 +3,9 @@ on:
   push:
     branches:
       - master
+      - debug_runner
     tags-ignore:
-      - "*"  
+      - "*"
   pull_request:
     branches: 
       - master
@@ -25,7 +26,7 @@ jobs:
     - name: 04 Build with dotnet
       run: dotnet build
     - name: 05 Run Unit test
-      run: dotnet test test/ChangeDB.Agent.SqlCe.UnitTest /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude="[*Test]*"
+      run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude="[*Test]*"
     - name: 06 UpLoad SqlCe Coverage
       uses: actions/upload-artifact@v2
       with:
