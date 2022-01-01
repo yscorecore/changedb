@@ -25,6 +25,8 @@ jobs:
         dotnet-version: 6.0.100
     - name: 04 Build with dotnet
       run: dotnet build
+    - name: switch docker mode
+      run: c:\ProgramFiles\Docker\Docker\DockerCli.exe -SwitchDaemon
     - name: 05 Run Unit test
       run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude="[*Test]*"
     - name: 06 UpLoad SqlCe Coverage
