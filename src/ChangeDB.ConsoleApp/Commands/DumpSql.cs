@@ -25,7 +25,7 @@ namespace ChangeDB.ConsoleApp.Commands
         [Value(4, MetaName = "output-file", Required = true, HelpText = "output script file")]
         public string TargetScript { get; set; }
 
-        [Option('f', "force", HelpText = "drop target sql scripts file1 if exists", Default = false)]
+        [Option('f', "force", HelpText = "drop target sql script file if exists", Default = false)]
         public bool DropTargetDatabaseIfExists { get; set; } = false;
 
         [Option("dump-scope", HelpText = "(All/Metadata/Data)", Default = MigrationScope.All)]
@@ -44,7 +44,9 @@ namespace ChangeDB.ConsoleApp.Commands
         public string PostSqlSplit { get; set; } = "";
 
 
-
+        [Option("target-default-schema",
+            HelpText = "target database default schema.")]
+        public string TargetDefaultSchema { get; set; }
 
 
         protected override void OnRunCommand()
@@ -71,7 +73,9 @@ namespace ChangeDB.ConsoleApp.Commands
                     {
                         SqlFile = PostSqlFile,
                         SqlSplit = PostSqlSplit,
-                    }
+                    },
+                    TargetDefaultSchema = TargetDefaultSchema
+
                 },
 
                 SourceDatabase = new DatabaseInfo { DatabaseType = SourceType, ConnectionString = SourceConnectionString },

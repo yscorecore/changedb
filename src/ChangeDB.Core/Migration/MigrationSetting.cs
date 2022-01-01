@@ -17,9 +17,11 @@ namespace ChangeDB.Migration
         public bool IncludeMeta { get => MigrationScope.HasFlag(MigrationScope.MetaData); }
         public bool IncludeData { get => MigrationScope.HasFlag(MigrationScope.Data); }
 
-        public int GrowthSpeed { get => 10; }
+        public int GrowthSpeed { get; set; } = 10;
 
-        public int MaxTaskCount { get; init; } = 8;
+        public int MaxTaskCount { get; set; } = 8;
+
+        public string TargetDefaultSchema { get; set; } = string.Empty;
     }
 
     [Flags]

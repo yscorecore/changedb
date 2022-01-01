@@ -47,7 +47,9 @@ namespace ChangeDB.ConsoleApp.Commands
         [Option("post-sql-file-split", Required = false, HelpText = "sql file split chars, default value is \"\"", Default = "")]
         public string PostSqlSplit { get; set; } = string.Empty;
 
-
+        [Option("target-default-schema",
+            HelpText = "target database default schema.")]
+        public string TargetDefaultSchema { get; set; }
 
         protected override void OnRunCommand()
         {
@@ -73,7 +75,8 @@ namespace ChangeDB.ConsoleApp.Commands
                     {
                         SqlFile = PostSqlFile,
                         SqlSplit = PostSqlSplit,
-                    }
+                    },
+                    TargetDefaultSchema = TargetDefaultSchema
                 },
 
                 SourceDatabase = new DatabaseInfo { DatabaseType = SourceType, ConnectionString = SourceConnectionString },

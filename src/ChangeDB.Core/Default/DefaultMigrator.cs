@@ -65,7 +65,7 @@ namespace ChangeDB.Default
 
         protected virtual Task ApplyTargetAgentSettings(MigrationContext migrationContext)
         {
-            return SettingsApplier.ApplyAgentSettings(migrationContext.Target);
+            return SettingsApplier.ApplyAgentSettings(migrationContext);
         }
 
         protected virtual async Task DoMigrateDatabase(MigrationContext migrationContext)

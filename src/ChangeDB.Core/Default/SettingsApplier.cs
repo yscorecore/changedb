@@ -186,8 +186,9 @@ namespace ChangeDB.Default
             }
         }
 
-        public static Task ApplyAgentSettings(AgentRunTimeInfo target)
+        public static Task ApplyAgentSettings(MigrationContext migrationContext)
         {
+            var target = migrationContext.Target;
             FixEmptySchema();
             FixMaxObjectName();
             return Task.CompletedTask;
@@ -263,10 +264,13 @@ namespace ChangeDB.Default
                 }
                 else
                 {
+                    var targetDefaultSchema = string.IsNullOrEmpty(migrationContext.Setting.TargetDefaultSchema)
+                        ? agentSetting.DefaultSchema
+                        : migrationContext.Setting.TargetDefaultSchema;
                     // set defaultSchame
-                    target.Descriptor.Tables.Where(p => string.IsNullOrEmpty(p.Schema)).Each(p => p.Schema = agentSetting.DefaultSchema);
-                    target.Descriptor.Tables.SelectMany(p => p.ForeignKeys).Where(p => string.IsNullOrEmpty(p.PrincipalSchema)).Each(p => p.PrincipalSchema = agentSetting.DefaultSchema);
-                    target.Descriptor.Sequences.Where(p => string.IsNullOrEmpty(p.Schema)).Each(p => p.Schema = agentSetting.DefaultSchema);
+                    target.Descriptor.Tables.Where(p => string.IsNullOrEmpty(p.Schema)).Each(p => p.Schema = targetDefaultSchema);
+                    target.Descriptor.Tables.SelectMany(p => p.ForeignKeys).Where(p => string.IsNullOrEmpty(p.PrincipalSchema)).Each(p => p.PrincipalSchema = targetDefaultSchema);
+                    target.Descriptor.Sequences.Where(p => string.IsNullOrEmpty(p.Schema)).Each(p => p.Schema = targetDefaultSchema);
                 }
             }
 
