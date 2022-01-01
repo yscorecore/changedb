@@ -66,6 +66,7 @@ namespace ChangeDB.Agent.Postgres
                 Add(new SqlExpressionDescriptor { Constant = "" }, "varchar(10)", "''");
                 Add(new SqlExpressionDescriptor { Constant = "'" }, "varchar(10)", "''''");
                 Add(new SqlExpressionDescriptor { Constant = "''" }, "varchar(10)", "''''''");
+                Add(new SqlExpressionDescriptor { Constant = "\r\n\t" }, "varchar(10)", @"E'\r\n\t'");
                 Add(new SqlExpressionDescriptor { Constant = "abc" }, "varchar(10)", "'abc'");
                 Add(new SqlExpressionDescriptor { Constant = Guid.Empty }, "uuid", "'00000000-0000-0000-0000-000000000000'::uuid");
                 Add(new SqlExpressionDescriptor { Constant = new byte[] { 1, 15 } }, "bytea", "'\\x010F'::bytea");

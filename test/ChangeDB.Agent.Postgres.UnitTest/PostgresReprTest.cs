@@ -23,7 +23,7 @@ namespace ChangeDB.Agent.Postgres
         [InlineData("Hello\n中国")]
         public void ShouldReprString(string value)
         {
-            var reprValue = _repr.ReprValue(value);
+            var reprValue = _repr.ReprValue(value, "varchar");
             var valueFromDatabase = _databaseEnvironment.DbConnection.ExecuteScalar<string>($"select {reprValue}");
             valueFromDatabase.Should().Be(value);
         }

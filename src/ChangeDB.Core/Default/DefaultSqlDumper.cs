@@ -20,8 +20,11 @@ namespace ChangeDB.Default
             var targetAgent = AgentFactory.CreateAgent(context.DumpInfo.DatabaseType);
             await using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
 
+            await using var targetConnection = new SqlScriptDbConnection(context.DumpInfo.SqlScriptFile,
+                context.Setting.DropTargetDatabaseIfExists,
+                targetAgent.Repr);
             context.SourceConnection = sourceConnection;
-            context.TargetConnection = new SqlScriptDbConnection(context.DumpInfo.SqlScriptFile, targetAgent.Repr.ReprValue);
+            context.TargetConnection = targetConnection;
             context.Source = new AgentRunTimeInfo
             {
                 Agent = sourceAgent,

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 using ChangeDB.Migration;
 
@@ -7,7 +8,12 @@ namespace ChangeDB.Agent.SqlServer
     public class SqlServerRepr : IRepr
     {
         public static readonly IRepr Default = new SqlServerRepr();
-        public string ReprValue(object value)
+        public string ReprValue(object value, string storeType)
+        {
+            return ReprConstant(value);
+        }
+
+        public string ReprValue(object value, DbType dbType)
         {
             return ReprConstant(value);
         }

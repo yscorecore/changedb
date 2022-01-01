@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using ChangeDB.Migration;
 
@@ -12,16 +13,21 @@ namespace ChangeDB.Agent.Postgres
         // https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-STRINGS-ESCAPE
         private static Dictionary<string, string> ReplaceChars = new Dictionary<string, string>()
         {
-            ["\'"] = @"''",
             ["\n"] = @"\n",
             ["\r"] = @"\r",
             ["\t"] = @"\t",
             ["\b"] = @"\b",
             ["\f"] = @"\f"
         };
-        public string ReprValue(object value)
+        public string ReprValue(object value, string storeType)
         {
             return ReprConstant(value);
+        }
+
+        public string ReprValue(object value, DbType dbType)
+        {
+            return ReprConstant(value);
+
         }
 
         public static string ReprString(string input)

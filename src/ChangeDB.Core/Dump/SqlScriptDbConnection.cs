@@ -6,48 +6,67 @@ using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using ChangeDB.Migration;
 
 namespace ChangeDB.Dump
 {
     internal class SqlScriptDbConnection : DbConnection
     {
-        public SqlScriptDbConnection(string outputScriptFile, Func<object, string> repr)
+        public SqlScriptDbConnection(string outputScriptFile, bool createNew, IRepr repr)
         {
 
-            fileStream = new Lazy<StreamWriter>(() => new StreamWriter(outputScriptFile) { AutoFlush = true }, true);
-            Repr = repr;
+            _ = outputScriptFile ?? throw new ArgumentNullException(nameof(outputScriptFile));
+            Repr = repr ?? throw new ArgumentNullException(nameof(repr));
+            FileStream = new Lazy<StreamWriter>(() =>
+            {
+                var baseStream = File.Open(outputScriptFile, createNew ? FileMode.CreateNew : FileMode.Create, FileAccess.Write, FileShare.Read);
+                return new StreamWriter(baseStream);
+
+
+            }, true);
+
         }
         public override string ConnectionString { get; set; }
         public override string Database { get; }
         public override string DataSource { get; }
         public override string ServerVersion { get; }
         public override ConnectionState State { get; }
-        private Func<object, string> Repr { get; }
-        public string SplitText { get; set; } = string.Empty;
 
-        private readonly Lazy<StreamWriter> fileStream;
+
+        public IRepr Repr { get; }
+
+        public Lazy<StreamWriter> FileStream { get; }
 
         public override void ChangeDatabase(string databaseName) { }
 
         public override void Close() { }
 
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (FileStream.IsValueCreated)
+            {
+                FileStream.Value.Flush();
+                FileStream.Value.Dispose();
+            }
+        }
+
         public override void Open() { }
 
         protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel) => throw new NotImplementedException();
-        protected override DbCommand CreateDbCommand() => new SqlScriptDbCommand(this.fileStream, this.Repr);
+        protected override DbCommand CreateDbCommand() => new SqlScriptDbCommand(this);
     }
 
     internal class SqlScriptDbCommand : DbCommand
     {
-        public SqlScriptDbCommand(Lazy<StreamWriter> writer, Func<object, string> repr)
+        public new SqlScriptDbConnection Connection { get; }
+
+        public SqlScriptDbCommand(SqlScriptDbConnection connection)
         {
-            this.DbParameterCollection = new SqlScriptDbParameterCollection();
-            this.Writer = writer;
-            Repr = repr;
+            Connection = connection;
+            DbParameterCollection = new SqlScriptDbParameterCollection();
         }
 
-        private Lazy<StreamWriter> Writer { get; set; }
-        private Func<object, string> Repr { get; }
         public override string CommandText { get; set; }
         public override int CommandTimeout { get; set; }
         public override CommandType CommandType { get; set; }
@@ -62,14 +81,15 @@ namespace ChangeDB.Dump
         public override int ExecuteNonQuery()
         {
             var line = BuildCommandText();
-            this.Writer.Value.WriteLine(line);
-            this.Writer.Value.WriteLine();
+            var writer = this.Connection.FileStream.Value;
+            writer.WriteLine(line);
+            writer.WriteLine();
             return 1;
         }
         private string BuildCommandText()
         {
             var dataDic = this.DbParameterCollection.OfType<DbParameter>()
-               .ToDictionary(p => p.ParameterName, p => Repr(p.Value));
+               .ToDictionary(p => p.ParameterName, p => this.Connection.Repr.ReprValue(p.Value, p.DbType));
             if (dataDic.Count == 0) return this.CommandText;
             return Regex.Replace(CommandText, @"@\w+", (m) =>
             {
