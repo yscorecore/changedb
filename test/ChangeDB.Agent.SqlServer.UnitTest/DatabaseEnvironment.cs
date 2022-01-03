@@ -11,25 +11,51 @@ namespace ChangeDB.Agent.SqlServer
     {
         public DatabaseEnvironment()
         {
-            DBPort = Utility.GetRandomTcpPort();
-            DockerCompose.Up(new Dictionary<string, object> { ["DBPORT"] = DBPort }, "db:1433");
-
-            DbConnection = NewDatabaseConnection();
-            DbConnection.CreateDatabase();
+            (connectionTemplate, fromEnvironment) = GetConnectionString();
+            defaultConnectionFactory = new Lazy<DbConnection>(CreateNewDatabase);
         }
 
-        public int DBPort { get; }
-        public DbConnection DbConnection { get; }
+        private static (string Conn, bool FromEnv) GetConnectionString()
+        {
+            var connectionTemplate = Environment.GetEnvironmentVariable("SqlServerConnectionString");
+            if (string.IsNullOrEmpty(connectionTemplate))
+            {
+                var dbPort = Utility.GetRandomTcpPort();
+                DockerCompose.Up(new Dictionary<string, object> { ["SQLSERVER_DBPORT"] = dbPort }, "db:1433");
+                return ($"Server=127.0.0.1,{dbPort};User Id=sa;Password=myStrong(!)Password;", false);
+            }
+            else
+            {
+                return (connectionTemplate, true);
+            }
+        }
+
+        private readonly Lazy<DbConnection> defaultConnectionFactory;
+        private readonly string connectionTemplate;
+        private readonly bool fromEnvironment;
+        public DbConnection DbConnection { get => defaultConnectionFactory.Value; }
 
         public void Dispose()
         {
-            DockerCompose.Down();
+            if (!fromEnvironment)
+            {
+                DockerCompose.Down();
+            }
         }
-
         public DbConnection NewDatabaseConnection()
         {
-            return new SqlConnection(
-                $"Server=127.0.0.1,{DBPort};Database={Utility.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;");
+            var builder = new SqlConnectionStringBuilder(this.connectionTemplate)
+            {
+                InitialCatalog = Utility.RandomDatabaseName()
+            };
+            return new SqlConnection(builder.ConnectionString);
+
+        }
+        private DbConnection CreateNewDatabase()
+        {
+            var conn = NewDatabaseConnection();
+            conn.CreateDatabase();
+            return conn;
         }
     }
 }

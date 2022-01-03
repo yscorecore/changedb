@@ -3,8 +3,8 @@
 <RunSettings>
   <RunConfiguration>
     <EnvironmentVariables>
-      <PostgresConnectionString></PostgresConnectionString>
-      <SqlServerConnectionString></SqlServerConnectionString>
+      <PostgresConnectionString>Server=localhost;Port=5432;User Id=postgres;Password=root;</PostgresConnectionString>
+      <SqlServerConnectionString>Data Source=(localdb)\MSSQLLocalDB;</SqlServerConnectionString>
     </EnvironmentVariables>
   </RunConfiguration>
 </RunSettings>

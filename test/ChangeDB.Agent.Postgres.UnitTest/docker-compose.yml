@@ -5,4 +5,4 @@ services:
     environment:
       POSTGRES_PASSWORD: mypassword
     ports:
-      - "${DBPORT:-5432}:5432"
+      - "${POSTGRES_DBPORT:-5432}:5432"

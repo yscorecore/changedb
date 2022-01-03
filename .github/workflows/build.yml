@@ -12,7 +12,13 @@ on:
 jobs:
   run-windows:
     runs-on: windows-latest
+
+
     steps:
+    - name: Start SqlServer LocalDB on Windows
+      run: SqlLocalDB start MSSQLLocalDB      
+    - name: Start PostgreSQL on Windows
+      run: Set-Service -InputObject postgresql-x64-14 -Status running -StartupType automatic
     - name: 01 Checkout Code
       uses: actions/checkout@v1
     - name: 02 Setup .Net Core 5
@@ -25,10 +31,8 @@ jobs:
         dotnet-version: 6.0.100
     - name: 04 Build with dotnet
       run: dotnet build
-    - name: switch docker mode
-      run: c:\ProgramFiles\Docker\Docker\DockerCli.exe -SwitchDaemon
     - name: 05 Run Unit test
-      run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude="[*Test]*"
+      run: dotnet test -s test/github.runsettings /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude="[*Test]*"
     - name: 06 UpLoad SqlCe Coverage
       uses: actions/upload-artifact@v2
       with:

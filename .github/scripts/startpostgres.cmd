@@ -1,0 +1,1 @@
+$PGBIN\pg_ctl.exe start

@@ -11,25 +11,51 @@ namespace ChangeDB.Agent.Postgres
     {
         public DatabaseEnvironment()
         {
-            DBPort = Utility.GetRandomTcpPort();
-            DockerCompose.Up(new Dictionary<string, object> { ["DBPORT"] = DBPort }, "db:5432");
-
-            DbConnection = NewDatabaseConnection();
-            DbConnection.CreateDatabase();
+            (connectionTemplate, fromEnvironment) = GetConnectionString();
+            defaultConnectionFactory = new Lazy<DbConnection>(CreateNewDatabase);
         }
 
-        public int DBPort { get; }
-        public DbConnection DbConnection { get; }
+        private static (string Conn, bool FromEnv) GetConnectionString()
+        {
+            var connectionTemplate = Environment.GetEnvironmentVariable("PostgresConnectionString");
+            if (string.IsNullOrEmpty(connectionTemplate))
+            {
+                var dbPort = Utility.GetRandomTcpPort();
+                DockerCompose.Up(new Dictionary<string, object> { ["POSTGRES_DBPORT"] = dbPort }, "db:5432");
+                return ($"Server=localhost;Port={dbPort};User Id=postgres;Password=mypassword;", false);
+            }
+            else
+            {
+                return (connectionTemplate, true);
+            }
+        }
+
+        private Lazy<DbConnection> defaultConnectionFactory;
+        private string connectionTemplate;
+        private bool fromEnvironment;
+        public DbConnection DbConnection { get => defaultConnectionFactory.Value; }
 
         public void Dispose()
         {
-            DockerCompose.Down();
+            if (!fromEnvironment)
+            {
+                DockerCompose.Down();
+            }
         }
-
         public DbConnection NewDatabaseConnection()
         {
-            return new NpgsqlConnection(
-                $"Server=127.0.0.1;Port={DBPort};Database={Utility.RandomDatabaseName()};User Id=postgres;Password=mypassword;");
+            var builder = new NpgsqlConnectionStringBuilder(this.connectionTemplate)
+            {
+                Database = Utility.RandomDatabaseName()
+            };
+            return new NpgsqlConnection(builder.ConnectionString);
+
+        }
+        private DbConnection CreateNewDatabase()
+        {
+            var conn = NewDatabaseConnection();
+            conn.CreateDatabase();
+            return conn;
         }
     }
 }
