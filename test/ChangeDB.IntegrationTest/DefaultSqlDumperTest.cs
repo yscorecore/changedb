@@ -56,15 +56,15 @@ namespace ChangeDB
 
         private void AssertTargetSqlStript(XElement targetNode, string sqlScriptFile)
         {
-            var content = File.ReadAllText(sqlScriptFile).Trim();
-            var allSql = targetNode.Value.Trim();
+            var content = File.ReadAllText(sqlScriptFile).Trim().Replace("\r","");
+            var allSql = targetNode.Value.Trim().Replace("\r","");
             content.Should().Be(allSql, "the dump scripts should be same");
         }
 
         private async Task InitSourceDatabase(IDatabaseSqlImporter databaseSqlImporter, string agentType,
             string dbConnectionString, XElement xElement)
         {
-            await using var dbConnection = _databaseEnvironment.NewConnection(agentType, dbConnectionString);
+            await using var dbConnection = _databaseEnvironment.CreateConnection(agentType, dbConnectionString);
             var split = xElement.Attribute("split").Value;
             var sql = xElement.Value;
             var tempFile = System.IO.Path.GetRandomFileName();

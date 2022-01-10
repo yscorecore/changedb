@@ -62,7 +62,7 @@ namespace ChangeDB.IntegrationTest
         private async Task InitSourceDatabase(IDatabaseSqlImporter databaseSqlImporter, string agentType,
             string dbConnectionString, XElement xElement)
         {
-            await using var dbConnection = databaseEnvironment.NewConnection(agentType, dbConnectionString);
+            await using var dbConnection = databaseEnvironment.CreateConnection(agentType, dbConnectionString);
             var split = xElement.Attribute("split").Value;
             var sql = xElement.Value;
             var tempFile = System.IO.Path.GetRandomFileName();
@@ -124,7 +124,7 @@ namespace ChangeDB.IntegrationTest
 
         private void AssertTargetDatabase(XElement xElement, MigrationContext migrationContext)
         {
-            var dbConnection = databaseEnvironment.NewConnection(migrationContext.TargetDatabase.DatabaseType,
+            var dbConnection = databaseEnvironment.CreateConnection(migrationContext.TargetDatabase.DatabaseType,
                 migrationContext.TargetDatabase.ConnectionString);
 
             foreach (var tableElement in xElement.XPathSelectElements("table"))

@@ -12,22 +12,19 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="migrations\sqlserver_basic.xml">
+        <None Update="Environments\*.yml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+       
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <None Update="migrations\*.xml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="migrations\sqlserver_datatype.xml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="migrations\sqlserver_foreignkey.xml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="migrations\sqlserver_northwind.xml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="migrations\sqlserver_default_value.xml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="dumpsql\sqlserver_basic.xml">
+     
+      <None Update="dumpsql\*.xml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>

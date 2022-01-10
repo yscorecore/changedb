@@ -11,6 +11,8 @@ namespace ChangeDB
 {
     public static class DockerCompose
     {
+        private static long TimeTicks = DateTime.Now.Ticks;
+
         public static int MaxTimeOutSeconds { get; set; } = 60 * 30;
 
         public static IDisposable Up(IDictionary<string, object> envs = null)
@@ -37,8 +39,8 @@ namespace ChangeDB
             File.WriteAllText(statusFile, string.Empty);
             // create docker compose file
             GeneratorWaitComposeFile();
-
-            string dockerComposeFileArgument = $"-f \"{actualDockerComposeFile}\" -f \"{waitComposeFile}\"";
+            var projectName = $"{Path.GetFileNameWithoutExtension(dockerComposeFile)}_{TimeTicks}";
+            string dockerComposeFileArgument = $"-f \"{actualDockerComposeFile}\" -f \"{waitComposeFile}\" -p {projectName}";
 
             using (AutoResetEvent waitReport = new AutoResetEvent(false))
             {
@@ -100,7 +102,6 @@ services:
             }
 
             string FindDockerComposeFile()
-
             {
 
                 var current = Environment.CurrentDirectory;
@@ -145,6 +146,40 @@ services:
         public static void Down()
         {
             Exec("docker-compose", "down", null);
+        }
+        public static void Down(string dockerComposeFile)
+        {
+            var actualDockerComposeFile = FindDockerComposeFile();
+            if (actualDockerComposeFile == null)
+            {
+                throw new FileNotFoundException($"can not find the docker compose file '{dockerComposeFile}'.", dockerComposeFile);
+            }
+            var projectName = $"{Path.GetFileNameWithoutExtension(dockerComposeFile)}_{TimeTicks}";
+            Exec("docker-compose", $"-p {projectName} -f {actualDockerComposeFile} down  --remove-orphans", null);
+            string FindDockerComposeFile()
+            {
+
+                var current = Environment.CurrentDirectory;
+                var root = Path.GetPathRoot(current);
+                while (true)
+                {
+                    var full = Path.Combine(current, dockerComposeFile);
+
+                    if (File.Exists(full))
+                    {
+                        return full;
+                    }
+                    else if (current == root)
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        current = Path.GetDirectoryName(current);
+                    }
+                }
+
+            }
         }
         private static int Exec(string fileName, string arguments, IDictionary<string, object> envs)
         {

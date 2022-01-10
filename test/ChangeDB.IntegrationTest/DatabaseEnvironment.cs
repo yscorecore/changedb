@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Threading.Tasks;
+using ChangeDB.Environments;
 using Microsoft.Data.SqlClient;
 using Npgsql;
 using Xunit;
@@ -10,21 +13,24 @@ namespace ChangeDB
     [CollectionDefinition(nameof(DatabaseEnvironment))]
     public class DatabaseEnvironment : IDisposable, ICollectionFixture<DatabaseEnvironment>
     {
+        private readonly IDictionary<string, IDatabaseEnvironment> _databases =
+            new ConcurrentDictionary<string, IDatabaseEnvironment>();
         public DatabaseEnvironment()
         {
-            SqlServerPort = Utility.GetRandomTcpPort();
-            PostgresPort = Utility.GetRandomTcpPort();
-            DockerCompose.Up(
-                new Dictionary<string, object> { ["POSTGRES_PORT"] = PostgresPort, ["SQLSERVER_PORT"] = SqlServerPort },
-                new Dictionary<string, int> { ["postgres"] = 5432, ["sqlserver"] = 1433 });
+            var envs = new[] {
+                new {Name = "postgres", Type = typeof(PostgresEnvironment)},
+                new {Name = "sqlserver", Type = typeof(SqlServerEnvironment)}};
+            Parallel.ForEach(envs, (e, s) =>
+            {
+                _databases[e.Name] = Activator.CreateInstance(e.Type) as IDatabaseEnvironment;
+            });
         }
 
-        public int SqlServerPort { get; }
-        public int PostgresPort { get; }
+
 
         public void Dispose()
         {
-            DockerCompose.Down();
+            Parallel.ForEach(_databases.Values, (a, p) => a.Dispose());
         }
 
 
@@ -32,26 +38,23 @@ namespace ChangeDB
 
         public string NewConnectionString(string dbType)
         {
-            return dbType?.ToLowerInvariant() switch
+            if (_databases.TryGetValue(dbType, out var environment))
             {
-                "sqlserver" => $"Server=127.0.0.1,{SqlServerPort};Database={Utility.RandomDatabaseName()};User Id=sa;Password=myStrong(!)Password;",
-                "postgres" => $"Server=127.0.0.1;Port={PostgresPort};Database={Utility.RandomDatabaseName()};User Id=postgres;Password=mypassword;",
-                _ => throw new NotSupportedException($"not support database type {dbType}")
-            };
+                return environment.NewConnectionString();
+            }
+
+            throw new NotSupportedException($"not support database type {dbType}");
         }
 
-        public DbConnection NewConnection(string dbType)
+
+        public DbConnection CreateConnection(string dbType, string connectionString)
         {
-            return NewConnection(dbType, NewConnectionString(dbType));
-        }
-        public DbConnection NewConnection(string dbType, string connectionString)
-        {
-            return dbType?.ToLowerInvariant() switch
+            if (_databases.TryGetValue(dbType, out var environment))
             {
-                "sqlserver" => new SqlConnection(connectionString),
-                "postgres" => new NpgsqlConnection(connectionString),
-                _ => throw new NotSupportedException($"not support database type {dbType}")
-            };
+                return environment.CreateConnection(connectionString);
+            }
+
+            throw new NotSupportedException($"not support database type {dbType}");
         }
     }
 }
