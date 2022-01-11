@@ -1,14 +1,20 @@
-# CHANGEDB
-
+# <center>CHANGEDB</center>
 ChangeDB is a muti-database convert cli tool, it's all about making database migration much more easier. 
 
-![build](https://github.com/yscorecore/changedb/workflows/build/badge.svg)
-[![codecov](https://codecov.io/gh/yscorecore/changedb/branch/master/graph/badge.svg)](https://codecov.io/gh/yscorecore/changedb) 
-[![Nuget](https://img.shields.io/nuget/v/ChangeDB.ConsoleApp)](https://nuget.org/packages/changeDB.ConsoleApp/) 
-[![GitHub](https://img.shields.io/github/license/yscorecore/changedb)](https://github.com/yscorecore/changedb/blob/master/LICENSE)
+<p align="center">
+<img alt="build" src="https://github.com/yscorecore/changedb/workflows/build/badge.svg" />
+<a href="https://img.shields.io/nuget/v/ChangeDB.ConsoleApp">
+    <img alt="Nuget" src="https://img.shields.io/nuget/v/ChangeDB.ConsoleApp" />
+</a>
+<a href="https://github.com/yscorecore/changedb/blob/master/LICENSE">
+    <img alt="GitHub" src="https://img.shields.io/github/license/yscorecore/changedb" />
+</a>
+<a href="https://codecov.io/gh/yscorecore/changedb">
+    <img alt="codecov" src="https://codecov.io/gh/yscorecore/changedb/branch/master/graph/badge.svg" />
+</a>
+</p>
 
-
-## How to use
+## 📕 How to use
 
 
 1. Install Dotnet (net5/net6). `ChangeDB` is supported by dotnet runtime, please check the link [Here](https://dotnet.microsoft.com/download/dotnet) to setup your personal dotnet runtime.
@@ -24,7 +30,9 @@ ChangeDB is a muti-database convert cli tool, it's all about making database mig
    ```shell
    changedb dumpsql {source-database-type} "{source-connection-string}" {target-database-type} "{output-file}" 
    ```
-## Database Supported 
+      Here is the demo for ChangeDB
+   ![image](./res/ChangedbDemo.gif)
+## 🏗 Database Supported 
 
  - **Sql Server**
  - **Postgres**
