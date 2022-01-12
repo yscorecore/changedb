@@ -1,5 +1,5 @@
 # <p align="center">CHANGEDB</p>
-<p align="center">ChangeDB is a muti-database convert cli tool, it's all about making database migration much more easier. </p>
+<p align="center">ChangeDB is a multi-database cli convert tool, it's all about making database migration much more easier. </p>
 
 <p align="center">
 <img alt="build" src="https://github.com/yscorecore/changedb/workflows/build/badge.svg" />
