@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>ChangeDB.Agent.Firebird</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+      <ProjectReference Include="..\..\src\ChangeDB.Agent.Firebird\ChangeDB.Agent.Firebird.csproj" >
+          
+      </ProjectReference>
+    <ProjectReference Include="..\ChangeDB.Test\ChangeDB.Test.csproj" />
+  </ItemGroup>
+</Project>

@@ -16,17 +16,17 @@ namespace ChangeDB
 
         public DatabaseEnvironment()
         {
-            SqlServerPort = Utility.GetAvailableTcpPort(1433);
-            PostgresPort = Utility.GetAvailableTcpPort(5432);
-            DockerCompose.Up(new Dictionary<string, object>
-            {
-                ["POSTGRES_PORT"] = PostgresPort,
-                ["SQLSERVER_PORT"] = SqlServerPort,
-            }, new Dictionary<string, int>
-            {
-                ["postgres"] = 5432,
-                ["sqlserver"] = 1433,
-            });
+            //SqlServerPort = Utility.GetAvailableTcpPort(1433);
+            //PostgresPort = Utility.GetAvailableTcpPort(5432);
+            //DockerCompose.Up(new Dictionary<string, object>
+            //{
+            //    ["POSTGRES_PORT"] = PostgresPort,
+            //    ["SQLSERVER_PORT"] = SqlServerPort,
+            //}, new Dictionary<string, int>
+            //{
+            //    ["postgres"] = 5432,
+            //    ["sqlserver"] = 1433,
+            //});
         }
 
         public uint SqlServerPort { get; } = 1433;
@@ -44,7 +44,7 @@ namespace ChangeDB
 
         public void Dispose()
         {
-            DockerCompose.Down();
+            // DockerCompose.Down();
         }
     }
 }

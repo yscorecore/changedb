@@ -79,7 +79,7 @@ datetimeoffset	34	10	datetimeoffset({0})	scale	System.DateTimeOffset
                 "xml" => DataTypeDescriptor.NText(),
                 "date" => DataTypeDescriptor.Date(),
                 "time" => DataTypeDescriptor.Time(length),
-                "datetime" => DataTypeDescriptor.DateTime(0),
+                "datetime" => DataTypeDescriptor.DateTime(3),
                 "smalldatetime" => DataTypeDescriptor.DateTime(0),
                 "datetime2" => DataTypeDescriptor.DateTime(length),
                 "datetimeoffset" => DataTypeDescriptor.DateTimeOffset(length),
