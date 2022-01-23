@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+        <TargetFramework>net5</TargetFramework>
+    </PropertyGroup>
+  <ItemGroup>
+    <None Remove="fbembed.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="fbembed.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+   <PackageReference Include="ChangeDB.Core" Version="1.0.7" />
+    <PackageReference Include="FirebirdSql.EntityFrameworkCore.Firebird" Version="8.5.4" />
+  </ItemGroup>
+</Project>
