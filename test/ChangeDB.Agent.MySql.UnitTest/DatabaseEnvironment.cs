@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using MySqlConnector;
 using Xunit;
@@ -8,11 +9,25 @@ namespace ChangeDB.Agent.MySql
     [CollectionDefinition(nameof(DatabaseEnvironment))]
     public class DatabaseEnvironment : IDisposable, ICollectionFixture<DatabaseEnvironment>
     {
+
         public DatabaseEnvironment()
         {
-            connectionTemplate = "Server=127.0.0.1;Uid=root;Pwd=password;";
+
+            DBPort = Utility.GetAvailableTcpPort(3306);
+            DockerCompose.Up(new Dictionary<string, object>
+            {
+                ["DBPORT"] = DBPort
+            }, "db:3306");
+
+
+
+
+            connectionTemplate = $"Server=127.0.0.1;Port={DBPort};Uid=root;Pwd=password;";
             defaultConnectionFactory = new Lazy<DbConnection>(CreateNewDatabase);
         }
+
+        public uint DBPort { get; set; }
+
         private string connectionTemplate;
 
         private readonly Lazy<DbConnection> defaultConnectionFactory;
@@ -38,7 +53,6 @@ namespace ChangeDB.Agent.MySql
             conn.CreateDatabase();
             return conn;
         }
-
 
         public void Dispose()
         {

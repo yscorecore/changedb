@@ -1,4 +1,4 @@
-using System.Data.Common;
+﻿using System.Data.Common;
 using ChangeDB.Migration;
 using MySqlConnector;
 
@@ -21,6 +21,6 @@ namespace ChangeDB.Agent.MySql
         public IRepr Repr => MySqlRepr.Default;
 
         public AgentSetting AgentSetting => new AgentSetting
-        { SupportSchema = false, DefaultSchema = null, ObjectNameMaxLength = 64, IdentityName = MySqlUtils.IdentityName };
+        { SupportSchema = false, DefaultSchema = null, ObjectNameMaxLength = 64 };
     }
 }

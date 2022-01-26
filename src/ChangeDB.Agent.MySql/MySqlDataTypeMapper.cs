@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.MySql

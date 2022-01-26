@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using ChangeDB.Descriptors;
@@ -117,7 +117,8 @@ namespace ChangeDB.Agent.MySql
             SqlExpressionDescriptor ConstantValue(string expression, string storeType = null)
             {
                 var sql = string.IsNullOrEmpty(storeType) ? $"select {expression}" : $"select cast({expression} as {storeType})";
-                var val = ValueCache.GetOrAdd(sql, (s) => context.Connection.ExecuteScalar(s));
+
+                var val = ValueCache.GetOrAdd(sql, (s) => context.AgentInfo.Connection.ExecuteScalar(s));
                 return new SqlExpressionDescriptor { Constant = val };
             }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -24,8 +24,8 @@ namespace ChangeDB.Agent.MySql.UnitTest
 
             _migrationContext = new MigrationContext
             {
-                TargetConnection = _dbConnection,
-                SourceConnection = _dbConnection
+                Target = new AgentRunTimeInfo { Connection = _dbConnection },
+                Source = new AgentRunTimeInfo { Connection = _dbConnection },
             };
 
         }

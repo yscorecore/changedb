@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ChangeDB.Agent.MySql\ChangeDB.Agent.MySql.csproj" />
     <ProjectReference Include="..\ChangeDB.Agent.Postgres\ChangeDB.Agent.Postgres.csproj" />
     <ProjectReference Include="..\ChangeDB.Agent.SqlCe\ChangeDB.Agent.SqlCe.csproj">
         <IncludeAssets>all</IncludeAssets>

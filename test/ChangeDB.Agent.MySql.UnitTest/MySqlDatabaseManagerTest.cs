@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data.Common;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
@@ -19,7 +19,7 @@ namespace ChangeDB.Agent.MySql.UnitTest
             _dbConnection = databaseEnvironment.NewDatabaseConnection();
             _migrationContext = new MigrationContext
             {
-                TargetConnection = _dbConnection
+                Target = new AgentRunTimeInfo { Connection = _dbConnection }
             };
 
             _dbConnection.CreateDatabase();
