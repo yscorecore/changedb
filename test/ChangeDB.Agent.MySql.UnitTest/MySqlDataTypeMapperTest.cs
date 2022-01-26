@@ -23,8 +23,9 @@ namespace ChangeDB.Agent.MySql.UnitTest
             _dbConnection = databaseEnvironment.DbConnection;
             _migrationContext = new MigrationContext
             {
-                Target = new AgentRunTimeInfo { Connection = _dbConnection },
-                Source = new AgentRunTimeInfo { Connection = _dbConnection },
+                TargetConnection = _dbConnection,
+                SourceConnection = _dbConnection,
+                Source = new AgentRunTimeInfo { Agent = new MySqlMigrationAgent() },
                 SourceDatabase = new DatabaseInfo() { ConnectionString = databaseEnvironment.NewConnectionString(_dbConnection.Database) }
             };
         }

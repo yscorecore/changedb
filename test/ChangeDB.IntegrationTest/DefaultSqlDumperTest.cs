@@ -56,8 +56,8 @@ namespace ChangeDB
 
         private void AssertTargetSqlStript(XElement targetNode, string sqlScriptFile)
         {
-            var content = File.ReadAllText(sqlScriptFile).Trim();
-            var allSql = targetNode.Value.Trim();
+            var content = File.ReadAllText(sqlScriptFile).Trim().Replace("\r", string.Empty);
+            var allSql = targetNode.Value.Trim().Replace("\r", string.Empty);
             content.Should().Be(allSql, "the dump scripts should be same");
         }
 
