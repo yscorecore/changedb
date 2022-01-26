@@ -13,7 +13,7 @@ namespace ChangeDB.Agent.MySql
         public DatabaseEnvironment()
         {
 
-            DBPort = Utility.GetAvailableTcpPort(3306);
+            DBPort = Utility.GetRandomTcpPort();
             DockerCompose.Up(new Dictionary<string, object>
             {
                 ["DBPORT"] = DBPort
@@ -26,7 +26,7 @@ namespace ChangeDB.Agent.MySql
             defaultConnectionFactory = new Lazy<DbConnection>(CreateNewDatabase);
         }
 
-        public uint DBPort { get; set; }
+        public int DBPort { get; set; }
 
         private string connectionTemplate;
 
@@ -56,10 +56,7 @@ namespace ChangeDB.Agent.MySql
 
         public void Dispose()
         {
-            if (defaultConnectionFactory.IsValueCreated)
-            {
-                defaultConnectionFactory.Value.Dispose();
-            }
+            DockerCompose.Down();
         }
     }
 }

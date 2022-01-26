@@ -22,6 +22,16 @@ namespace ChangeDB.Agent.MySql
             ["\'"] = @"\'",
         };
 
+        public string ReprValue(object value, string storeType)
+        {
+            return ReprValue(value);
+        }
+
+        public string ReprValue(object value, DbType dbType)
+        {
+            return ReprValue(value);
+        }
+
         public string ReprValue(object value)
         {
             return ReprConstant(value);
@@ -84,6 +94,8 @@ namespace ChangeDB.Agent.MySql
             }
             return sb;
         }
+
+        
     }
 
 }

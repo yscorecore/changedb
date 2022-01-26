@@ -118,7 +118,7 @@ namespace ChangeDB.Agent.MySql
             {
                 var sql = string.IsNullOrEmpty(storeType) ? $"select {expression}" : $"select cast({expression} as {storeType})";
 
-                var val = ValueCache.GetOrAdd(sql, (s) => context.AgentInfo.Connection.ExecuteScalar(s));
+                var val = ValueCache.GetOrAdd(sql, (s) => context.Connection.ExecuteScalar(s));
                 return new SqlExpressionDescriptor { Constant = val };
             }
 
