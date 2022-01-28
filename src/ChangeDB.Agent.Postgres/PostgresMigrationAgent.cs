@@ -6,13 +6,14 @@ namespace ChangeDB.Agent.Postgres
 {
     public class PostgresMigrationAgent : IMigrationAgent
     {
-        public IDataMigrator DataMigrator { get => PostgresDataMigrator.Default; }
-        public IMetadataMigrator MetadataMigrator { get => PostgresMetadataMigrator.Default; }
-        public IDataTypeMapper DataTypeMapper { get => PostgresDataTypeMapper.Default; }
-        public ISqlExpressionTranslator ExpressionTranslator { get => PostgresSqlExpressionTranslator.Default; }
-        public IDatabaseManager DatabaseManger { get => PostgresDatabaseManager.Default; }
-        public AgentSetting AgentSetting { get => new AgentSetting { ObjectNameMaxLength = 64, DefaultSchema = "public", SupportSchema = true, IdentityName = PostgresUtils.IdentityName }; }
-        public IRepr Repr { get => PostgresRepr.Default; }
+        public IDataMigrator DataMigrator => PostgresDataMigrator.Default;
+        public IMetadataMigrator MetadataMigrator => PostgresMetadataMigrator.Default;
+        public IDataTypeMapper DataTypeMapper => PostgresDataTypeMapper.Default;
+        public ISqlExpressionTranslator ExpressionTranslator => PostgresSqlExpressionTranslator.Default;
+        public IDatabaseManager DatabaseManger => PostgresDatabaseManager.Default;
+        public AgentSetting AgentSetting => new AgentSetting { ObjectNameMaxLength = 64, DefaultSchema = "public", SupportSchema = true, IdentityName = PostgresUtils.IdentityName };
+        public IRepr Repr => PostgresRepr.Default;
+        public IDataDumper DataDumper => PostgresDataDumper.Default;
 
         public DbConnection CreateConnection(string connectionString) => new NpgsqlConnection(connectionString);
 

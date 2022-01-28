@@ -22,5 +22,7 @@ namespace ChangeDB.Agent.MySql
 
         public AgentSetting AgentSetting => new AgentSetting
         { SupportSchema = false, DefaultSchema = null, ObjectNameMaxLength = 64 };
+
+        public IDataDumper DataDumper => MySqlDataDumper.Default;
     }
 }

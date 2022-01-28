@@ -12,5 +12,6 @@ namespace ChangeDB.Migration
         IDatabaseManager DatabaseManger { get; }
         IRepr Repr { get; }
         AgentSetting AgentSetting { get; }
+        IDataDumper DataDumper { get; }
     }
 }

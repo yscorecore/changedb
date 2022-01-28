@@ -7,13 +7,14 @@ namespace ChangeDB.Agent.SqlServer
 
     public class SqlServerMigrationAgent : IMigrationAgent
     {
-        public IDataMigrator DataMigrator { get => SqlServerDataMigrator.Default; }
-        public IMetadataMigrator MetadataMigrator { get => SqlServerMetadataMigrator.Default; }
-        public IDataTypeMapper DataTypeMapper { get => SqlServerDataTypeMapper.Default; }
-        public ISqlExpressionTranslator ExpressionTranslator { get => SqlServerSqlExpressionTranslator.Default; }
-        public IDatabaseManager DatabaseManger { get => SqlServerDatabaseManager.Default; }
-        public AgentSetting AgentSetting { get => new AgentSetting { ObjectNameMaxLength = 128, DefaultSchema = "dbo", SupportSchema = true, IdentityName = SqlServerUtils.IdentityName }; }
-        public IRepr Repr { get => SqlServerRepr.Default; }
+        public IDataMigrator DataMigrator => SqlServerDataMigrator.Default;
+        public IMetadataMigrator MetadataMigrator => SqlServerMetadataMigrator.Default;
+        public IDataTypeMapper DataTypeMapper => SqlServerDataTypeMapper.Default;
+        public ISqlExpressionTranslator ExpressionTranslator => SqlServerSqlExpressionTranslator.Default;
+        public IDatabaseManager DatabaseManger => SqlServerDatabaseManager.Default;
+        public AgentSetting AgentSetting => new AgentSetting { ObjectNameMaxLength = 128, DefaultSchema = "dbo", SupportSchema = true, IdentityName = SqlServerUtils.IdentityName };
+        public IRepr Repr => SqlServerRepr.Default;
+        public IDataDumper DataDumper => SqlServerDataDumper.Default;
 
         public DbConnection CreateConnection(string connectionString) => new SqlConnection(connectionString);
 

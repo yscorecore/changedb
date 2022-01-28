@@ -22,6 +22,9 @@ namespace ChangeDB.Migration
         public int MaxTaskCount { get; set; } = 8;
 
         public string TargetDefaultSchema { get; set; } = string.Empty;
+
+
+        public bool OptimizeInsertion { get; set; } = true;
     }
 
     [Flags]

@@ -7,13 +7,14 @@ namespace ChangeDB.Agent.SqlCe
 {
     public class SqlCeMigrationAgent : IMigrationAgent
     {
-        public IDataMigrator DataMigrator { get => SqlCeDataMigrator.Default; }
-        public IMetadataMigrator MetadataMigrator { get => SqlCeMetadataMigrator.Default; }
-        public IDataTypeMapper DataTypeMapper { get => SqlCeDataTypeMapper.Default; }
-        public ISqlExpressionTranslator ExpressionTranslator { get => SqlServerSqlExpressionTranslator.Default; }
-        public IDatabaseManager DatabaseManger { get => SqlCeDatabaseManager.Default; }
-        public AgentSetting AgentSetting { get => new AgentSetting { DefaultSchema = null, ObjectNameMaxLength = 128, IdentityName = SqlCeUtils.IdentityName }; }
-        public IRepr Repr { get => SqlServerRepr.Default; }
+        public IDataMigrator DataMigrator => SqlCeDataMigrator.Default;
+        public IMetadataMigrator MetadataMigrator => SqlCeMetadataMigrator.Default;
+        public IDataTypeMapper DataTypeMapper => SqlCeDataTypeMapper.Default;
+        public ISqlExpressionTranslator ExpressionTranslator => SqlServerSqlExpressionTranslator.Default;
+        public IDatabaseManager DatabaseManger => SqlCeDatabaseManager.Default;
+        public AgentSetting AgentSetting => new AgentSetting { DefaultSchema = null, ObjectNameMaxLength = 128, IdentityName = SqlCeUtils.IdentityName };
+        public IRepr Repr => SqlServerRepr.Default;
+        public IDataDumper DataDumper => SqlServerDataDumper.Default;
 
         public DbConnection CreateConnection(string connectionString) => new SqlCeConnection(connectionString);
 

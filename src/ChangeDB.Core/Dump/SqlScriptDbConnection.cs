@@ -12,18 +12,26 @@ namespace ChangeDB.Dump
 {
     internal class SqlScriptDbConnection : DbConnection
     {
-        public SqlScriptDbConnection(string outputScriptFile, bool createNew, IRepr repr)
+        //public SqlScriptDbConnection(string outputScriptFile, bool createNew, IRepr repr)
+        //{
+
+        //    _ = outputScriptFile ?? throw new ArgumentNullException(nameof(outputScriptFile));
+        //    Repr = repr ?? throw new ArgumentNullException(nameof(repr));
+        //    FileStream = new Lazy<StreamWriter>(() =>
+        //    {
+        //        var baseStream = File.Open(outputScriptFile, createNew ? FileMode.CreateNew : FileMode.Create, FileAccess.Write, FileShare.Read);
+        //        return new StreamWriter(baseStream);
+
+
+        //    }, true);
+
+        //}
+        public SqlScriptDbConnection(TextWriter writer, IRepr repr)
         {
 
-            _ = outputScriptFile ?? throw new ArgumentNullException(nameof(outputScriptFile));
+            Writer = writer ?? throw new ArgumentNullException(nameof(writer));
             Repr = repr ?? throw new ArgumentNullException(nameof(repr));
-            FileStream = new Lazy<StreamWriter>(() =>
-            {
-                var baseStream = File.Open(outputScriptFile, createNew ? FileMode.CreateNew : FileMode.Create, FileAccess.Write, FileShare.Read);
-                return new StreamWriter(baseStream);
 
-
-            }, true);
 
         }
         public override string ConnectionString { get; set; }
@@ -35,21 +43,13 @@ namespace ChangeDB.Dump
 
         public IRepr Repr { get; }
 
-        public Lazy<StreamWriter> FileStream { get; }
+        public TextWriter Writer { get; }
 
         public override void ChangeDatabase(string databaseName) { }
 
         public override void Close() { }
 
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-            if (FileStream.IsValueCreated)
-            {
-                FileStream.Value.Flush();
-                FileStream.Value.Dispose();
-            }
-        }
+
 
         public override void Open() { }
 
@@ -81,7 +81,7 @@ namespace ChangeDB.Dump
         public override int ExecuteNonQuery()
         {
             var line = BuildCommandText();
-            var writer = this.Connection.FileStream.Value;
+            var writer = this.Connection.Writer;
             writer.WriteLine(line);
             writer.WriteLine();
             return 1;

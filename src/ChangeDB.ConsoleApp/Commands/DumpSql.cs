@@ -48,6 +48,10 @@ namespace ChangeDB.ConsoleApp.Commands
             HelpText = "target database default schema.")]
         public string TargetDefaultSchema { get; set; }
 
+        [Option("optimize-insertion",
+            HelpText = "optimize insertion script.", Default = true)]
+        public bool OptimizeInsertion { get; set; } = true;
+
 
         protected override void OnRunCommand()
         {
