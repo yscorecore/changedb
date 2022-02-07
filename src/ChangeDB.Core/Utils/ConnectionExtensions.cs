@@ -162,6 +162,11 @@ namespace ChangeDB
             using var reader = ExecuteReader(connection, sql);
             return reader.LoadDataTable();
         }
+        public static List<Dictionary<string, object>> ExecuteReaderAsDataList(this IDbConnection connection, string sql)
+        {
+            using var reader = ExecuteReader(connection, sql);
+            return reader.LoadData().ToList();
+        }
         public static List<Tuple<T1, T2>> ExecuteReaderAsList<T1, T2>(this IDbConnection connection, string sql)
         {
             var table = ExecuteReaderAsTable(connection, sql);
@@ -214,19 +219,22 @@ namespace ChangeDB
             //Get schema of our actual table
             DataTable schema = reader.GetSchemaTable();
             DataTable table = new DataTable();
-            if (schema != null)
-                if (schema.Rows.Count > 0)
-                    for (int i = 0; i < schema.Rows.Count; i++)
-                    {
-                        //Create new column for each row in schema table
-                        //Set properties that are causing errors and add it to our datatable
-                        //Rows in schema table are filled with information of columns in our actual table
-                        DataColumn Col = new DataColumn(schema.Rows[i]["ColumnName"].ToString(), (Type)schema.Rows[i]["DataType"]);
-                        Col.AllowDBNull = true;
-                        Col.Unique = false;
-                        Col.AutoIncrement = false;
-                        table.Columns.Add(Col);
-                    }
+            if (schema == null)
+            {
+                //This is our datatable filled with data
+                return table;
+            }
+            for (int i = 0; i < schema.Rows.Count; i++)
+            {
+                //Create new column for each row in schema table
+                //Set properties that are causing errors and add it to our datatable
+                //Rows in schema table are filled with information of columns in our actual table
+                DataColumn Col = new DataColumn(schema.Rows[i]["ColumnName"].ToString(), (Type)schema.Rows[i]["DataType"]);
+                Col.AllowDBNull = true;
+                Col.Unique = false;
+                Col.AutoIncrement = false;
+                table.Columns.Add(Col);
+            }
 
             while (reader.Read())
             {
@@ -240,6 +248,18 @@ namespace ChangeDB
             }
             //This is our datatable filled with data
             return table;
+        }
+        private static IEnumerable<Dictionary<string, object>> LoadData(this IDataReader reader)
+        {
+            using var schema = reader.GetSchemaTable();
+            if (schema != null)
+            {
+                var allColumns = schema.Rows.OfType<DataRow>().Select(p => p.FieldValue<string>("ColumnName")).ToList();
+                while (reader.Read())
+                {
+                    yield return allColumns.ToDictionary(p => p, p => reader[p].ToValue<object>());
+                }
+            }
         }
     }
 }

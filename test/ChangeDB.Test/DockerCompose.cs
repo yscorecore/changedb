@@ -11,12 +11,11 @@ namespace ChangeDB
 {
     public static class DockerCompose
     {
-        public static int MaxTimeOutSeconds { get; set; } = 60 * 30;
 
         public static IDisposable Up(IDictionary<string, object> envs = null)
         {
             envs ??= new Dictionary<string, object>();
-            Exec("docker-compose", "up --build -d", envs);
+            Shell.Exec("docker-compose", "up --build -d", envs);
             return new DockerComposeGroup(null);
         }
 
@@ -54,7 +53,7 @@ namespace ChangeDB
                     };
                     fileWatcher.EnableRaisingEvents = true;
 
-                    Exec("docker-compose", $"{dockerComposeFileArgument} up --build -d", envs);
+                    Shell.Exec("docker-compose", $"{dockerComposeFileArgument} up --build -d", envs);
 
                     if (waitReport.WaitOne(maxTimeOutSeconds * 1000))
                     {
@@ -144,74 +143,8 @@ services:
 
         public static void Down()
         {
-            Exec("docker-compose", "down", null);
+            Shell.Exec("docker-compose", "down", null);
         }
-        private static int Exec(string fileName, string arguments, IDictionary<string, object> envs)
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = arguments,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-
-            };
-            if (envs != null)
-            {
-                foreach (var kv in envs)
-                {
-                    startInfo.Environment.Add(kv.Key, Convert.ToString(kv.Value, CultureInfo.InvariantCulture));
-                }
-            }
-            StringBuilder stringBuilder = new StringBuilder();
-            using (var process = Process.Start(startInfo))
-            {
-
-                using (AutoResetEvent outputWaitHandle = new AutoResetEvent(false))
-                using (AutoResetEvent errorWaitHandle = new AutoResetEvent(false))
-                {
-                    process.OutputDataReceived += (s, e) =>
-                    {
-                        if (e.Data == null)
-                        {
-                            outputWaitHandle.Set();
-                        }
-                        else
-                        {
-                            stringBuilder.AppendLine(e.Data);
-                        }
-                    };
-                    process.ErrorDataReceived += (s, e) =>
-                    {
-                        if (e.Data == null)
-                        {
-                            errorWaitHandle.Set();
-                        }
-                        else
-                        {
-                            stringBuilder.AppendLine(e.Data);
-                        }
-                    };
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine();
-                    var timeout = MaxTimeOutSeconds * 1000;
-                    if (process.WaitForExit(timeout) && outputWaitHandle.WaitOne(timeout) && errorWaitHandle.WaitOne(timeout))
-                    {
-                        if (process.ExitCode != 0)
-                        {
-                            throw new Exception($"Exec process exit with code: {process.ExitCode}, output: {stringBuilder}");
-                        }
-                    }
-                    else
-                    {
-                        throw new Exception($"Exec process timeout, total seconds > {MaxTimeOutSeconds}s, output: {stringBuilder}");
-                    }
-                }
-                return process.ExitCode;
-            }
-
-        }
-
         class DockerComposeGroup : IDisposable
         {
             public DockerComposeGroup(string tempFolder, params string[] composeFiles)
@@ -227,12 +160,12 @@ services:
             {
                 if (ComposeFiles.Length == 0)
                 {
-                    Exec("docker-compose", "down", null);
+                    Shell.Exec("docker-compose", "down", null);
                 }
                 else
                 {
                     var dockerComposeFileArgument = string.Join(" ", ComposeFiles.Select(p => $"-f \"{Path.GetFullPath(p)}\""));
-                    Exec("docker-compose", $"{dockerComposeFileArgument} down", null);
+                    Shell.Exec("docker-compose", $"{dockerComposeFileArgument} down", null);
                 }
                 if (string.IsNullOrEmpty(TempFolder))
                 {

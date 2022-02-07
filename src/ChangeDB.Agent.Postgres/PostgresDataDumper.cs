@@ -20,7 +20,7 @@ namespace ChangeDB.Agent.Postgres
             if (setting.OptimizeInsertion)
             {
                 //Copy mode
-                await base.WriteTable(data, table, dumpContext);
+                await CopyTable(data, table, dumpContext);
             }
             else
             {
@@ -74,6 +74,12 @@ namespace ChangeDB.Agent.Postgres
                     _ => string.Empty
                 };
             }
+        }
+
+
+        private Task CopyTable(DataTable data, TableDescriptor table, DumpContext dumpContext)
+        {
+            return Task.CompletedTask;
         }
 
     }
