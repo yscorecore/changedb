@@ -45,9 +45,9 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ClearDatabase();
         }
 
-        [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
+        //[Theory]
+        //[InlineData(false)]
+        //[InlineData(true)]
         public async Task ShouldImportDumpDataByPsqlWhenOptimizeInsertionIsFalse(bool optimizeInsertion)
         {
 
