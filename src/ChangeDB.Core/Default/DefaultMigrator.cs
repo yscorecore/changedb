@@ -246,7 +246,7 @@ namespace ChangeDB.Default
                 // convert target column name
                 dataTable.Columns.OfType<DataColumn>().Each(p =>
                     p.ColumnName = migrationSetting.TargetNameStyle.ColumnNameFunc(p.ColumnName));
-                await OnWriteTableData(dataTable, targetTableDesc, migrationContext);
+                await target.Agent.DataMigrator.WriteTargetTable(dataTable, targetTableDesc, migrationContext);
 
                 migratedCount += dataTable.Rows.Count;
                 totalCount = Math.Max(totalCount, migratedCount);
@@ -264,13 +264,6 @@ namespace ChangeDB.Default
 
             migrationContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, migratedCount, migratedCount, true);
         }
-
-        protected virtual async Task OnWriteTableData(DataTable dataTable, TableDescriptor tableDescriptor, MigrationContext migrationContext)
-        {
-            var target = migrationContext.Target;
-            await target.Agent.DataMigrator.WriteTargetTable(dataTable, tableDescriptor, migrationContext);
-        }
-
 
     }
 }

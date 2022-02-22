@@ -77,10 +77,53 @@ namespace ChangeDB.Agent.Postgres
         }
 
 
-        private Task CopyTable(DataTable data, TableDescriptor table, DumpContext dumpContext)
+
+
+        private async Task CopyTable(DataTable data, TableDescriptor table, DumpContext dumpContext)
         {
-            return Task.CompletedTask;
+            if (data?.Rows?.Count == 0) return;
+            /*
+ COPY x (a, b, c, d, e) from stdin;
+9999	\N	\\N	\NN	\N
+10000	21	31	41	51
+\.
+             * */
+            //if (table != lastTable)
+            //{
+            //    // new table
+            //}
+            //else
+            //{
+            //    await AppendTableRows(data, table, dumpContext);    
+            //}
+            foreach (DataRow row in data.Rows)
+            {
+                var datas = table.Columns.Select(p => FormatValue(row[p.Name]));
+                await dumpContext.Writer.WriteLineAsync(string.Join('\t', datas));
+            }
+        }
+        private string FormatValue(object value)
+        {
+            return PostgresRepr.ReprCopyConstant(value);
         }
 
+        public override async Task BeforeWriteTable(TableDescriptor table, DumpContext dumpContext)
+        {
+            var setting = dumpContext.Setting;
+            if (setting.OptimizeInsertion)
+            {
+                await dumpContext.Writer.WriteLineAsync($"COPY {IdentityName(table.Schema, table.Name)}({BuildColumnNames(table.Columns)}) FROM STDIN;");
+            }
+        }
+        public override async Task AfterWriteTable(TableDescriptor tableDescriptor, DumpContext dumpContext)
+        {
+            var setting = dumpContext.Setting;
+            if (setting.OptimizeInsertion)
+            {
+                await dumpContext.Writer.WriteLineAsync("\\.");
+                await dumpContext.Writer.WriteLineAsync("");
+            }
+
+        }
     }
 }

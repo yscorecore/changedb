@@ -13,11 +13,12 @@ namespace ChangeDB.Agent.Postgres
         // https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-STRINGS-ESCAPE
         private static Dictionary<string, string> ReplaceChars = new Dictionary<string, string>()
         {
+            ["\\"] = @"\\",
             ["\n"] = @"\n",
             ["\r"] = @"\r",
             ["\t"] = @"\t",
             ["\b"] = @"\b",
-            ["\f"] = @"\f"
+            ["\f"] = @"\f",
         };
         public string ReprValue(object value, string storeType)
         {
@@ -64,6 +65,39 @@ namespace ChangeDB.Agent.Postgres
                     return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'"; ;
                 case DateTimeOffset dateTimeOffset:
                     return $"'{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}'";
+                default:
+                    return constant.ToString();
+            }
+        }
+
+        private static string ReprCopyString(string input)
+        {
+            if (input is null) return null;
+            return input.Replace(ReplaceChars);
+        }
+
+        public static string ReprCopyConstant(object constant)
+        {
+            if (constant == null || Convert.IsDBNull(constant))
+            {
+                return "\\N";
+            }
+            switch (constant)
+            {
+                case string str:
+                    return ReprCopyString(str);
+                case bool:
+                    return Convert.ToBoolean(constant).ToString().ToLowerInvariant();
+                case double or float or long or int or short or char or byte or decimal or bool:
+                    return constant.ToString();
+                case Guid guid:
+                    return $"{guid}";
+                case byte[] bytes:
+                    return $"\\x{string.Join("", bytes.Select(p => p.ToString("X2")))}";
+                case DateTime dateTime:
+                    return $"{dateTime:yyyy-MM-dd HH:mm:ss}";
+                case DateTimeOffset dateTimeOffset:
+                    return $"{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}";
                 default:
                     return constant.ToString();
             }

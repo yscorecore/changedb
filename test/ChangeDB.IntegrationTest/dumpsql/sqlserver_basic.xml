@@ -2,24 +2,35 @@
 <root>
     <source type="sqlserver" split="go">
         <![CDATA[
-    create table abc(id int primary key identity(1,1),val int);
+    create table abc(id int primary key identity(1,1),val varchar(10));
     GO
-    insert into abc(val) values(1);
-    insert into abc(val) values(2);
+    insert into abc(val) values('abc');
+    insert into abc(val) values('bcd');
     
     ]]>
     </source>
 
     <targets>
-        <target type="postgres" scope="data">
+        <target type="postgres" scope="data" optimize-insertion="false">
                 <![CDATA[
-INSERT INTO "dbo"."abc"("id", "val") OVERRIDING SYSTEM VALUE VALUES (1, 1);
+INSERT INTO "dbo"."abc"("id", "val") OVERRIDING SYSTEM VALUE VALUES (1, 'abc');
 
-INSERT INTO "dbo"."abc"("id", "val") OVERRIDING SYSTEM VALUE VALUES (2, 2);
+INSERT INTO "dbo"."abc"("id", "val") OVERRIDING SYSTEM VALUE VALUES (2, 'bcd');
 
 SELECT SETVAL(PG_GET_SERIAL_SEQUENCE('"dbo"."abc"', 'id'), 2);
                 ]]>
             
+        </target>
+        <target type="postgres" scope="data" optimize-insertion="true">
+            <![CDATA[
+COPY "dbo"."abc"("id", "val") FROM STDIN;
+1	abc
+2	bcd
+\.
+
+SELECT SETVAL(PG_GET_SERIAL_SEQUENCE('"dbo"."abc"', 'id'), 2);
+                ]]>
+
         </target>
     </targets>
     

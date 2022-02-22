@@ -40,10 +40,11 @@ namespace ChangeDB
             {
                 var targetType = targetNode.Attribute("type").Value;
                 var scope = (MigrationScope)Enum.Parse(typeof(MigrationScope), targetNode.Attribute("scope")?.Value ?? "All", true);
+                var optimizeInsertion = bool.Parse(targetNode.Attribute("optimize-insertion")?.Value ?? "true");
                 var tempFile = Path.GetRandomFileName();
                 var dumpContext = new DumpContext()
                 {
-                    Setting = new MigrationSetting() { MaxTaskCount = 1, MigrationScope = scope },
+                    Setting = new MigrationSetting() { MaxTaskCount = 1, MigrationScope = scope, OptimizeInsertion = optimizeInsertion },
                     SourceDatabase = new DatabaseInfo() { DatabaseType = sourceType, ConnectionString = sourceConnectionString },
                     TargetDatabase = new DatabaseInfo() { DatabaseType = targetType },
                     DumpInfo = new SqlScriptInfo { DatabaseType = targetType, SqlScriptFile = tempFile },

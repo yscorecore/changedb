@@ -41,5 +41,14 @@ namespace ChangeDB.Dump
             return string.Join(", ", columnValues.Select(p => ReprValue(p.Column, p.Value)));
         }
 
+        public virtual Task BeforeWriteTable(TableDescriptor tableDescriptor, DumpContext dumpContext)
+        {
+            return Task.CompletedTask;
+        }
+
+        public virtual Task AfterWriteTable(TableDescriptor tableDescriptor, DumpContext dumpContext)
+        {
+            return Task.CompletedTask;
+        }
     }
 }

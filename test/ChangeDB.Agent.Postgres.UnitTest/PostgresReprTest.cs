@@ -19,7 +19,7 @@ namespace ChangeDB.Agent.Postgres
         [Theory]
         [InlineData("abc")]
         [InlineData("中国")]
-        [InlineData("\r\r\n\n\t\b\f")]
+        [InlineData("\r\r\n\n\t\b\f\\")]
         [InlineData("Hello\n中国")]
         public void ShouldReprString(string value)
         {

@@ -11,6 +11,10 @@ namespace ChangeDB.Migration
 {
     public interface IDataDumper
     {
+        Task BeforeWriteTable(TableDescriptor tableDescriptor, DumpContext dumpContext);
+
+        Task AfterWriteTable(TableDescriptor tableDescriptor, DumpContext dumpContext);
+
         Task WriteTable(DataTable data, TableDescriptor table, DumpContext dumpContext);
     }
 }

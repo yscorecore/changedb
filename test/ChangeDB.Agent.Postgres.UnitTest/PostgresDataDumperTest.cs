@@ -17,7 +17,6 @@ namespace ChangeDB.Agent.Postgres
 {
 
     [Collection(nameof(DatabaseEnvironment))]
-
     public class PostgresDataDumperTest : IDisposable
     {
         private readonly IDataDumper _dataDumper = PostgresDataDumper.Default;
@@ -78,7 +77,9 @@ namespace ChangeDB.Agent.Postgres
                     Writer = writer
 
                 };
+                await _dataDumper.BeforeWriteTable(tableDesc, dumpContext);
                 await _dataDumper.WriteTable(tableData, tableDesc, dumpContext);
+                await _dataDumper.AfterWriteTable(tableDesc, dumpContext);
                 writer.Flush();
             }
 
@@ -156,12 +157,13 @@ namespace ChangeDB.Agent.Postgres
                     Writer = writer
 
                 };
+                await _dataDumper.BeforeWriteTable(tableDesc, dumpContext);
                 await _dataDumper.WriteTable(tableData1, tableDesc, dumpContext);
                 await _dataDumper.WriteTable(tableData2, tableDesc, dumpContext);
+                await _dataDumper.AfterWriteTable(tableDesc, dumpContext);
                 writer.Flush();
             }
             File.ReadAllText(dumpFile).Should().Contain("COPY", Exactly.Once());
-
         }
 
     }
