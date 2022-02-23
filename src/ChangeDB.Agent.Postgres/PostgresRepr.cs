@@ -93,7 +93,7 @@ namespace ChangeDB.Agent.Postgres
                 case Guid guid:
                     return $"{guid}";
                 case byte[] bytes:
-                    return $"\\x{string.Join("", bytes.Select(p => p.ToString("X2")))}";
+                    return $"\\\\x{string.Join("", bytes.Select(p => p.ToString("X2")))}";
                 case DateTime dateTime:
                     return $"{dateTime:yyyy-MM-dd HH:mm:ss}";
                 case DateTimeOffset dateTimeOffset:
