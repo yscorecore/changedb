@@ -30,8 +30,7 @@
    ```shell
    changedb dumpsql {source-database-type} "{source-connection-string}" {target-database-type} "{output-file}" 
    ```
-      Here is the demo for ChangeDB
-   ![image](./res/ChangedbDemo.gif)
+
 ## 🏗 Database Supported 
 
  - **Sql Server**
