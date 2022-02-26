@@ -48,7 +48,6 @@ namespace ChangeDB
                     SourceDatabase = new DatabaseInfo() { DatabaseType = sourceType, ConnectionString = sourceConnectionString },
                     TargetDatabase = new DatabaseInfo() { DatabaseType = targetType },
                     DumpInfo = new SqlScriptInfo { DatabaseType = targetType, SqlScriptFile = tempFile },
-                    MigrationType = MigrationType.SqlScript
                 };
                 await dumper.DumpSql(dumpContext);
                 AssertTargetSqlStript(targetNode, tempFile);

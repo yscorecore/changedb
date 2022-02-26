@@ -7,7 +7,6 @@ namespace ChangeDB.Migration
     {
         public DatabaseInfo SourceDatabase { get; init; }
         public DatabaseInfo TargetDatabase { get; init; }
-        public MigrationType MigrationType { get; init; }
         public MigrationSetting Setting { get; init; } = new MigrationSetting();
         public EventReporter EventReporter { get; set; } = new EventReporter();
         public AgentRunTimeInfo Source { get; set; }
@@ -34,11 +33,11 @@ namespace ChangeDB.Migration
 
     }
 
-    public enum MigrationType
-    {
-        Database,
-        SqlScript
-    }
+    //public enum MigrationType
+    //{
+    //    Database,
+    //    SqlScript
+    //}
 
     public record EventReporter
     {

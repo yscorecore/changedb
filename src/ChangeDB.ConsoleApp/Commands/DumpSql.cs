@@ -85,7 +85,6 @@ namespace ChangeDB.ConsoleApp.Commands
                 SourceDatabase = new DatabaseInfo { DatabaseType = SourceType, ConnectionString = SourceConnectionString },
                 TargetDatabase = new DatabaseInfo { DatabaseType = TargetType, ConnectionString = String.Empty },
                 DumpInfo = new SqlScriptInfo { DatabaseType = TargetType, SqlScriptFile = TargetScript },
-                MigrationType = MigrationType.SqlScript
             };
             ConsoleProgressBarManager consoleProgressBarManager = new ConsoleProgressBarManager();
             context.EventReporter.StageChanged += (sender, e) =>

@@ -45,9 +45,9 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ClearDatabase();
         }
 
-        //[Theory]
-        //[InlineData(false)]
-        //[InlineData(true)]
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
         public async Task ShouldImportDumpDataByPsqlWhenOptimizeInsertionIsFalse(bool optimizeInsertion)
         {
 
@@ -55,7 +55,7 @@ namespace ChangeDB.Agent.Postgres
                 "create schema ts;",
                 "create table ts.table1(id int primary key,nm varchar(64));",
                 "INSERT INTO ts.table1(id,nm) VALUES(1,'name1');",
-                "INSERT INTO ts.table1(id,nm) VALUES(2,'name2');",
+                "INSERT INTO ts.t able1(id,nm) VALUES(2,'name2');",
                 "INSERT INTO ts.table1(id,nm) VALUES(3,'name3');"
              );
 
@@ -77,9 +77,7 @@ namespace ChangeDB.Agent.Postgres
                     Writer = writer
 
                 };
-                await _dataDumper.BeforeWriteTable(tableDesc, dumpContext);
-                await _dataDumper.WriteTable(tableData, tableDesc, dumpContext);
-                await _dataDumper.AfterWriteTable(tableDesc, dumpContext);
+                await _dataDumper.WriteTables(ToAsyncTable(tableData), tableDesc, dumpContext);
                 writer.Flush();
             }
 
@@ -121,7 +119,7 @@ namespace ChangeDB.Agent.Postgres
                     Writer = writer
 
                 };
-                await _dataDumper.WriteTable(tableData, tableDesc, dumpContext);
+                await _dataDumper.WriteTables(ToAsyncTable(tableData), tableDesc, dumpContext);
                 writer.Flush();
             }
             File.ReadAllText(dumpFile).Should().Contain("INSERT INTO", Exactly.Times(3));
@@ -157,13 +155,15 @@ namespace ChangeDB.Agent.Postgres
                     Writer = writer
 
                 };
-                await _dataDumper.BeforeWriteTable(tableDesc, dumpContext);
-                await _dataDumper.WriteTable(tableData1, tableDesc, dumpContext);
-                await _dataDumper.WriteTable(tableData2, tableDesc, dumpContext);
-                await _dataDumper.AfterWriteTable(tableDesc, dumpContext);
+                await _dataDumper.WriteTables(ToAsyncTable(tableData1, tableData2), tableDesc, dumpContext);
                 writer.Flush();
             }
             File.ReadAllText(dumpFile).Should().Contain("COPY", Exactly.Once());
+        }
+
+        private IAsyncEnumerable<DataTable> ToAsyncTable(params DataTable[] tables)
+        {
+            return tables.ToAsync();
         }
 
     }

@@ -71,7 +71,7 @@ namespace ChangeDB.Default
         protected virtual async Task DoMigrateDatabase(MigrationContext migrationContext)
         {
             var (target, source, migrationSetting) = (migrationContext.Target, migrationContext.Source, migrationContext.Setting);
-            if (migrationContext.MigrationType == MigrationType.Database && migrationContext.Setting.IncludeMeta)
+            if (migrationContext.Setting.IncludeMeta)
             {
                 await CreateTargetDatabase(migrationContext);
             }
@@ -136,7 +136,7 @@ namespace ChangeDB.Default
 
             bool NeedOrderByDependency() => migrationContext.Setting.MigrationScope == MigrationScope.Data;
 
-            bool NeedMultiTask() => migrationContext.MigrationType == MigrationType.Database && migrationContext.Setting.MaxTaskCount > 1;
+            bool NeedMultiTask() => migrationContext.Setting.MaxTaskCount > 1;
 
             async Task MigrateTableInSingleTask(IEnumerable<TableDescriptor> tables)
             {

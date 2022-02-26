@@ -82,25 +82,17 @@ namespace ChangeDB.Agent.Postgres
             {
                 return "\\N";
             }
-            switch (constant)
+            return constant switch
             {
-                case string str:
-                    return ReprCopyString(str);
-                case bool:
-                    return Convert.ToBoolean(constant).ToString().ToLowerInvariant();
-                case double or float or long or int or short or char or byte or decimal or bool:
-                    return constant.ToString();
-                case Guid guid:
-                    return $"{guid}";
-                case byte[] bytes:
-                    return $"\\\\x{string.Join("", bytes.Select(p => p.ToString("X2")))}";
-                case DateTime dateTime:
-                    return $"{dateTime:yyyy-MM-dd HH:mm:ss}";
-                case DateTimeOffset dateTimeOffset:
-                    return $"{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}";
-                default:
-                    return constant.ToString();
-            }
+                string str => ReprCopyString(str),
+                bool => Convert.ToBoolean(constant).ToString().ToLowerInvariant(),
+                double or float or long or int or short or char or byte or decimal or bool => constant.ToString(),
+                Guid guid => $"{guid}",
+                byte[] bytes => $"\\\\x{string.Join("", bytes.Select(p => p.ToString("X2")))}",
+                DateTime dateTime => $"{dateTime:yyyy-MM-dd HH:mm:ss}",
+                DateTimeOffset dateTimeOffset => $"{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}",
+                _ => constant.ToString(),
+            };
         }
     }
 }

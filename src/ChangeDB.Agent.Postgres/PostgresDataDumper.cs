@@ -14,20 +14,32 @@ namespace ChangeDB.Agent.Postgres
     {
         public static readonly IDataDumper Default = new PostgresDataDumper();
 
-        public override async Task WriteTable(DataTable data, TableDescriptor table, DumpContext dumpContext)
+        public override async Task WriteTables(IAsyncEnumerable<DataTable> datas, TableDescriptor tableDescriptor, DumpContext dumpContext)
         {
-            var setting = dumpContext.Setting;
-            if (setting.OptimizeInsertion)
+            if (dumpContext.Setting.OptimizeInsertion)
             {
-                //Copy mode
-                await CopyTable(data, table, dumpContext);
+                await dumpContext.Writer.WriteLineAsync($"COPY {IdentityName(tableDescriptor.Schema, tableDescriptor.Name)}({BuildColumnNames(tableDescriptor.Columns)}) FROM STDIN;");
+
+                await foreach (var dataTable in datas)
+                {
+                    foreach (DataRow row in dataTable.Rows)
+                    {
+                        var values = tableDescriptor.Columns.Select(p => FormatValue(row[p.Name]));
+                        await dumpContext.Writer.WriteLineAsync(string.Join('\t', values));
+                    }
+                }
+                await dumpContext.Writer.WriteLineAsync("\\.");
+                await dumpContext.Writer.WriteLineAsync("");
+                // copy mode
+
             }
             else
             {
-                //Insert mode
-                await base.WriteTable(data, table, dumpContext);
+                // insert mode
+                await base.WriteTables(datas, tableDescriptor, dumpContext);
             }
         }
+
 
         protected override string IdentityName(string schema, string name)
         {
@@ -77,53 +89,11 @@ namespace ChangeDB.Agent.Postgres
         }
 
 
-
-
-        private async Task CopyTable(DataTable data, TableDescriptor table, DumpContext dumpContext)
-        {
-            if (data?.Rows?.Count == 0) return;
-            /*
- COPY x (a, b, c, d, e) from stdin;
-9999	\N	\\N	\NN	\N
-10000	21	31	41	51
-\.
-             * */
-            //if (table != lastTable)
-            //{
-            //    // new table
-            //}
-            //else
-            //{
-            //    await AppendTableRows(data, table, dumpContext);    
-            //}
-            foreach (DataRow row in data.Rows)
-            {
-                var datas = table.Columns.Select(p => FormatValue(row[p.Name]));
-                await dumpContext.Writer.WriteLineAsync(string.Join('\t', datas));
-            }
-        }
         private string FormatValue(object value)
         {
             return PostgresRepr.ReprCopyConstant(value);
         }
 
-        public override async Task BeforeWriteTable(TableDescriptor table, DumpContext dumpContext)
-        {
-            var setting = dumpContext.Setting;
-            if (setting.OptimizeInsertion)
-            {
-                await dumpContext.Writer.WriteLineAsync($"COPY {IdentityName(table.Schema, table.Name)}({BuildColumnNames(table.Columns)}) FROM STDIN;");
-            }
-        }
-        public override async Task AfterWriteTable(TableDescriptor tableDescriptor, DumpContext dumpContext)
-        {
-            var setting = dumpContext.Setting;
-            if (setting.OptimizeInsertion)
-            {
-                await dumpContext.Writer.WriteLineAsync("\\.");
-                await dumpContext.Writer.WriteLineAsync("");
-            }
 
-        }
     }
 }

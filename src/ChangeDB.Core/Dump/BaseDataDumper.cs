@@ -10,16 +10,7 @@ namespace ChangeDB.Dump
 {
     public abstract class BaseDataDumper : IDataDumper
     {
-        public virtual Task WriteTable(DataTable data, TableDescriptor table, DumpContext dumpContext)
-        {
-            foreach (DataRow row in data.Rows)
-            {
-                var line = BuildInsertCommand(row, table);
-                dumpContext.Writer.WriteLine(line);
-                dumpContext.Writer.WriteLine();
-            }
-            return Task.CompletedTask;
-        }
+
 
         protected virtual string BuildInsertCommand(DataRow row, TableDescriptor table)
         {
@@ -41,14 +32,18 @@ namespace ChangeDB.Dump
             return string.Join(", ", columnValues.Select(p => ReprValue(p.Column, p.Value)));
         }
 
-        public virtual Task BeforeWriteTable(TableDescriptor tableDescriptor, DumpContext dumpContext)
+        public virtual async Task WriteTables(IAsyncEnumerable<DataTable> datas, TableDescriptor tableDescriptor, DumpContext dumpContext)
         {
-            return Task.CompletedTask;
-        }
 
-        public virtual Task AfterWriteTable(TableDescriptor tableDescriptor, DumpContext dumpContext)
-        {
-            return Task.CompletedTask;
+            await foreach (DataTable dataTable in datas)
+            {
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    var line = BuildInsertCommand(row, tableDescriptor);
+                    dumpContext.Writer.WriteLine(line);
+                    dumpContext.Writer.WriteLine();
+                }
+            }
         }
     }
 }

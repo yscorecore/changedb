@@ -156,7 +156,7 @@ namespace ChangeDB.Agent.Postgres
 
         public Task AfterWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
         {
-            var tableFullName = PostgresUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
+            var tableFullName = IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
             tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)
                 .Each((column) =>
                 {

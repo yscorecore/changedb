@@ -53,7 +53,6 @@ namespace ChangeDB.IntegrationTest
                     Setting = new MigrationSetting() { MaxTaskCount = 5 },
                     SourceDatabase = new DatabaseInfo() { DatabaseType = sourceType, ConnectionString = sourceConnectionString },
                     TargetDatabase = new DatabaseInfo() { DatabaseType = targetType, ConnectionString = targetConnectionString },
-                    MigrationType = MigrationType.Database
                 };
                 await migrate.MigrateDatabase(migrationContext);
                 AssertTargetDatabase(targetNode, migrationContext);

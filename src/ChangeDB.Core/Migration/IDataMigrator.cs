@@ -1,4 +1,7 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 
 namespace ChangeDB.Migration
@@ -15,5 +18,32 @@ namespace ChangeDB.Migration
 
         Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext migrationContext);
 
+
+        public async IAsyncEnumerable<DataTable> ReadSourceTable(TableDescriptor sourceTable, MigrationContext migrationContext)
+        {
+            var source = migrationContext.Source;
+            var migrationSetting = migrationContext.Setting;
+
+            var (loadedCount, maxRowSize, fetchCount) = (0, 1, 1);
+
+            while (true)
+            {
+                var pageInfo = new PageInfo { Offset = loadedCount, Limit = Math.Max(1, fetchCount) };
+                var dataTable = await source.Agent.DataMigrator.ReadSourceTable(sourceTable, pageInfo, migrationContext);
+
+                yield return dataTable;
+
+                loadedCount += dataTable.Rows.Count;
+                maxRowSize = Math.Max(maxRowSize, dataTable.MaxRowSize());
+                fetchCount = Math.Min(fetchCount * migrationSetting.GrowthSpeed, Math.Max(1, migrationSetting.FetchDataMaxSize / maxRowSize));
+
+                if (dataTable.Rows.Count < pageInfo.Limit)
+                {
+                    break;
+                }
+            }
+        }
     }
+
+
 }
