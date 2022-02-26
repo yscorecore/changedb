@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using CommandLine;
 
 namespace ChangeDB.ConsoleApp
@@ -8,7 +9,7 @@ namespace ChangeDB.ConsoleApp
         static int Main(string[] args)
         {
             var commands = System.Reflection.Assembly.GetExecutingAssembly().GetTypes().Where(p => p.IsClass && typeof(ICommand).IsAssignableFrom(p)).ToArray();
-            var parser = new Parser(with => with.CaseInsensitiveEnumValues = true);
+            var parser = new Parser(with => { with.CaseInsensitiveEnumValues = true; with.HelpWriter = Console.Out; });
             return parser.ParseArguments(args, commands).MapResult(command => (command as ICommand).Run(), errors => 1);
         }
     }
