@@ -20,8 +20,8 @@ namespace ChangeDB.Agent.SqlCe.EFCore.SqlServerCompact
         private HashSet<string> selectedTables;
 
         private DatabaseModel _databaseModel;
-        private Dictionary<string, DatabaseTable> _tables = new Dictionary<string, DatabaseTable>();
-        private Dictionary<string, DatabaseColumn> _tableColumns = new Dictionary<string, DatabaseColumn>();
+        private readonly Dictionary<string, DatabaseTable> _tables = new Dictionary<string, DatabaseTable>();
+        private readonly Dictionary<string, DatabaseColumn> _tableColumns = new Dictionary<string, DatabaseColumn>();
 
         private static string TableKey(DatabaseTable table) => TableKey(table.Name);
         private static string TableKey(string name) => "[" + name + "]";

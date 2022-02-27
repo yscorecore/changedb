@@ -51,9 +51,9 @@ namespace ChangeDB.Migration
     public class TargetNameStyle
     {
         static readonly Random Random = new();
-        static Func<string, string> Lower = p => p?.ToLowerInvariant();
-        static Func<string, string> Upper = p => p?.ToUpperInvariant();
-        static Func<string, string> Origin = p => p;
+        static readonly Func<string, string> Lower = p => p?.ToLowerInvariant();
+        static readonly Func<string, string> Upper = p => p?.ToUpperInvariant();
+        static readonly Func<string, string> Origin = p => p;
 
         public NameStyle NameStyle { get; set; }
         public NameStyle? SchemaNameStyle { get; set; }

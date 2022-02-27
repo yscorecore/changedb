@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Runtime.InteropServices.ComTypes;
-using System.Runtime.Loader;
 using ChangeDB.Migration;
 using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,13 +9,13 @@ namespace ChangeDB.ConsoleApp.Commands
     public class Migration : BaseCommand
     {
         public override string CommandName { get => "migration"; }
-        [Value(1, MetaName = "source-dbtype", Required = true, HelpText = "source database type.")]
+        [Value(1, MetaName = "source-dbtype", Required = true, HelpText = "source database type.(mysql/postgres/sqlserver/sqlce)")]
         public string SourceType { get; set; }
 
         [Value(2, MetaName = "source-connection", Required = true, HelpText = "source database connection strings")]
         public string SourceConnectionString { get; set; }
 
-        [Value(3, MetaName = "target-dbtype", Required = true, HelpText = "target database type.")]
+        [Value(3, MetaName = "target-dbtype", Required = true, HelpText = "target database type.(mysql/postgres/sqlserver/sqlce)")]
         public string TargetType { get; set; }
 
         [Value(4, MetaName = "target-connection", Required = true, HelpText = "target database connection strings")]
@@ -50,6 +46,10 @@ namespace ChangeDB.ConsoleApp.Commands
         [Option("target-default-schema",
             HelpText = "target database default schema.")]
         public string TargetDefaultSchema { get; set; }
+
+        [Option("show-progress",
+            HelpText = "show progress bar.", Default = true)]
+        public bool ShowProgress { get; set; } = true;
 
         protected override void OnRunCommand()
         {
@@ -82,33 +82,53 @@ namespace ChangeDB.ConsoleApp.Commands
                 SourceDatabase = new DatabaseInfo { DatabaseType = SourceType, ConnectionString = SourceConnectionString },
                 TargetDatabase = new DatabaseInfo { DatabaseType = TargetType, ConnectionString = TargetConnectionString }
             };
-            ConsoleProgressBarManager consoleProgressBarManager = new ConsoleProgressBarManager();
-            context.EventReporter.StageChanged += (sender, e) =>
-            {
-                if (e == StageKind.StartingTableData)
-                {
-                    consoleProgressBarManager.Start();
-                }
-                else if (e == StageKind.FinishedTableData)
-                {
-                    consoleProgressBarManager.End();
-                }
-            };
+            ShowConsoleMessage(context);
+            return context;
+        }
+
+        private void ShowConsoleMessage(MigrationContext context)
+        {
             context.EventReporter.ObjectCreated += (sender, e) =>
             {
                 Console.WriteLine(string.IsNullOrEmpty(e.OwnerName)
                     ? $"{e.ObjectType} {e.FullName} created."
                     : $"{e.ObjectType} {e.FullName} on {e.OwnerName} created.");
             };
-            context.EventReporter.TableDataMigrated += (sender, e) =>
+
+            if (this.ShowProgress)
             {
-                consoleProgressBarManager.ReportProgress(e.Table,
-                    e.Completed ? $"Data of table {e.Table} migrated." : $"Migrating data of table {e.Table}"
-                    , e.TotalCount, e.MigratedCount, e.Completed);
-            };
-            return context;
+                ConsoleProgressBarManager consoleProgressBarManager = new ConsoleProgressBarManager();
+                context.EventReporter.StageChanged += (sender, e) =>
+                {
+                    if (e == StageKind.StartingTableData)
+                    {
+                        consoleProgressBarManager.Start();
+                    }
+                    else if (e == StageKind.FinishedTableData)
+                    {
+                        consoleProgressBarManager.End();
+                    }
+                };
+
+                context.EventReporter.TableDataMigrated += (sender, e) =>
+                {
+                    consoleProgressBarManager.ReportProgress(e.Table,
+                        e.Completed ? $"Data of table {e.Table} migrated." : $"Migrating data of table {e.Table}"
+                        , e.TotalCount, e.MigratedCount, e.Completed);
+                };
+            }
+            else
+            {
+                context.EventReporter.TableDataMigrated += (sender, e) =>
+                {
+                    if (e.Completed)
+                    {
+                        Console.WriteLine($"Data of table {e.Table} migrated.");
+                    }
+                };
+            }
+
+
         }
-
-
     }
 }

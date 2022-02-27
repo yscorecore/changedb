@@ -11,7 +11,7 @@ namespace ChangeDB.Agent.Postgres
         public static readonly IRepr Default = new PostgresRepr();
 
         // https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-STRINGS-ESCAPE
-        private static Dictionary<string, string> ReplaceChars = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> ReplaceChars = new Dictionary<string, string>()
         {
             ["\\"] = @"\\",
             ["\n"] = @"\n",

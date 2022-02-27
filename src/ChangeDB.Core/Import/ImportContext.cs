@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using ChangeDB.Migration;
 
 namespace ChangeDB.Import

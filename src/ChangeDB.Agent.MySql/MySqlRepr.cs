@@ -12,7 +12,7 @@ namespace ChangeDB.Agent.MySql
         public static readonly IRepr Default = new MySqlRepr();
 
         // https://dev.mysql.com/doc/refman/8.0/en/string-literals.html
-        private static Dictionary<string, string> ReplaceChars = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> ReplaceChars = new Dictionary<string, string>()
         {
             ["\\"] = @"\\",
             ["\n"] = @"\n",

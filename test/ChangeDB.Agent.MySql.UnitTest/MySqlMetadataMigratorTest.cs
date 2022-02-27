@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using FluentAssertions;
-using MySqlConnector;
 using Xunit;
 
 namespace ChangeDB.Agent.MySql.UnitTest

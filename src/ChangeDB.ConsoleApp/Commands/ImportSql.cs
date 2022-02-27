@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Loader;
-using ChangeDB.Dump;
 using ChangeDB.Import;
 using ChangeDB.Migration;
 using CommandLine;

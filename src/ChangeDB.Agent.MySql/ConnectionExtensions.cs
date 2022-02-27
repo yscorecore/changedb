@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using System.Data.Common;
-using System.Linq;
 using MySqlConnector;
 using static ChangeDB.Agent.MySql.MySqlUtils;
 namespace ChangeDB.Agent.MySql

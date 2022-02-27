@@ -1,6 +1,4 @@
-﻿using System.Data.Common;
-
-namespace ChangeDB.Migration
+﻿namespace ChangeDB.Migration
 {
     public record AgentRunTimeInfo
     {

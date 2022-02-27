@@ -28,7 +28,7 @@ namespace ChangeDB.Agent.MySql
 
         public int DBPort { get; set; }
 
-        private string connectionTemplate;
+        private readonly string connectionTemplate;
 
         private readonly Lazy<DbConnection> defaultConnectionFactory;
         public DbConnection DbConnection => defaultConnectionFactory.Value;

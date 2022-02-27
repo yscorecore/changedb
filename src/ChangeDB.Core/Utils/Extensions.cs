@@ -7,7 +7,7 @@ namespace ChangeDB
 {
     internal static class Extensions
     {
-        static Dictionary<Type, int> TypeSize = new Dictionary<Type, int>
+        static readonly Dictionary<Type, int> TypeSize = new Dictionary<Type, int>
         {
             [typeof(int)] = sizeof(int),
             [typeof(uint)] = sizeof(uint),

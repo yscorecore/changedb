@@ -18,7 +18,7 @@ namespace ChangeDB.Default
             {
                 return migrator;
             }
-            throw new NotSupportedException($"Not support agent type '{type}'.");
+            throw new NotSupportedException($"Not support agent type '{type}', the agent type should be one of the [{string.Join(", ", _allMigrators.Keys)}].");
         }
     }
 }

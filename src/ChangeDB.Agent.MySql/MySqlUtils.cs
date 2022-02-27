@@ -12,7 +12,7 @@ namespace ChangeDB.Agent.MySql
 {
     public static class MySqlUtils
     {
-        private static string[] NumberTypes = new[]
+        private static readonly string[] NumberTypes = new[]
              {"bit", "int", "tinyint", "smallint", "int", "bigint", "decimal", "double", "float"};
         public static string IdentityName(string objectName) => $"`{objectName}`";
         public static string IdentityName(string schema, string objectName) => $"{IdentityName(objectName)}";

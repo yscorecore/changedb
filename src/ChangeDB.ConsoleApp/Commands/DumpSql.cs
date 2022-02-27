@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using ChangeDB.Dump;
 using ChangeDB.Migration;
 using CommandLine;
@@ -12,13 +11,13 @@ namespace ChangeDB.ConsoleApp.Commands
     {
         public override string CommandName { get => "dumpsql"; }
 
-        [Value(1, MetaName = "source-dbtype", Required = true, HelpText = "source database type.")]
+        [Value(1, MetaName = "source-dbtype", Required = true, HelpText = "source database type. (mysql/postgres/sqlserver/sqlce)")]
         public string SourceType { get; set; }
 
         [Value(2, MetaName = "source-connection", Required = true, HelpText = "source database connection strings")]
         public string SourceConnectionString { get; set; }
 
-        [Value(3, MetaName = "target-dbtype", Required = true, HelpText = "target database type, default use source database type.")]
+        [Value(3, MetaName = "target-dbtype", Required = true, HelpText = "target database type, default use source database type. (mysql/postgres/sqlserver/sqlce)")]
         public string TargetType { get; set; }
 
 
@@ -52,6 +51,9 @@ namespace ChangeDB.ConsoleApp.Commands
             HelpText = "optimize insertion script.", Default = true)]
         public bool OptimizeInsertion { get; set; } = true;
 
+        [Option("show-progress",
+           HelpText = "show progress bar.", Default = true)]
+        public bool ShowProgress { get; set; } = true;
 
         protected override void OnRunCommand()
         {
@@ -86,32 +88,52 @@ namespace ChangeDB.ConsoleApp.Commands
                 TargetDatabase = new DatabaseInfo { DatabaseType = TargetType, ConnectionString = String.Empty },
                 DumpInfo = new SqlScriptInfo { DatabaseType = TargetType, SqlScriptFile = TargetScript },
             };
-            ConsoleProgressBarManager consoleProgressBarManager = new ConsoleProgressBarManager();
-            context.EventReporter.StageChanged += (sender, e) =>
-            {
-                if (e == StageKind.StartingTableData)
-                {
-                    consoleProgressBarManager.Start();
-                }
-                else if (e == StageKind.FinishedTableData)
-                {
-                    consoleProgressBarManager.End();
-                }
-            };
+            WriteConsoleMessage(context);
+            return context;
+        }
+
+        private void WriteConsoleMessage(DumpContext context)
+        {
             context.EventReporter.ObjectCreated += (sender, e) =>
             {
                 Console.WriteLine(string.IsNullOrEmpty(e.OwnerName)
                     ? $"{e.ObjectType} {e.FullName} dumped."
                     : $"{e.ObjectType} {e.FullName} on {e.OwnerName} dumped.");
             };
-            context.EventReporter.TableDataMigrated += (sender, e) =>
-            {
-                consoleProgressBarManager.ReportProgress(e.Table,
-                    e.Completed ? $"Data of table {e.Table} dumped." : $"Dumping data of table {e.Table}"
-                    , e.TotalCount, e.MigratedCount, e.Completed);
-            };
-            return context;
-        }
 
+            if (ShowProgress)
+            {
+                ConsoleProgressBarManager consoleProgressBarManager = new ConsoleProgressBarManager();
+                context.EventReporter.StageChanged += (sender, e) =>
+                {
+                    if (e == StageKind.StartingTableData)
+                    {
+                        consoleProgressBarManager.Start();
+                    }
+                    else if (e == StageKind.FinishedTableData)
+                    {
+                        consoleProgressBarManager.End();
+                    }
+                };
+
+                context.EventReporter.TableDataMigrated += (sender, e) =>
+                {
+                    consoleProgressBarManager.ReportProgress(e.Table,
+                        e.Completed ? $"Data of table {e.Table} dumped." : $"Dumping data of table {e.Table}"
+                        , e.TotalCount, e.MigratedCount, e.Completed);
+                };
+            }
+            else
+            {
+                context.EventReporter.TableDataMigrated += (sender, e) =>
+                {
+                    if (e.Completed)
+                    {
+                        Console.WriteLine($"Data of table {e.Table} dumped.");
+                    }
+                };
+            }
+
+        }
     }
 }

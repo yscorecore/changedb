@@ -4,12 +4,10 @@ using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using ChangeDB.Dump;
 using ChangeDB.Migration;
 using FluentAssertions;
-using Moq;
 using Xunit;
 using static ChangeDB.Agent.Postgres.PostgresCommand;
 

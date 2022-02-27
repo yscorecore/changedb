@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using ChangeDB.Migration;
+﻿using ChangeDB.Migration;
 using FluentAssertions;
 using Xunit;
 
