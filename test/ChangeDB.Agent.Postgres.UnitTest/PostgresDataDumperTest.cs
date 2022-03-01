@@ -46,14 +46,14 @@ namespace ChangeDB.Agent.Postgres
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task ShouldImportDumpDataByPsqlWhenOptimizeInsertionIsFalse(bool optimizeInsertion)
+        public async Task ShouldImportDumpDataByPsql(bool optimizeInsertion)
         {
 
             _dbConnection.ExecuteNonQuery(
                 "create schema ts;",
                 "create table ts.table1(id int primary key,nm varchar(64));",
                 "INSERT INTO ts.table1(id,nm) VALUES(1,'name1');",
-                "INSERT INTO ts.t able1(id,nm) VALUES(2,'name2');",
+                "INSERT INTO ts.table1(id,nm) VALUES(2,'name2');",
                 "INSERT INTO ts.table1(id,nm) VALUES(3,'name3');"
              );
 

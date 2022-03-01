@@ -101,14 +101,15 @@ namespace ChangeDB
             var (currentLine, segmentStartLine) = (1, 1);
             while (true)
             {
-                string line = textReader.ReadLine()?.Trim();
-                if (line == null)
+                string line = textReader.ReadLine();
+                string trimedLine = line?.Trim();
+                if (trimedLine == null)
                 {
                     ExecuteCurrentStringBuilder();
                     break;
                 }
                 currentLine = seq();
-                if (line.Equals(sqlSplit ?? string.Empty, StringComparison.InvariantCultureIgnoreCase))
+                if (trimedLine.Equals(sqlSplit ?? string.Empty, StringComparison.InvariantCultureIgnoreCase))
                 {
                     ExecuteCurrentStringBuilder();
                 }
