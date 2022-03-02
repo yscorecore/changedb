@@ -31,14 +31,17 @@
    changedb dumpsql {source-database-type} "{source-connection-string}" {target-database-type} "{output-file}" 
    ```
 
-## 🏗 Database Supported 
+## 📦 Supported Database 
 
  - **Sql Server**
  - **Postgres**
  - **Mysql**
  - **Sql Server Compact** (only supported in windows)
 
-## Database Formate Connection String 
+## 🏗️Architecture diagram
+![image](./res/ArchitectureDiagram.png)
+
+## 🔗Database Formate Connection String 
 
 |Database | Format connection string  | Extend usages | 
 |---|---|---|
@@ -47,7 +50,7 @@
 |Mysql| `Server=myServerAddress;Database=myDataBase;Uid=myUsername;Pwd=myPassword;` |[Link](https://www.connectionstrings.com/mysql-connector-net-mysqlconnection/) |
 |Sql Server Compact| `Data Source=MyData.sdf;Persist Security Info=False;` |[Link](https://www.connectionstrings.com/sqlserverce-sqlceconnection/)|
     
-## Database Object Supported
+## 🧩Database Object Supported
 | Category | Object | Sql Server| Postgres| Mysql | Sql Server Compact |
 |---|---|---|---|---|---|
 | Table|`identity`|✔️|✔️|✔️|✔️|
