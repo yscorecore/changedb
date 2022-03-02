@@ -30,7 +30,7 @@
     },
     "dump_mssql_postgres": {
       "commandName": "Project",
-      "commandLineArgs": "dumpsql sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres postgres.sql"
+      "commandLineArgs": "dumpsql sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres postgres.sql --hide-progress"
     },
     "dump_mssql_sqlce": {
       "commandName": "Project",

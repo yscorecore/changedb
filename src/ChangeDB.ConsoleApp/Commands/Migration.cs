@@ -47,9 +47,11 @@ namespace ChangeDB.ConsoleApp.Commands
             HelpText = "target database default schema.")]
         public string TargetDefaultSchema { get; set; }
 
-        [Option("show-progress",
-            HelpText = "show progress bar.", Default = true)]
-        public bool ShowProgress { get; set; } = true;
+
+        [Option("hide-progress",
+           HelpText = "hide progress bar.", Default = false)]
+        public bool HideProgress { get; set; }
+
 
         protected override void OnRunCommand()
         {
@@ -95,7 +97,7 @@ namespace ChangeDB.ConsoleApp.Commands
                     : $"{e.ObjectType} {e.FullName} on {e.OwnerName} created.");
             };
 
-            if (this.ShowProgress)
+            if (!HideProgress)
             {
                 ConsoleProgressBarManager consoleProgressBarManager = new ConsoleProgressBarManager();
                 context.EventReporter.StageChanged += (sender, e) =>
