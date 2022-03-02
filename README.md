@@ -17,7 +17,7 @@
 ## 📕 How to use
 
 
-1. Install Dotnet (net5/net6). `ChangeDB` is supported by dotnet runtime, please check the link [Here](https://dotnet.microsoft.com/download/dotnet) to setup your personal dotnet runtime.
+1. Install Dotnet (net5/net6). `ChangeDB` is supported by dotnet sdk, please check the link [Here](https://dotnet.microsoft.com/download/dotnet) to setup your personal dotnet sdk.
 1. Install ChangeDB tool. you can follow the command below to setup tool quite easily.
    ```shell
    dotnet tool install ChangeDB.ConsoleApp -g
@@ -35,26 +35,28 @@
 
  - **Sql Server**
  - **Postgres**
+ - **Mysql**
  - **Sql Server Compact** (only supported in windows)
 
 ## Database Formate Connection String 
 
 |Database | Format connection string  | Extend usages | 
 |---|---|---|
-|MS SQL| `Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword;` |[Link](https://www.connectionstrings.com/microsoft-data-sqlclient/) |
+|Sql Serve| `Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword;` |[Link](https://www.connectionstrings.com/microsoft-data-sqlclient/) |
 |Postgres| `Server=127.0.0.1;Port=5432;Database=myDataBase;User Id=myUsername;Password=myPassword;` |[Link](https://www.connectionstrings.com/npgsql/) |
-|SQL CE| `Data Source=MyData.sdf;Persist Security Info=False;` |[Link](https://www.connectionstrings.com/sqlserverce-sqlceconnection/)|
+|Mysql| `Server=myServerAddress;Database=myDataBase;Uid=myUsername;Pwd=myPassword;` |[Link](https://www.connectionstrings.com/mysql-connector-net-mysqlconnection/) |
+|Sql Server Compact| `Data Source=MyData.sdf;Persist Security Info=False;` |[Link](https://www.connectionstrings.com/sqlserverce-sqlceconnection/)|
     
 ## Database Object Supported
-| Category | Object | Sql Server| Postgres| `Sql Server Compact` |
-|---|---|---|---|---|
-| Table|`identity`|✔️|✔️|✔️|
-| Table|`index`|✔️|✔️|✔️|
-| Table|`unique`|✔️|✔️|✔️|
-| Table|`default constant value`|✔️|✔️|✔️|
-| Table|`default function value`|✔️(`newid`,`getdate`)|✔️(`now`,`gen_random_uuid`)|✔️(`newid`,`getdate`)|
-| Table|`foreign key`|✔️|✔️|✔️|
-| Table|`unique index`|✔️|✔️|✔️|
+| Category | Object | Sql Server| Postgres| Mysql | Sql Server Compact |
+|---|---|---|---|---|---|
+| Table|`identity`|✔️|✔️|✔️|✔️|
+| Table|`index`|✔️|✔️|✔️|✔️|
+| Table|`unique`|✔️|✔️|✔️|✔️|
+| Table|`default constant value`|✔️|✔️|✔️|✔️|
+| Table|`default function value`|✔️(`newid`,`getdate`)|✔️(`gen_random_uuid`,`now`)|✔️(`uuid`,`now`)|✔️(`newid`,`getdate`)|
+| Table|`foreign key`|✔️|✔️|✔️|✔️|
+| Table|`unique index`|✔️|✔️|✔️|✔️|
 
 
 
