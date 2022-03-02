@@ -39,12 +39,9 @@
  - **Sql Server Compact** (only supported in windows)
 
 ## 🏗️Architecture diagram
-<<<<<<< HEAD
+
 <p align="center">
 <img alt="build" src="./res/ArchitectureDiagram.png" />
-=======
-![image](./res/ArchitectureDiagram.png)
->>>>>>> ce39975533c8887bc8632436fe7dbdc8f4c609c2
 
 ## 🔗Database Formate Connection String 
 
