@@ -30,6 +30,9 @@
    ```shell
    changedb dumpsql {source-database-type} "{source-connection-string}" {target-database-type} "{output-file}" 
    ```
+ 1. Here we use  [Northwind.sql](https://github.com/Microsoft/sql-server-samples/tree/master/samples/databases/northwind-pubs) as source data to show how we migrate between different type of database   
+<p align="center">
+<img alt="build" src="./res/ChangedbDemo.gif" />
 
 ## 📦 Supported Database 
 
