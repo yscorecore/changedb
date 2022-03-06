@@ -17,9 +17,8 @@ namespace ChangeDB.ConsoleApp.Commands
         [Value(2, MetaName = "Source-DBConnection", Required = true, HelpText = "Enter the source database connection strings, you can get help from ChangeDB Readme page")]
         public string SourceConnectionString { get; set; }
 
-        [Value(3, MetaName = "Target-DBtype", Required = true, HelpText = "Enter the type of output database, ChangeDB will same database type as INPUT if output DBType isn't specified. (ej:mysql/postgres/sqlserver/sqlce)")]
+        [Value(3, MetaName = "Target-DBType", Required = true, HelpText = "Enter the type of output database, ChangeDB will same database type as INPUT if output DBType isn't specified. (ej:mysql/postgres/sqlserver/sqlce)")]
         public string TargetType { get; set; }
-
 
         [Value(4, MetaName = "Output-FilePath", Required = true, HelpText = "Enter the file path to saved transformed sql scripts")]
         public string TargetScript { get; set; }
@@ -32,6 +31,7 @@ namespace ChangeDB.ConsoleApp.Commands
 
         [Option("Naming-Style", HelpText = "Identify the naming style of transformed database scripts. (ej:Original/Lower/Upper).")]
         public NameStyle NameStyle { get; set; } = NameStyle.Original;
+
         [Option("Max-Fetch-Capacity", HelpText = "Enter the max capacity when ChangeDB fetch data from source database, default value is 100 (100 here equals 100KB).")]
         public int MaxFetchBytes { get; set; } = 100;
 
