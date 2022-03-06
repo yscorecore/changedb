@@ -10,19 +10,19 @@ namespace ChangeDB.ConsoleApp.Commands
     public class ImportSql : BaseCommand
     {
         public override string CommandName { get => "importsql"; }
-        [Value(1, MetaName = "target-dbtype", Required = true, HelpText = "target database type.")]
+        [Value(1, MetaName = "Target-DBType", Required = true, HelpText = "Enter the type of Target database. (ej:mysql/postgres/sqlserver/sqlce)")]
         public string TargetType { get; set; }
 
-        [Value(2, MetaName = "target-connection", Required = true, HelpText = "target database connection strings")]
+        [Value(2, MetaName = "Target-DBConnection", Required = true, HelpText = "Enter the source database connection strings, you can get help from ChangeDB Readme page")]
         public string TargetConnectionString { get; set; }
 
-        [Value(3, MetaName = "script-file", Required = true, HelpText = "the script file path")]
+        [Value(3, MetaName = "Extra-ExecuteFile", Required = true, HelpText = "Choose the sql file location, ChangeDB will execute choosen script after the migration.")]
         public string TargetScriptFile { get; set; }
 
-        [Option("sql-file-split", Required = false, HelpText = "sql file split chars, default value is \"\"", Default = "")]
+        [Option("Scripts-Separator", Required = false, HelpText = "Enter the separator for transformed script, default seperator is \"\"", Default = "")]
         public string SqlSplit { get; set; } = string.Empty;
 
-        [Option('r', "recreate-new", HelpText = "recreate new database", Default = false)]
+        [Option('r', "Recreate-Database", HelpText = "Setiing this option true ChangeDB will recreate new database, default value is FALSE", Default = false)]
         public bool ReCreateTargetDatabase { get; set; } = false;
 
         protected override void OnRunCommand()
