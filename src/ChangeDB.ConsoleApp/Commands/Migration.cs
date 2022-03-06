@@ -9,42 +9,42 @@ namespace ChangeDB.ConsoleApp.Commands
     public class Migration : BaseCommand
     {
         public override string CommandName { get => "migration"; }
-        [Value(1, MetaName = "Source-DBType", Required = true, HelpText = "Enter the type of Source dtabase. (ej:mysql/postgres/sqlserver/sqlce)")]
+        [Value(1, MetaName = "source-dbtype", Required = true, HelpText = "Enter the type of Source dtabase. (ej:mysql/postgres/sqlserver/sqlce)")]
         public string SourceType { get; set; }
 
-        [Value(2, MetaName = "Source-DBConnection", Required = true, HelpText = "Enter the source database connection strings, you can get help from ChangeDB Readme page")]
+        [Value(2, MetaName = "source-dbconnection", Required = true, HelpText = "Enter the source database connection strings, you can get help from ChangeDB Readme page")]
         public string SourceConnectionString { get; set; }
 
-        [Value(3, MetaName = "Target-DBType", Required = true, HelpText = "Enter the type of Target database. (ej:mysql/postgres/sqlserver/sqlce)")]
+        [Value(3, MetaName = "target-dbtype", Required = true, HelpText = "Enter the type of Target database. (ej:mysql/postgres/sqlserver/sqlce)")]
         public string TargetType { get; set; }
 
-        [Value(4, MetaName = "Target-DBConnection", Required = true, HelpText = "Enter the target database connection strings, you can get help from ChangeDB Readme page")]
+        [Value(4, MetaName = "target-dbconnection", Required = true, HelpText = "Enter the target database connection strings, you can get help from ChangeDB Readme page")]
         public string TargetConnectionString { get; set; }
 
 
         [Option('f', "force", HelpText = "Warning:This option will DROP target sql script file if exists in path")]
         public bool DropTargetDatabaseIfExists { get; set; } = false;
 
-        [Option("Migration-Option", HelpText = "Identify which part of database you want to migration. (ej:All/Metadata/Data)(All/Metadata/Data)", Default = MigrationScope.All)]
+        [Option("migration-scope", HelpText = "Identify which part of database you want to migration. (ej:All/Metadata/Data)(All/Metadata/Data)", Default = MigrationScope.All)]
         public MigrationScope MigrationScope { get; set; } = MigrationScope.All;
 
-        [Option("Naming-Style", HelpText = "Identify the naming style of transformed database scripts. (ej:Original/Lower/Upper).")]
+        [Option("name-style", HelpText = "Identify the naming style of transformed database scripts. (ej:Original/Lower/Upper).")]
         public NameStyle NameStyle { get; set; } = NameStyle.Original;
 
-        [Option("Max-Fetch-Capacity", HelpText = "Enter the max capacity when ChangeDB fetch data from source database, default value is 100 (100 here equals 100KB).")]
+        [Option("max-fetch-bytes", HelpText = "Enter the max capacity when ChangeDB fetch data from source database, default value is 100 (100 here equals 100KB).")]
         public int MaxFetchBytes { get; set; } = 100;
 
-        [Option("Extra-ExecuteFile", HelpText = "Choose the sql file location, ChangeDB will execute choosen script after the migration.")]
+        [Option("post-sql-file", HelpText = "Choose the sql file location, ChangeDB will execute choosen script after the migration.")]
         public string PostSqlFile { get; set; }
 
-        [Option("Scripts-Separator", Required = false, HelpText = "Enter the separator for transformed script, default seperator is \"\"", Default = "")]
+        [Option("post-sql-file-split", Required = false, HelpText = "Enter the separator for transformed script, default seperator is \"\"", Default = "")]
         public string PostSqlSplit { get; set; } = string.Empty;
 
         [Option("target-default-schema", HelpText = "target database default schema.")]
         public string TargetDefaultSchema { get; set; }
 
 
-        [Option("Hide-Process-Indicator", HelpText = "Set ture console table will hide transfrom indicator while ChangeDB migrate database. default value is false.", Default = false)]
+        [Option("hide-progress", HelpText = "Set ture console table will hide transfrom indicator while ChangeDB migrate database. default value is false.", Default = false)]
         public bool HideProgress { get; set; }
 
 
