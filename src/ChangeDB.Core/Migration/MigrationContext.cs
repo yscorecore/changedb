@@ -33,11 +33,6 @@ namespace ChangeDB.Migration
 
     }
 
-    //public enum MigrationType
-    //{
-    //    Database,
-    //    SqlScript
-    //}
 
     public record EventReporter
     {

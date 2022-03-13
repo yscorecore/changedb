@@ -55,6 +55,7 @@ namespace ChangeDB.ConsoleApp.Commands
 
         protected override void OnRunCommand()
         {
+
             var service = ServiceHost.Default.GetRequiredService<IDatabaseMigrate>();
             var context = BuildMigrationContext();
             service.MigrateDatabase(context).Wait();
@@ -87,7 +88,10 @@ namespace ChangeDB.ConsoleApp.Commands
             ShowConsoleMessage(context);
             return context;
         }
-
+        private bool CanShowProgress()
+        {
+            return !HideProgress && !Console.IsOutputRedirected;
+        }
         private void ShowConsoleMessage(MigrationContext context)
         {
             context.EventReporter.ObjectCreated += (sender, e) =>
@@ -97,7 +101,7 @@ namespace ChangeDB.ConsoleApp.Commands
                     : $"{e.ObjectType} {e.FullName} on {e.OwnerName} created.");
             };
 
-            if (!HideProgress)
+            if (CanShowProgress())
             {
                 ConsoleProgressBarManager consoleProgressBarManager = new ConsoleProgressBarManager();
                 context.EventReporter.StageChanged += (sender, e) =>

@@ -24,11 +24,9 @@ namespace ChangeDB.Default
         public async Task DumpSql(DumpContext context)
         {
             var sourceAgent = AgentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
-            var targetAgent = AgentFactory.CreateAgent(context.DumpInfo.DatabaseType);
+            var targetAgent = AgentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
             await using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
-            var createNew = context.Setting.DropTargetDatabaseIfExists;
-            await using var sqlWriter = new StreamWriter(context.DumpInfo.SqlScriptFile, false);
-            await using var targetConnection = new SqlScriptDbConnection(sqlWriter,
+            await using var targetConnection = new SqlScriptDbConnection(context.Writer,
                 targetAgent.Repr);
             context.SourceConnection = sourceConnection;
             context.TargetConnection = targetConnection;
@@ -37,7 +35,6 @@ namespace ChangeDB.Default
                 Agent = sourceAgent,
                 Descriptor = null,
             };
-            context.Writer = sqlWriter;
             var sourceDatabaseDescriptor = await GetSourceDatabaseDescriptor(sourceAgent, sourceConnection, context);
 
             context.Source.Descriptor = sourceDatabaseDescriptor;
@@ -53,8 +50,6 @@ namespace ChangeDB.Default
             await ApplyTargetAgentSettings(context);
             await DoDumpDatabase(context);
             await ApplyCustomScripts(context);
-            // flush to file
-            await sqlWriter.FlushAsync();
         }
 
 
@@ -191,12 +186,20 @@ namespace ChangeDB.Default
         }
 
 
-        protected virtual Task ApplyCustomScripts(MigrationContext migrationContext)
+        protected virtual Task ApplyCustomScripts(DumpContext dumpContext)
         {
-            var migrationSetting = migrationContext.Setting;
+            var migrationSetting = dumpContext.Setting;
             if (!string.IsNullOrEmpty(migrationSetting.PostScript?.SqlFile))
             {
-                migrationContext.TargetConnection.ExecuteSqlScriptFile(migrationSetting.PostScript.SqlFile, migrationSetting.PostScript.SqlSplit);
+                if (File.Exists(migrationSetting.PostScript.SqlFile))
+                {
+
+                }
+                else
+                {
+
+                }
+                dumpContext.TargetConnection.ExecuteSqlScriptFile(migrationSetting.PostScript.SqlFile, migrationSetting.PostScript.SqlSplit);
             }
             return Task.CompletedTask;
         }
