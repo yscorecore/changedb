@@ -12,7 +12,7 @@ namespace ChangeDB.Agent.SqlCe
         public IDataTypeMapper DataTypeMapper => SqlCeDataTypeMapper.Default;
         public ISqlExpressionTranslator ExpressionTranslator => SqlServerSqlExpressionTranslator.Default;
         public IDatabaseManager DatabaseManger => SqlCeDatabaseManager.Default;
-        public AgentSetting AgentSetting => new AgentSetting { DefaultSchema = null, ObjectNameMaxLength = 128, IdentityName = SqlCeUtils.IdentityName };
+        public AgentSetting AgentSetting => new() { DefaultSchema = null, ObjectNameMaxLength = 128, IdentityName = SqlCeUtils.IdentityName };
         public IRepr Repr => SqlServerRepr.Default;
         public IDataDumper DataDumper => SqlServerDataDumper.Default;
 

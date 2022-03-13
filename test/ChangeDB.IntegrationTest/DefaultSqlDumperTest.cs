@@ -41,12 +41,13 @@ namespace ChangeDB
                 var scope = (MigrationScope)Enum.Parse(typeof(MigrationScope), targetNode.Attribute("scope")?.Value ?? "All", true);
                 var optimizeInsertion = bool.Parse(targetNode.Attribute("optimize-insertion")?.Value ?? "true");
                 var tempFile = Path.GetRandomFileName();
+                using var textwriter = new StreamWriter(tempFile);
                 var dumpContext = new DumpContext()
                 {
                     Setting = new MigrationSetting() { MaxTaskCount = 1, MigrationScope = scope, OptimizeInsertion = optimizeInsertion },
                     SourceDatabase = new DatabaseInfo() { DatabaseType = sourceType, ConnectionString = sourceConnectionString },
                     TargetDatabase = new DatabaseInfo() { DatabaseType = targetType },
-                    DumpInfo = new SqlScriptInfo { DatabaseType = targetType, SqlScriptFile = tempFile },
+                    Writer = textwriter,
                 };
                 await dumper.DumpSql(dumpContext);
                 AssertTargetSqlStript(targetNode, tempFile);

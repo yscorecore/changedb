@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using ChangeDB.Dump;
 using ChangeDB.Migration;
 using CommandLine;
@@ -57,11 +58,25 @@ namespace ChangeDB.ConsoleApp.Commands
         protected override void OnRunCommand()
         {
             var service = ServiceHost.Default.GetRequiredService<IDatabaseSqlDumper>();
-            var context = this.BuildDumpContext();
-            service.DumpSql(context).Wait();
+            if (string.IsNullOrEmpty(this.TargetScript))
+            {
+                var context = this.BuildDumpContext(Console.Out);
+                service.DumpSql(context).Wait();
+            }
+            else
+            {
+                var fileMode = this.DropTargetDatabaseIfExists ? FileMode.Create : FileMode.CreateNew;
+                using var fileStream = File.Open(TargetScript, fileMode, FileAccess.Write);
+                using var writer = new StreamWriter(fileStream);
+                var context = this.BuildDumpContext(writer);
+                service.DumpSql(context).Wait();
+                writer.Flush();
+            }
+
+
         }
 
-        private DumpContext BuildDumpContext()
+        private DumpContext BuildDumpContext(TextWriter textWriter)
         {
             var context = new DumpContext
             {
@@ -84,13 +99,17 @@ namespace ChangeDB.ConsoleApp.Commands
                 },
 
                 SourceDatabase = new DatabaseInfo { DatabaseType = SourceType, ConnectionString = SourceConnectionString },
-                TargetDatabase = new DatabaseInfo { DatabaseType = TargetType, ConnectionString = String.Empty },
-                DumpInfo = new SqlScriptInfo { DatabaseType = TargetType, SqlScriptFile = TargetScript },
+                TargetDatabase = new DatabaseInfo { DatabaseType = TargetType, ConnectionString = string.Empty },
+                Writer = textWriter
             };
             WriteConsoleMessage(context);
             return context;
         }
 
+        private bool CanShowProgress()
+        {
+            return !HideProgress && !Console.IsOutputRedirected;
+        }
         private void WriteConsoleMessage(DumpContext context)
         {
             context.EventReporter.ObjectCreated += (sender, e) =>
@@ -100,7 +119,7 @@ namespace ChangeDB.ConsoleApp.Commands
                     : $"{e.ObjectType} {e.FullName} on {e.OwnerName} dumped.");
             };
 
-            if (!HideProgress)
+            if (CanShowProgress())
             {
                 ConsoleProgressBarManager consoleProgressBarManager = new ConsoleProgressBarManager();
                 context.EventReporter.StageChanged += (sender, e) =>
