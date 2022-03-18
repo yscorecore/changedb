@@ -9,32 +9,26 @@ namespace ChangeDB.Agent.Postgres
     {
         public static void ReCreateDatabase(this DbConnection connection)
         {
-            using (var newConnection = CreateNoDatabaseConnection(connection))
-            {
-                var connectionInfo = new NpgsqlConnectionStringBuilder(connection.ConnectionString);
-                newConnection.ExecuteNonQuery(
-                    $"DROP DATABASE IF EXISTS {PostgresUtils.IdentityName(connectionInfo.Database)};",
-                            $"CREATE DATABASE {PostgresUtils.IdentityName(connectionInfo.Database)};"
-                    );
-            }
+            using var newConnection = CreateNoDatabaseConnection(connection);
+            var connectionInfo = new NpgsqlConnectionStringBuilder(connection.ConnectionString);
+            newConnection.ExecuteNonQuery(
+                $"DROP DATABASE IF EXISTS {PostgresUtils.IdentityName(connectionInfo.Database)};",
+                $"CREATE DATABASE {PostgresUtils.IdentityName(connectionInfo.Database)};"
+            );
         }
         public static void DropDatabaseIfExists(this DbConnection connection)
         {
-            using (var newConnection = CreateNoDatabaseConnection(connection))
-            {
-                var connectionInfo = new NpgsqlConnectionStringBuilder(connection.ConnectionString);
-                newConnection.ExecuteNonQuery(
-                     $"DROP DATABASE IF EXISTS {PostgresUtils.IdentityName(connectionInfo.Database)};"
-                     );
-            }
+            using var newConnection = CreateNoDatabaseConnection(connection);
+            var connectionInfo = new NpgsqlConnectionStringBuilder(connection.ConnectionString);
+            newConnection.ExecuteNonQuery(
+                $"DROP DATABASE IF EXISTS {PostgresUtils.IdentityName(connectionInfo.Database)};"
+            );
         }
         public static void CreateDatabase(this DbConnection connection)
         {
-            using (var newConnection = CreateNoDatabaseConnection(connection))
-            {
-                var connectionInfo = new NpgsqlConnectionStringBuilder(connection.ConnectionString);
-                newConnection.ExecuteNonQuery($"CREATE DATABASE {PostgresUtils.IdentityName(connectionInfo.Database)};");
-            }
+            using var newConnection = CreateNoDatabaseConnection(connection);
+            var connectionInfo = new NpgsqlConnectionStringBuilder(connection.ConnectionString);
+            newConnection.ExecuteNonQuery($"CREATE DATABASE {PostgresUtils.IdentityName(connectionInfo.Database)};");
         }
 
         public static void ClearDatabase(this DbConnection connection)

@@ -12,7 +12,6 @@ namespace ChangeDB.ConsoleApp
             ServiceCollection sc = new ServiceCollection();
             sc.AddChangeDb();
             _serviceProvider = sc.BuildServiceProvider();
-
         }
         private readonly IServiceProvider _serviceProvider;
         public object GetService(Type serviceType)

@@ -33,6 +33,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.MySql", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.MySql.UnitTest", "test\ChangeDB.Agent.MySql.UnitTest\ChangeDB.Agent.MySql.UnitTest.csproj", "{2F860AB0-198D-4D55-9852-C12F7A6BB7A3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChangeDB.ConsoleApp.End2EndTest", "test\ChangeDB.ConsoleApp.End2EndTest\ChangeDB.ConsoleApp.End2EndTest.csproj", "{DF0B76E1-6DFA-40B3-8852-AC8663B7E867}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -91,6 +93,10 @@ Global
 		{2F860AB0-198D-4D55-9852-C12F7A6BB7A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F860AB0-198D-4D55-9852-C12F7A6BB7A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F860AB0-198D-4D55-9852-C12F7A6BB7A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF0B76E1-6DFA-40B3-8852-AC8663B7E867}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF0B76E1-6DFA-40B3-8852-AC8663B7E867}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF0B76E1-6DFA-40B3-8852-AC8663B7E867}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF0B76E1-6DFA-40B3-8852-AC8663B7E867}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -109,6 +115,7 @@ Global
 		{DA12C6B6-1718-4048-AEF5-39C2B8003D5A} = {6C7E5914-CD6B-40F1-BFD7-8FB17E3EAE11}
 		{17FA1608-8D32-409B-851F-8A3EF090FAA8} = {6C7E5914-CD6B-40F1-BFD7-8FB17E3EAE11}
 		{2F860AB0-198D-4D55-9852-C12F7A6BB7A3} = {9D50B35B-1EAA-4620-B0A6-245456051247}
+		{DF0B76E1-6DFA-40B3-8852-AC8663B7E867} = {9D50B35B-1EAA-4620-B0A6-245456051247}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB11BB21-3F5D-42D6-8737-F19C0666F1F8}
