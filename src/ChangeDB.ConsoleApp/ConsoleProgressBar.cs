@@ -45,6 +45,7 @@ namespace ChangeDB.ConsoleApp
 
         private readonly Timer _timer = new Timer() { Interval = 300, Enabled = false };
 
+        private readonly object _locker = new object();
         public ConsoleProgressBarManager()
         {
             _timer.Elapsed += (s, e) => { this.RenderProgressBars(); };
@@ -52,7 +53,7 @@ namespace ChangeDB.ConsoleApp
 
         public void ReportProgress(string key, string text, long total, long value, bool finished)
         {
-            lock (this)
+            lock (_locker)
             {
                 var bar = this._bars.FirstOrDefault(p => p.Key == key);
                 if (bar == null)
@@ -86,7 +87,7 @@ namespace ChangeDB.ConsoleApp
 
         private void RenderProgressBars()
         {
-            lock (this)
+            lock (_locker)
             {
                 var consoleTop = Console.CursorTop;
                 var goBackLines = CalcGoBackLines();
