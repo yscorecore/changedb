@@ -7,19 +7,17 @@ on:
     tags-ignore:
       - "*"  
 jobs:
-  basic:
+  build:
     runs-on: ubuntu-latest
     steps:
     - name: 01 Checkout Code
-      uses: actions/checkout@v1
-    - name: 02 Setup .NET Core
+      uses: actions/checkout@v2
+    - name: 02 Setup .Net SDK
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.100
-    - name: 03 Setup .NET Core 6
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 6.0.100
-    - name: 04 Build with dotnet
+        dotnet-version: | 
+          5.0.100
+          6.0.100
+    - name: 03 Build with dotnet
       run: dotnet build
 
