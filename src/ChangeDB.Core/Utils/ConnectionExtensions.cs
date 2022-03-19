@@ -26,24 +26,7 @@ namespace ChangeDB
             }
             var result = command.ExecuteScalar();
             return result == DBNull.Value ? null : result;
-
         }
-
-        private static T ToValue<T>(this object val)
-        {
-            if (val == null || val == DBNull.Value)
-            {
-                return default(T);
-            }
-            else
-            {
-                var valType = Nullable.GetUnderlyingType(typeof(T));
-                return (T)Convert.ChangeType(val, valType ?? typeof(T));
-            }
-        }
-
-        private static T FieldValue<T>(this DataRow row, int index) => row[index].ToValue<T>();
-        private static T FieldValue<T>(this DataRow row, string columnName) => row[columnName].ToValue<T>();
         public static T ExecuteScalar<T>(this IDbConnection connection, string sql, IDictionary<string, object> args = null)
         {
             return connection.ExecuteScalar(sql, args).ToValue<T>();
@@ -261,5 +244,20 @@ namespace ChangeDB
                 }
             }
         }
+        private static T ToValue<T>(this object val)
+        {
+            if (val == null || val == DBNull.Value)
+            {
+                return default(T);
+            }
+            else
+            {
+                var valType = Nullable.GetUnderlyingType(typeof(T));
+                return (T)Convert.ChangeType(val, valType ?? typeof(T));
+            }
+        }
+
+        private static T FieldValue<T>(this DataRow row, int index) => row[index].ToValue<T>();
+        private static T FieldValue<T>(this DataRow row, string columnName) => row[columnName].ToValue<T>();
     }
 }

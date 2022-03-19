@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
@@ -9,8 +10,10 @@ using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
+using Microsoft.EntityFrameworkCore.SqlServer.Design.Internal;
 using Microsoft.EntityFrameworkCore.SqlServer.Diagnostics.Internal;
 using Microsoft.EntityFrameworkCore.SqlServer.Scaffolding.Internal;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace ChangeDB.Agent.SqlServer
@@ -23,24 +26,25 @@ namespace ChangeDB.Agent.SqlServer
 
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
+        [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
         {
-            var loggerFactory = new LoggerFactory();
-            var databaseModelFactory = new SqlServerDatabaseModelFactory(
-                new DiagnosticsLogger<DbLoggerCategory.Scaffolding>(
-                    loggerFactory,
-                    new LoggingOptions(),
-                    new DiagnosticListener("sqlserver"),
-                    new SqlServerLoggingDefinitions(),
-                    new NullDbContextLogger()));
-            var options = new DatabaseModelFactoryOptions();
-            var model = databaseModelFactory.Create(dbConnection, options);
+            var databaseModelFactory = GetModelFactory();
+            var model = databaseModelFactory.Create(dbConnection, new DatabaseModelFactoryOptions());
             return FromDatabaseModel(model, dbConnection);
         }
+        [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.")]
+        private static IDatabaseModelFactory GetModelFactory()
+        {
+            var sc = new ServiceCollection();
+            var designerService = new SqlServerDesignTimeServices();
+            sc.AddEntityFrameworkSqlServer();
+            designerService.ConfigureDesignTimeServices(sc);
+            var provider = sc.BuildServiceProvider();
+            return provider.GetRequiredService<IDatabaseModelFactory>();
+        }
 
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
+        [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
         private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection)
         {
             // exclude views

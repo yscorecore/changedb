@@ -46,12 +46,7 @@ namespace ChangeDB.Agent.MySql
 
         private static IDictionary<string, object> GetRowData(DataRow row, TableDescriptor tableDescriptor)
         {
-            var dic = new Dictionary<string, object>();
-            foreach (var column in tableDescriptor.Columns)
-            {
-                dic[$"@{column.Name}"] = row[column.Name];
-            }
-            return dic;
+            return tableDescriptor.Columns.ToDictionary(p => $"@{p.Name}", p => row[p.Name]);
         }
 
 

@@ -25,7 +25,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             var rootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var agentDlls = Directory.GetFiles(rootPath, "ChangeDB.Agent.*.dll");
-            var allAgentTypes = agentDlls.SelectMany(p => Assembly.LoadFrom(p).GetTypes().Where(p => !p.IsAbstract && typeof(IMigrationAgent).IsAssignableFrom(p))).ToList();
+            var allAgentTypes = agentDlls.SelectMany(p => Assembly.LoadFrom(p).GetTypes().Where(t => !t.IsAbstract && typeof(IMigrationAgent).IsAssignableFrom(t))).ToList();
 
             foreach (var agentType in allAgentTypes)
             {

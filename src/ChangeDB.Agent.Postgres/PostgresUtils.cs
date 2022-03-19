@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
@@ -8,7 +9,9 @@ using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Design.Internal;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Diagnostics.Internal;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata.Internal;
@@ -27,22 +30,24 @@ namespace ChangeDB.Agent.Postgres
         public static string IdentityName(string schema, string objectName) => string.IsNullOrEmpty(schema) ? IdentityName(objectName) : $"{IdentityName(schema)}.{IdentityName(objectName)}";
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
+        [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
         public static DatabaseDescriptor GetDataBaseDescriptorByEfCore(DbConnection dbConnection)
         {
-            var loggerFactory = new LoggerFactory();
-            var databaseModelFactory = new NpgsqlDatabaseModelFactory(
-                   new DiagnosticsLogger<DbLoggerCategory.Scaffolding>(
-                       loggerFactory,
-                       new LoggingOptions(),
-                       new DiagnosticListener("postgres"),
-                       new NpgsqlLoggingDefinitions(),
-                       new NullDbContextLogger()));
-            var options = new DatabaseModelFactoryOptions();
-            var model = databaseModelFactory.Create(dbConnection, options);
+            var databaseModelFactory = GetModelFactory();
+            var model = databaseModelFactory.Create(dbConnection, new DatabaseModelFactoryOptions());
             return FromDatabaseModel(model, dbConnection);
         }
 
+        [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.")]
+        private static IDatabaseModelFactory GetModelFactory()
+        {
+            var sc = new ServiceCollection();
+            var designerService = new NpgsqlDesignTimeServices();
+            sc.AddEntityFrameworkNpgsql();
+            designerService.ConfigureDesignTimeServices(sc);
+            var provider = sc.BuildServiceProvider();
+            return provider.GetRequiredService<IDatabaseModelFactory>();
+        }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
         private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection)
         {
