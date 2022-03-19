@@ -12,6 +12,10 @@
 <a href="https://codecov.io/gh/yscorecore/changedb">
     <img alt="codecov" src="https://codecov.io/gh/yscorecore/changedb/branch/master/graph/badge.svg" />
 </a>
+<a href="https://sonarcloud.io/summary/new_code?id=yscorecore_changedb">
+    <img alt="Security Rating" src="https://sonarcloud.io/api/project_badges/measure?project=yscorecore_changedb&metric=security_rating" />
+</a>
+
 </p>
 
 ## 📕 How to use
