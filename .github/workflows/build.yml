@@ -9,75 +9,125 @@ on:
     branches: 
       - sonar
 jobs:
-  run-windows:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 01 Checkout Code
+      uses: actions/checkout@v2
+    - name: 02 Setup .Net SDK
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: | 
+          5.0.100
+          6.0.100
+    - name: 03 Build with dotnet
+      run: dotnet build
+  code-check-format:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 01 Checkout Code
+      uses: actions/checkout@v2
+    - name: 02 Setup .Net SDK
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: | 
+          5.0.100
+          6.0.100
+    - name: 03 Restore Dotnet Tool
+      run: dotnet tool restore
+    - name: 04 Check Code Format
+      run: dotnet format --verify-no-changes 
+  code-scan-sonar:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 01 Checkout Code
+      uses: actions/checkout@v2
+    - name: 02 Setup .Net SDK
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: | 
+          5.0.100
+          6.0.100
+    - name: 03 Setup JDK 11
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.11
+    - name: 04 Install SonarScanner
+      run:  dotnet tool restore
+    - name: 05 Begin Scan With SonarCloud
+      run:  dotnet sonarscanner begin /k:"yscorecore_changedb" /o:"yscorecore" /d:sonar.login="${{secrets.SONAR_TOKEN}}" /d:sonar.host.url="https://sonarcloud.io"
+    - name: 06 Build with dotnet
+      run: dotnet build
+    - name: 07 End Scan With SonarCloud
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run:  dotnet sonarscanner end /d:sonar.login="${{secrets.SONAR_TOKEN}}"
+  test-sqlce:
     runs-on: windows-latest
     steps:
     - name: 01 Checkout Code
       uses: actions/checkout@v1
-    - name: 02 Setup .Net Core 5
+    - name: 02 Setup .Net SDK
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.100
-    - name: 03 Setup .NET Core 6
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 6.0.100
-    - name: 04 Build with dotnet
-      run: dotnet build
-    - name: 05 Run Unit test
+        dotnet-version: | 
+          5.0.100
+          6.0.100
+    - name: 03 Run Unit test
       run: dotnet test test/ChangeDB.Agent.SqlCe.UnitTest /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude="[*Test]*"
-    - name: 06 UpLoad SqlCe Coverage
-      uses: actions/upload-artifact@v2
+    - name: 04 UpLoad SqlCe Coverage
+      uses: actions/upload-artifact@v3
       with:
         name: sqlce-coverage
-        path: test/ChangeDB.Agent.SqlCe.UnitTest/coverage.cobertura.xml
-  run-linux:
+        path: test/*/coverage.cobertura.xml
+  test-others:
     runs-on: ubuntu-latest
     steps:
     - name: 01 Checkout Code
       uses: actions/checkout@v1
-    - name: 02 Setup .Net Core 5
+    - name: 02 Setup .Net SDK
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.100
-    - name: 03 Setup .NET Core 6
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 6.0.100
-    - name: Setup Java 17
-      uses: actions/setup-java@v2
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-    - name: 04 Restore Dotnet Tool
+        dotnet-version: | 
+          5.0.100
+          6.0.100
+    - name: 03 Restore Dotnet Tool
       run: dotnet tool restore
-    - name: 05 Check Code Format
-      run: dotnet format --verify-no-changes 
-    - name: 12 Begin Scan With SonarCloud
-      run:  dotnet dotnet-sonarscanner begin /k:"yscorecore_changedb" /o:"yscorecore" /d:sonar.login="${{secrets.SONAR_TOKEN}}" /d:sonar.host.url="https://sonarcloud.io”
-    - name: 06 Build with dotnet
-      run: dotnet build
-    - name: 07 DownLoad Sqlce Coverage
-      uses: actions/download-artifact@v2
+    - name: 04 Run Unit test
+      run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude="[*Test]*"
+    - name: 05 UpLoad Coverage
+      uses: actions/upload-artifact@v3
       with:
-        name: sqlce-coverage
-        path: test/ChangeDB.Agent.SqlCe.UnitTest
-    - name: 08 Run Unit test
-      run: dotnet test --no-restore /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude="[*Test]*"
-    - name: 09 Combin All Test Report
-      run: dotnet reportgenerator -reports:test/*/coverage.cobertura.xml -reporttype:cobertura -targetdir:.
-    - name: 10 Save Artifact
-      uses: actions/upload-artifact@v1
+        name: test-coverage
+        path: test/*/coverage.cobertura.xml
+  test:
+    needs: [test-sqlce,test-others]
+    runs-on: ubuntu-latest
+    steps:
+    - name: 01 Checkout Code
+      uses: actions/checkout@v1
+    - name: 02 Setup .Net SDK
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: |
+          6.0.100
+    - name: 03 Restore Dotnet Tool
+      run: dotnet tool restore
+    - name: 04 DownLoad Coverage
+      uses: actions/download-artifact@v3
+      with:
+        path: test-coverages
+    - name: 05 Combin All Test Report
+      run: dotnet reportgenerator -reports:test-coverages/**/coverage.cobertura.xml -reporttype:cobertura -targetdir:.
+    - name: 06 Save Artifact
+      uses: actions/upload-artifact@v3
       with:
         name: cobertura_report
         path: ./Cobertura.xml
-    - name: 11 Upload coverage to Codecov
+    - name: 07 Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: unittests
         fail_ci_if_error: true
-    - name: 13 Build Between SonarCloud
-      run:  dotnet build
-    - name: 14 End Scan With SonarCloud
-      run:  dotnet dotnet-sonarscanner end /d:sonar.login="{{secrets.SONAR_TOKEN}}"
