@@ -13,6 +13,12 @@
       "commands": [
         "reportgenerator"
       ]
+    },
+    "dotnet-sonarscanner": {
+      "version": "5.5.3",
+      "commands": [
+        "dotnet-sonarscanner"
+      ]
     }
   }
 }

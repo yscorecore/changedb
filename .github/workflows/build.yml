@@ -71,3 +71,9 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: unittests
         fail_ci_if_error: true
+    - name: 12 Begin Scan With SonarCloud
+      run:  dotnet dotnet-sonarscanner begin /k:"yscorecore_changedb" /o:"yscorecore" /d:sonar.login="{{secrets.SONAR_TOKEN}}" /d:sonar.host.url="https://sonarcloud.io”
+    - name: 13 Build Between SonarCloud
+      run:  dotnet build
+    - name: 14 End Scan With SonarCloud
+      run:  dotnet dotnet-sonarscanner end  /d:sonar.login="{{secrets.SONAR_TOKEN}}"
