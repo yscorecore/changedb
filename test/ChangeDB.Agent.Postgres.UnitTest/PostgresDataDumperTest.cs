@@ -43,10 +43,11 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ClearDatabase();
         }
 
-        //[Theory]
-        //[InlineData(false)]
-        //[InlineData(true)]
-        public async Task ShouldImportDumpDataByPsql(bool optimizeInsertion)
+        // [Theory(Skip = "skip on ci")]
+        // [InlineData(false)]
+        // [InlineData(true)]
+        // TODO Slip ON CI
+        private async Task ShouldImportDumpDataByPsql(bool optimizeInsertion)
         {
 
             _dbConnection.ExecuteNonQuery(
@@ -76,7 +77,7 @@ namespace ChangeDB.Agent.Postgres
 
                 };
                 await _dataDumper.WriteTables(ToAsyncTable(tableData), tableDesc, dumpContext);
-                writer.Flush();
+                await writer.FlushAsync();
             }
 
             // can use psql insert dump file

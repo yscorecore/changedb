@@ -17,7 +17,7 @@ namespace ChangeDB.Agent.Postgres
 
         public Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext)
         {
-            var databaseDescriptor = PostgresUtils.GetDataBaseDescriptorByEFCore(migrationContext.SourceConnection);
+            var databaseDescriptor = PostgresUtils.GetDataBaseDescriptorByEfCore(migrationContext.SourceConnection);
             return Task.FromResult(databaseDescriptor);
         }
         public Task PreMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
@@ -218,8 +218,7 @@ namespace ChangeDB.Agent.Postgres
                         var principalColumns = string.Join(", ", foreignKey.PrincipalNames.Select(PostgresUtils.IdentityName));
                         var principalTable = PostgresUtils.IdentityName(foreignKey.PrincipalSchema, foreignKey.PrincipalTable);
                         var sql =
-                            $"ALTER TABLE {tableName} ADD CONSTRAINT {foreignKeyName}" +
-                            $"FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})";
+                            $"ALTER TABLE {tableName} ADD CONSTRAINT {foreignKeyName} FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})";
                         migrationContext.CreateTargetObject(sql, ObjectType.ForeignKey, foreignKeyName, tableName);
                     }
                 }

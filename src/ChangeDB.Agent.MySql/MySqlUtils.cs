@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding;
@@ -25,6 +26,7 @@ namespace ChangeDB.Agent.MySql
             return FromDatabaseModel(model, dbConnection);
         }
 
+        [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.")]
         private static IDatabaseModelFactory GetModelFactory()
         {
             var sc = new ServiceCollection();
