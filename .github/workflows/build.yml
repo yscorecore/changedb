@@ -2,12 +2,12 @@ name: build
 on:
   push:
     branches:
-      - master
+      - sonar
     tags-ignore:
       - "*"  
   pull_request:
     branches: 
-      - master
+      - sonar
 jobs:
   run-windows:
     runs-on: windows-latest
@@ -32,7 +32,6 @@ jobs:
         name: sqlce-coverage
         path: test/ChangeDB.Agent.SqlCe.UnitTest/coverage.cobertura.xml
   run-linux:
-    needs: run-windows
     runs-on: ubuntu-latest
     steps:
     - name: 01 Checkout Code
@@ -45,10 +44,17 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 6.0.100
+    - name: Setup Java 17
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'temurin'
+        java-version: '17'
     - name: 04 Restore Dotnet Tool
       run: dotnet tool restore
     - name: 05 Check Code Format
       run: dotnet format --verify-no-changes 
+    - name: 12 Begin Scan With SonarCloud
+      run:  dotnet dotnet-sonarscanner begin /k:"yscorecore_changedb" /o:"yscorecore" /d:sonar.login="${{secrets.SONAR_TOKEN}}" /d:sonar.host.url="https://sonarcloud.io”
     - name: 06 Build with dotnet
       run: dotnet build
     - name: 07 DownLoad Sqlce Coverage
@@ -71,9 +77,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: unittests
         fail_ci_if_error: true
-    - name: 12 Begin Scan With SonarCloud
-      run:  dotnet dotnet-sonarscanner begin /k:"yscorecore_changedb" /o:"yscorecore" /d:sonar.login="{{secrets.SONAR_TOKEN}}" /d:sonar.host.url="https://sonarcloud.io”
     - name: 13 Build Between SonarCloud
       run:  dotnet build
     - name: 14 End Scan With SonarCloud
-      run:  dotnet dotnet-sonarscanner end  /d:sonar.login="{{secrets.SONAR_TOKEN}}"
+      run:  dotnet dotnet-sonarscanner end /d:sonar.login="{{secrets.SONAR_TOKEN}}"
