@@ -136,33 +136,33 @@ GEOMCOLLECTION      |255                 |GEOMCOLLECTION      |System.Byte[]
             return (storeType.ToLower(), null, null);
         }
 
-        public string ToDatabaseStoreType(DataTypeDescriptor dataType)
+        public string ToDatabaseStoreType(DataTypeDescriptor commonDataType)
         {
-            return dataType.DbType switch
+            return commonDataType.DbType switch
             {
                 CommonDataType.Boolean => "tinyint(1)",
-                CommonDataType.Varchar => CreateVarcharType(dataType.Arg1 ?? 1),
-                CommonDataType.Char => $"CHAR({dataType.Arg1})",
-                CommonDataType.NVarchar => CreateVarcharType(dataType.Arg1 ?? 1),
-                CommonDataType.NChar => $"CHAR({dataType.Arg1})",
+                CommonDataType.Varchar => CreateVarcharType(commonDataType.Arg1 ?? 1),
+                CommonDataType.Char => $"CHAR({commonDataType.Arg1})",
+                CommonDataType.NVarchar => CreateVarcharType(commonDataType.Arg1 ?? 1),
+                CommonDataType.NChar => $"CHAR({commonDataType.Arg1})",
                 CommonDataType.Float => "float",
                 CommonDataType.Double => "double",
-                CommonDataType.Binary => $"binary({dataType.Arg1})",
+                CommonDataType.Binary => $"binary({commonDataType.Arg1})",
                 CommonDataType.Int => "int",
                 CommonDataType.SmallInt => "smallint",
                 CommonDataType.BigInt => "bigint",
                 CommonDataType.TinyInt => "tinyint",
-                CommonDataType.Varbinary => CreateBinaryType(dataType.Arg1 ?? 1),
-                CommonDataType.Decimal => $"decimal({dataType.Arg1},{dataType.Arg2})",
+                CommonDataType.Varbinary => CreateBinaryType(commonDataType.Arg1 ?? 1),
+                CommonDataType.Decimal => $"decimal({commonDataType.Arg1},{commonDataType.Arg2})",
                 CommonDataType.Date => "date",
-                CommonDataType.Time => $"time({Math.Min(dataType?.Arg1 ?? 0, 6)})",
-                CommonDataType.DateTime => $"datetime({Math.Min(dataType?.Arg1 ?? 0, 6)})",
+                CommonDataType.Time => $"time({Math.Min(commonDataType?.Arg1 ?? 0, 6)})",
+                CommonDataType.DateTime => $"datetime({Math.Min(commonDataType?.Arg1 ?? 0, 6)})",
                 CommonDataType.Text => "longtext",
                 CommonDataType.NText => "longtext",
                 CommonDataType.Blob => "longblob",
                 CommonDataType.Uuid => "binary(16)",
-                CommonDataType.DateTimeOffset => $"datetime({Math.Min(dataType?.Arg1 ?? 0, 6)})",
-                _ => throw new ArgumentOutOfRangeException()
+                CommonDataType.DateTimeOffset => $"datetime({Math.Min(commonDataType?.Arg1 ?? 0, 6)})",
+                _ => throw new NotSupportedException()
             };
 
             string CreateVarcharType(int length)
