@@ -193,13 +193,13 @@ namespace ChangeDB.Default
             {
                 if (File.Exists(migrationSetting.PostScript.SqlFile))
                 {
-
+                    using var reader = new StreamReader(migrationSetting.PostScript.SqlFile);
+                    dumpContext.Writer.AppendReader(reader);
                 }
                 else
                 {
-
+                    throw new ChangeDBException($"script file '{migrationSetting.PostScript.SqlFile}' not found.");
                 }
-                dumpContext.TargetConnection.ExecuteSqlScriptFile(migrationSetting.PostScript.SqlFile, migrationSetting.PostScript.SqlSplit);
             }
             return Task.CompletedTask;
         }
@@ -230,29 +230,7 @@ namespace ChangeDB.Default
             var targetDataTables = ConvertToTargetDataTable(sourceDataTables, dumpContext.Setting);
             await target.Agent.DataDumper.WriteTables(targetDataTables, targetTableDesc, dumpContext);
 
-            //while (totalCount > 0)
-            //{
 
-
-            //    var pageInfo = new PageInfo { Offset = migratedCount, Limit = Math.Max(1, fetchCount) };
-            //    var dataTable = await source.Agent.DataMigrator.ReadSourceTable(sourceTable, pageInfo, migrationContext);
-            //    // convert target column name
-            //    dataTable.Columns.OfType<DataColumn>().Each(p =>
-            //        p.ColumnName = migrationSetting.TargetNameStyle.ColumnNameFunc(p.ColumnName));
-            //    await target.Agent.DataMigrator.WriteTargetTable(dataTable, targetTableDesc, migrationContext);
-
-            //    migratedCount += dataTable.Rows.Count;
-            //    totalCount = Math.Max(totalCount, migratedCount);
-            //    maxRowSize = Math.Max(maxRowSize, dataTable.MaxRowSize());
-            //    fetchCount = Math.Min(fetchCount * migrationSetting.GrowthSpeed, Math.Max(1, migrationSetting.FetchDataMaxSize / maxRowSize));
-
-            //    if (dataTable.Rows.Count < pageInfo.Limit)
-            //    {
-            //        migrationContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, migratedCount, migratedCount, false);
-            //        break;
-            //    }
-            //    migrationContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, totalCount, migratedCount, false);
-            //}
             await target.Agent.DataMigrator.AfterWriteTargetTable(targetTableDesc, dumpContext);
             var targetCount = await target.Agent.DataMigrator.CountSourceTable(sourceTable, dumpContext);
             dumpContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, sourceCount, targetCount, true);

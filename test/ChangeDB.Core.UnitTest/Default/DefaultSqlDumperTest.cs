@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ChangeDB.Default;
@@ -35,7 +36,7 @@ namespace ChangeDB.Core.Default
             await dumper.DumpSql(new DumpContext
             {
                 SourceDatabase = new DatabaseInfo { DatabaseType = "sourcedb" },
-                TargetDatabase = new DatabaseInfo { DatabaseType = "sourcedb" },
+                TargetDatabase = new DatabaseInfo { DatabaseType = "targetdb" },
                 Setting = new MigrationSetting
                 {
                     PostScript = new CustomSqlScript { SqlFile = customSqlScript }
@@ -43,7 +44,10 @@ namespace ChangeDB.Core.Default
                 Writer = writer
             });
             using var reader = new StringReader(sb.ToString());
-            reader.ReadAllLines().Should().BeEquivalentTo(new[] { "Hello;", "", "world;", "" });
+            var allLines = reader.ReadAllLines().ToArray();
+            allLines[0].Should().Be("Hello;");
+            allLines[1].Should().Be("");
+            allLines[2].Should().Be("world;");
         }
     }
 }

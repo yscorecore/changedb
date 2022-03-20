@@ -26,52 +26,50 @@ namespace ChangeDB
                     startInfo.Environment.Add(kv.Key, Convert.ToString(kv.Value, CultureInfo.InvariantCulture));
                 }
             }
-            StringBuilder stringBuilder = new StringBuilder();
-            using (var process = Process.Start(startInfo))
-            {
+            var stringBuilder = new StringBuilder();
+            using var process = Process.Start(startInfo);
 
-                using (AutoResetEvent outputWaitHandle = new AutoResetEvent(false))
-                using (AutoResetEvent errorWaitHandle = new AutoResetEvent(false))
+            using (AutoResetEvent outputWaitHandle = new AutoResetEvent(false))
+            using (AutoResetEvent errorWaitHandle = new AutoResetEvent(false))
+            {
+                process.OutputDataReceived += (s, e) =>
                 {
-                    process.OutputDataReceived += (s, e) =>
+                    if (e.Data == null)
                     {
-                        if (e.Data == null)
-                        {
-                            outputWaitHandle.Set();
-                        }
-                        else
-                        {
-                            stringBuilder.AppendLine(e.Data);
-                        }
-                    };
-                    process.ErrorDataReceived += (s, e) =>
-                    {
-                        if (e.Data == null)
-                        {
-                            errorWaitHandle.Set();
-                        }
-                        else
-                        {
-                            stringBuilder.AppendLine(e.Data);
-                        }
-                    };
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine();
-                    var timeout = maxTimeOutSeconds * 1000;
-                    if (process.WaitForExit(timeout) && outputWaitHandle.WaitOne(timeout) && errorWaitHandle.WaitOne(timeout))
-                    {
-                        if (process.ExitCode != 0)
-                        {
-                            throw new Exception($"Exec process exit with code: {process.ExitCode}, output: {stringBuilder}");
-                        }
+                        outputWaitHandle.Set();
                     }
                     else
                     {
-                        throw new Exception($"Exec process timeout, total seconds > {maxTimeOutSeconds}s, output: {stringBuilder}");
+                        stringBuilder.AppendLine(e.Data);
+                    }
+                };
+                process.ErrorDataReceived += (s, e) =>
+                {
+                    if (e.Data == null)
+                    {
+                        errorWaitHandle.Set();
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine(e.Data);
+                    }
+                };
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+                var timeout = maxTimeOutSeconds * 1000;
+                if (process.WaitForExit(timeout) && outputWaitHandle.WaitOne(timeout) && errorWaitHandle.WaitOne(timeout))
+                {
+                    if (process.ExitCode != 0)
+                    {
+                        throw new Exception($"Exec process exit with code: {process.ExitCode}, output: {stringBuilder}");
                     }
                 }
-                return process.ExitCode;
+                else
+                {
+                    throw new Exception($"Exec process timeout, total seconds > {maxTimeOutSeconds}s, output: {stringBuilder}");
+                }
             }
+            return process.ExitCode;
 
         }
 

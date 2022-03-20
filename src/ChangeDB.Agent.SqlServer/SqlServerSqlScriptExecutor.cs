@@ -11,20 +11,6 @@ namespace ChangeDB.Agent.SqlServer
 {
     public class SqlServerSqlScriptExecutor : BaseSqlScriptExecutor
     {
-        //protected override IDictionary<char, char> ContentWrapChars()
-        //{
-        //    return new Dictionary<char, char>
-        //    {
-        //        ['\''] = '\'',
-        //        ['"'] = '"',
-        //        ['['] = ']'
-        //    };
-        //}
-        //protected override (bool IsEnd, string sqlSegment) IsEndOfSqlSentence(string line)
-        //{
-        //    var isEnd = string.Equals(line.Trim(), "go", StringComparison.InvariantCultureIgnoreCase);
-        //    return (isEnd, null);
-        //}
         protected override IDictionary<char, IContentReader> ContentReaders()
         {
             return new Dictionary<char, IContentReader>

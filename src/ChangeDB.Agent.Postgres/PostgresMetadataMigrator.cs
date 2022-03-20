@@ -218,8 +218,7 @@ namespace ChangeDB.Agent.Postgres
                         var principalColumns = string.Join(", ", foreignKey.PrincipalNames.Select(PostgresUtils.IdentityName));
                         var principalTable = PostgresUtils.IdentityName(foreignKey.PrincipalSchema, foreignKey.PrincipalTable);
                         var sql =
-                            $"ALTER TABLE {tableName} ADD CONSTRAINT {foreignKeyName}" +
-                            $"FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})";
+                            $"ALTER TABLE {tableName} ADD CONSTRAINT {foreignKeyName} FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})";
                         migrationContext.CreateTargetObject(sql, ObjectType.ForeignKey, foreignKeyName, tableName);
                     }
                 }
