@@ -5,6 +5,6 @@ namespace ChangeDB.Migration.Mapper
 {
     public class TableDescriptorMapper : BaseMapper<TableDescriptor>
     {
-        public List<ColumnDescriptorMapper> ColumnMappers { get; set; }
+        public List<ColumnDescriptorMapper> ColumnMappers { get; } = new();
     }
 }

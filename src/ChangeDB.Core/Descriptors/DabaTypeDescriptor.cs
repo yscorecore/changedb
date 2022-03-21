@@ -34,7 +34,7 @@ namespace ChangeDB
 
         public static DataTypeDescriptor DateTimeOffset(int scale) => new() { DbType = CommonDataType.DateTimeOffset, Arg1 = scale, ClrType = typeof(DateTimeOffset) };
 
-        public static DataTypeDescriptor UnKnow() => new() { DbType = CommonDataType.UnKnow };
+        public static DataTypeDescriptor UnKnow() => new() { DbType = CommonDataType.UnKnow,ClrType = typeof(object)};
     }
 
     public enum CommonDataType

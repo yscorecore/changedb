@@ -5,6 +5,6 @@ namespace ChangeDB.Migration
 {
     public interface IDatabaseMapper
     {
-        Task<DatabaseDescriptorMapper> MapDatabase(DatabaseDescriptor sourceDatabase);
+        Task<DatabaseDescriptorMapper> MapDatabase(DatabaseDescriptor sourceDatabase,AgentSetting agentSetting);
     }
 }
