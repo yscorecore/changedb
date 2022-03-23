@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using FluentAssertions;
@@ -88,7 +89,15 @@ namespace ChangeDB.Agent.SqlServer
             var databaseDescriptor = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
             var columnStoreType = databaseDescriptor.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).Single();
             var commonDataType = _dataTypeMapper.ToCommonDatabaseType(columnStoreType);
-            commonDataType.Should().BeEquivalentTo(new DataTypeDescriptor { DbType = commonDbType, Arg1 = arg1, Arg2 = arg2 });
+
+            var method = typeof(DataTypeDescriptor).GetMethod(Enum.GetName(commonDbType) ?? string.Empty,
+                BindingFlags.Static | BindingFlags.Public);
+            var parameterLength = method.GetParameters().Length;
+            var args = new object[parameterLength];
+            if (parameterLength > 0) args[0] = arg1;
+            if (parameterLength > 1) args[1] = arg2;
+            var typeDescriptor = (DataTypeDescriptor)method.Invoke(null, args);
+            commonDataType.Should().BeEquivalentTo(typeDescriptor);
         }
 
         [Theory]
