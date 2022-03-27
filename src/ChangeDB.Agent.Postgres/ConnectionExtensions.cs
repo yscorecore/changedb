@@ -52,8 +52,9 @@ namespace ChangeDB.Agent.Postgres
 
         private static void DropSchemaIfExists(this DbConnection connection, string schema, bool dropSchema = true)
         {
-
-            var allTables = connection.ExecuteReaderAsList<string>($"SELECT table_name from INFORMATION_SCHEMA.TABLES t WHERE t.TABLE_SCHEMA = '{schema}'");
+            var allViews = connection.ExecuteReaderAsList<string>($"SELECT table_name from INFORMATION_SCHEMA.TABLES t WHERE t.TABLE_SCHEMA = '{schema}' AND t.TABLE_TYPE='VIEW'");
+            allViews.ForEach(p => connection.DropViewIfExists(schema, p));
+            var allTables = connection.ExecuteReaderAsList<string>($"SELECT table_name from INFORMATION_SCHEMA.TABLES t WHERE t.TABLE_SCHEMA = '{schema}' AND t.TABLE_TYPE='BASE TABLE'");
             allTables.ForEach(p => connection.DropTableIfExists(schema, p));
             if (dropSchema)
             {
@@ -63,6 +64,10 @@ namespace ChangeDB.Agent.Postgres
         public static void DropTableIfExists(this DbConnection connection, string schema, string table)
         {
             connection.ExecuteNonQuery($"DROP TABLE IF EXISTS {PostgresUtils.IdentityName(schema, table)};");
+        }
+        public static void DropViewIfExists(this DbConnection connection, string schema, string table)
+        {
+            connection.ExecuteNonQuery($"DROP VIEW IF EXISTS {PostgresUtils.IdentityName(schema, table)};");
         }
         public static string ExtractDatabaseName(this DbConnection connection)
         {

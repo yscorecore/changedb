@@ -17,11 +17,15 @@ namespace ChangeDB.Agent.Postgres
 
         public Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext)
         {
-            var databaseDescriptor = PostgresUtils.GetDataBaseDescriptorByEfCore(migrationContext.SourceConnection);
+
+            var databaseDescriptor = PostgresUtils.GetDataBaseDescriptorByEfCore(migrationContext.SourceConnection,
+                 PostgresDataTypeMapper.Default,
+                 PostgresSqlExpressionTranslator.Default);
             return Task.FromResult(databaseDescriptor);
         }
         public Task PreMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
         {
+            var dataTypeMapper = PostgresDataTypeMapper.Default;
             var dbConnection = migrationContext.TargetConnection;
             CreateSchemas();
             CreateTables();
@@ -51,7 +55,7 @@ namespace ChangeDB.Agent.Postgres
                 string BuildColumnBasicDesc(ColumnDescriptor column)
                 {
                     var columnName = PostgresUtils.IdentityName(column.Name);
-                    var dataType = column.StoreType;
+                    var dataType = dataTypeMapper.ToDatabaseStoreType(column.DataType);
 
                     if (column.IsIdentity && column.IdentityInfo != null)
                     {
@@ -69,12 +73,12 @@ namespace ChangeDB.Agent.Postgres
                     else if (column.IdentityInfo != null)
                     {
                         //serial
-                        var mappedDataType = column.StoreType.ToLowerInvariant() switch
+                        var mappedDataType = column.DataType.DbType switch
                         {
-                            "integer" => "serial",
-                            "smallint" => "smallserial",
-                            "bigint" => "bigserial",
-                            _ => throw new ArgumentException($"not support {column.StoreType} as serial"),
+                             CommonDataType.Int => "serial",
+                            CommonDataType.SmallInt => "smallserial",
+                            CommonDataType.BigInt => "bigserial",
+                            _ => throw new ArgumentException($"not support {column.DataType.DbType} as serial"),
                         };
                         return $"{columnName} {mappedDataType}";
                     }

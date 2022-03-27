@@ -3,6 +3,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using ChangeDB.Migration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
 using Microsoft.EntityFrameworkCore.Internal;
@@ -31,11 +32,11 @@ namespace ChangeDB.Agent.Postgres
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
-        public static DatabaseDescriptor GetDataBaseDescriptorByEfCore(DbConnection dbConnection)
+        public static DatabaseDescriptor GetDataBaseDescriptorByEfCore(DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
         {
             var databaseModelFactory = GetModelFactory();
             var model = databaseModelFactory.Create(dbConnection, new DatabaseModelFactoryOptions());
-            return FromDatabaseModel(model, dbConnection);
+            return FromDatabaseModel(model, dbConnection, dataTypeMapper, sqlExpressionTranslator);
         }
 
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.")]
@@ -49,7 +50,7 @@ namespace ChangeDB.Agent.Postgres
             return provider.GetRequiredService<IDatabaseModelFactory>();
         }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
-        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection)
+        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
         {
             // exclude views
             var allTables = dbConnection.ExecuteReaderAsList<string, string>("select table_schema ,table_name from information_schema.tables t where t.table_type ='BASE TABLE'");
@@ -132,18 +133,29 @@ namespace ChangeDB.Agent.Postgres
             //https://github.com/npgsql/efcore.pg/blob/176fae2e08087ad43b9650768b7296a336d4f3f2/src/EFCore.PG/Scaffolding/Internal/NpgsqlDatabaseModelFactory.cs#L454
             ColumnDescriptor FromColumnModel(DatabaseColumn column)
             {
+                // reassign defaultValue Sql, because efcore will filter clr default
+                var defaultValue = allDefaultValues.Where(p =>
+                           p.Item1 == column.Table.Schema && p.Item2 == column.Table.Name && p.Item3 == column.Name)
+                      .Select(p => p.Item4).SingleOrDefault();
+
                 var baseColumnDesc = new ColumnDescriptor
                 {
                     Collation = column.Collation,
                     Comment = column.Comment,
                     ComputedColumnSql = column.ComputedColumnSql,
-                    DefaultValueSql = column.DefaultValueSql,
                     Name = column.Name,
                     IsStored = column.IsStored ?? false,
                     IsNullable = column.IsNullable,
-                    StoreType = column.StoreType,
+                    DataType = dataTypeMapper.ToCommonDatabaseType(column.StoreType),
+                    DefaultValue = sqlExpressionTranslator.ToCommonSqlExpression(defaultValue, column.StoreType, dbConnection)
                 };
 
+
+                baseColumnDesc.SetOriginStoreType(column.StoreType);
+                if (!string.IsNullOrEmpty(defaultValue))
+                {
+                    baseColumnDesc.SetOriginDefaultType(defaultValue);
+                }
                 if (column.ValueGenerated == ValueGenerated.OnAdd)
                 {
                     var valueStrategy = (NpgsqlValueGenerationStrategy)column[NpgsqlAnnotationNames.ValueGenerationStrategy];
@@ -162,14 +174,7 @@ namespace ChangeDB.Agent.Postgres
                     var sequenceInfo = allIdentityColumns[column];
                     baseColumnDesc.IdentityInfo.CurrentValue = sequenceInfo.CurrentValue;
                 }
-                else
-                {
-                    // reassign defaultValue Sql, because efcore will filter clr default
-                    // https://github.com/npgsql/efcore.pg/blob/176fae2e08087ad43b9650768b7296a336d4f3f2/src/EFCore.PG/Scaffolding/Internal/NpgsqlDatabaseModelFactory.cs#L403
-                    baseColumnDesc.DefaultValueSql = allDefaultValues.Where(p =>
-                            p.Item1 == column.Table.Schema && p.Item2 == column.Table.Name && p.Item3 == column.Name)
-                        .Select(p => p.Item4).SingleOrDefault();
-                }
+
 
                 return baseColumnDesc;
             }
