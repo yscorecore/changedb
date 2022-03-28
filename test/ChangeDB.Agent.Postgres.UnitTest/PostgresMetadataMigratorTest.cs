@@ -487,8 +487,7 @@ namespace ChangeDB.Agent.Postgres
             };
             await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
             var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            var exceptedDatabaseDesc = databaseDesc.DeepCloneAndSet(p => p.Tables.ForEach(t => t.Schema = "public"));
-            actualDatabaseDesc.Should().BeEquivalentTo(exceptedDatabaseDesc);
+            actualDatabaseDesc.Tables.First().Schema.Should().Be("public");
         }
 
         [Fact]
@@ -505,7 +504,7 @@ namespace ChangeDB.Agent.Postgres
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="integer" }
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int()}
                         },
                          PrimaryKey = new PrimaryKeyDescriptor { Name="table1_id_pkey", Columns = new List<string>{"id" } },
                     }
@@ -513,7 +512,8 @@ namespace ChangeDB.Agent.Postgres
             };
             await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
             var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
+            actualDatabaseDesc.Tables.First().PrimaryKey.Should()
+                .BeEquivalentTo(new PrimaryKeyDescriptor { Name="table1_id_pkey", Columns = new List<string>{"id" } });
         }
 
         [Fact]
@@ -525,12 +525,11 @@ namespace ChangeDB.Agent.Postgres
                 {
                     new TableDescriptor
                     {
-
                         Schema="ts",
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="integer" }
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int()}
                         },
                         PrimaryKey = new PrimaryKeyDescriptor { Columns = new List<string>{"id" } },
                     }
@@ -538,8 +537,8 @@ namespace ChangeDB.Agent.Postgres
             };
             await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
             var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            var exceptedDatabaseDesc = databaseDesc.DeepCloneAndSet(p => p.Tables.ForEach(t => t.PrimaryKey.Name = "table1_pkey"));
-            actualDatabaseDesc.Should().BeEquivalentTo(exceptedDatabaseDesc);
+            actualDatabaseDesc.Tables.First().PrimaryKey.Columns.Should()
+                .BeEquivalentTo(new List<string>{"id" });
         }
 
         [Fact]
@@ -555,7 +554,7 @@ namespace ChangeDB.Agent.Postgres
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="integer" }
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int()}
                         },
                         Uniques = new List<UniqueDescriptor>
                         {
@@ -566,11 +565,15 @@ namespace ChangeDB.Agent.Postgres
             };
             await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
             var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
+            actualDatabaseDesc.Tables.First().Uniques.Should()
+                .BeEquivalentTo(new List<UniqueDescriptor>
+                {
+                    new UniqueDescriptor {Name = "table1_id_key", Columns = new List<string> {"id"}}
+                });
         }
 
         [Fact]
-        public async Task ShouldCreateMutilColumnUniqueWhenMigrateMetadata()
+        public async Task ShouldCreateMultiColumnUniqueWhenMigrateMetadata()
         {
             var databaseDesc = new DatabaseDescriptor()
             {
@@ -765,7 +768,7 @@ namespace ChangeDB.Agent.Postgres
             };
             await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
             var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            actualDatabaseDesc.Tables.Last().ForeignKeys.Should()
+            actualDatabaseDesc.Tables.Single(p=>p.Name=="table2").ForeignKeys.Should()
                 .BeEquivalentTo(new List<ForeignKeyDescriptor>
                          {
                              new ForeignKeyDescriptor
@@ -1074,7 +1077,7 @@ namespace ChangeDB.Agent.Postgres
                         {
                            new ColumnDescriptor
                            {
-                                Name="id", StoreType = "smallint", IsIdentity =true,
+                                Name="id", DataType = DataTypeDescriptor.Int(), IsIdentity =true,
                                 IdentityInfo = new IdentityDescriptor
                                 {
                                     IsCyclic =false,
@@ -1090,11 +1093,24 @@ namespace ChangeDB.Agent.Postgres
             };
             await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
             var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            var expectedDatabaseDesc = databaseDesc.DeepCloneAndSet(desc =>
-            {
-                desc.Tables.SelectMany(p => p.Columns).Select(p => p.IdentityInfo.Values).Each(dic => { dic[PostgresUtils.IdentityType] = "ALWAYS"; });
-            });
-            actualDatabaseDesc.Should().BeEquivalentTo(expectedDatabaseDesc);
+            actualDatabaseDesc.Tables.First().Columns.First()
+                .Should().BeEquivalentTo(new ColumnDescriptor
+                {
+                    Name="id", DataType = DataTypeDescriptor.Int(), IsIdentity =true,
+                    IdentityInfo = new IdentityDescriptor
+                    {
+                        IsCyclic =false,
+                        Values = new Dictionary<string, object>
+                        {
+                            [PostgresUtils.IdentityType]="ALWAYS"
+                        }
+                    },
+                    Values = new Dictionary<string, object>
+                    {
+                    [ColumnDescriptorExtensions.OriginStoreTypeKey]="integer"
+                    }
+                
+                });
         }
 
         [Fact]
@@ -1112,7 +1128,7 @@ namespace ChangeDB.Agent.Postgres
                         {
                            new ColumnDescriptor
                            {
-                                Name="id", IsNullable=false, StoreType = "integer", IsIdentity = false,
+                                Name="id", IsNullable=false, DataType = DataTypeDescriptor.Int(),  IsIdentity = false,
                                 IdentityInfo = new IdentityDescriptor
                                 {
                                     IsCyclic = false,
@@ -1128,7 +1144,19 @@ namespace ChangeDB.Agent.Postgres
             };
             await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
             var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
+            var column = actualDatabaseDesc.Tables.First().Columns.First();
+            column.Should().BeEquivalentTo(new ColumnDescriptor
+            {
+                Name="id", IsNullable=false, DataType = DataTypeDescriptor.Int(),  IsIdentity = false,
+                IdentityInfo = new IdentityDescriptor
+                {
+                    IsCyclic = false
+                },
+                Values = new Dictionary<string, object>
+                {
+                    [ColumnDescriptorExtensions.OriginStoreTypeKey]="integer"
+                }
+            });
         }
         #endregion
 

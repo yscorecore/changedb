@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using ChangeDB.Migration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
 using Microsoft.EntityFrameworkCore.Internal;
@@ -27,11 +28,11 @@ namespace ChangeDB.Agent.SqlServer
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
-        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
+        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
         {
             var databaseModelFactory = GetModelFactory();
             var model = databaseModelFactory.Create(dbConnection, new DatabaseModelFactoryOptions());
-            return FromDatabaseModel(model, dbConnection);
+            return FromDatabaseModel(model, dbConnection,dataTypeMapper,sqlExpressionTranslator);
         }
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.")]
         private static IDatabaseModelFactory GetModelFactory()
@@ -45,7 +46,7 @@ namespace ChangeDB.Agent.SqlServer
         }
 
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
-        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection)
+        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection,IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
         {
             // exclude views
             var allTables = dbConnection.ExecuteReaderAsList<string, string>("select table_schema ,table_name from information_schema.tables t where t.table_type ='BASE TABLE'");
@@ -124,21 +125,29 @@ namespace ChangeDB.Agent.SqlServer
             //https://github.com/dotnet/efcore/blob/252ece7a6bdf14139d90525a4dd0099616a82b4c/src/EFCore.SqlServer/Scaffolding/Internal/SqlServerDatabaseModelFactory.cs
             ColumnDescriptor FromColumnModel(DatabaseColumn column)
             {
+                var defaultValue=allDefaultValues.Where(p =>
+                        p.Item1 == column.Table.Schema && p.Item2 == column.Table.Name && p.Item3 == column.Name)
+                    .Select(p => p.Item4).SingleOrDefault();
                 var baseColumnDesc = new ColumnDescriptor
                 {
                     Collation = column.Collation,
                     Comment = column.Comment,
                     ComputedColumnSql = column.ComputedColumnSql,
-                    DefaultValueSql = column.DefaultValueSql,
+                    DefaultValueSql = defaultValue,
                     Name = column.Name,
                     IsStored = column.IsStored ?? false,
                     IsNullable = column.IsNullable,
                     StoreType = column.StoreType,
+                    DataType = dataTypeMapper.ToCommonDatabaseType(column.StoreType),
+                    DefaultValue = sqlExpressionTranslator.ToCommonSqlExpression(defaultValue, column.StoreType, dbConnection)
                 };
-
+                baseColumnDesc.SetOriginStoreType(column.StoreType);
+                if (!string.IsNullOrEmpty(defaultValue))
+                {
+                    baseColumnDesc.SetOriginDefaultValue(defaultValue);
+                }
                 if (column.ValueGenerated == ValueGenerated.OnAdd)
                 {
-                    var tableFullName = IdentityName(column.Table.Schema, column.Table.Name);
                     baseColumnDesc.IsIdentity = true;
                     var identityInfo = addIdentityInfos.Single(p => p.Item1 == column.Table.Schema && p.Item2 == column.Table.Name);
                     baseColumnDesc.IdentityInfo = new IdentityDescriptor
@@ -152,14 +161,9 @@ namespace ChangeDB.Agent.SqlServer
                     {
                         baseColumnDesc.IdentityInfo.IncrementBy = 1;
                     }
-                }
-                else
-                {
-                    // reassign defaultValue Sql, because efcore will filter clr default
-                    // https://github.com/dotnet/efcore/blob/252ece7a6bdf14139d90525a4dd0099616a82b4c/src/EFCore.SqlServer/Scaffolding/Internal/SqlServerDatabaseModelFactory.cs#L783
-                    baseColumnDesc.DefaultValueSql = allDefaultValues.Where(p =>
-                            p.Item1 == column.Table.Schema && p.Item2 == column.Table.Name && p.Item3 == column.Name)
-                        .Select(p => p.Item4).SingleOrDefault();
+                    
+                    baseColumnDesc.DefaultValue = null;
+                    baseColumnDesc.SetOriginDefaultValue(null);
                 }
 
                 return baseColumnDesc;

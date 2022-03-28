@@ -21,7 +21,7 @@ namespace ChangeDB.Default
             else
             {
                 var resultDataTable = new DataTable();
-                tableDescriptorMapper.ColumnMappers.ForEach(p=> resultDataTable.Columns.Add(p.Target.Name, p.Target.DataType.ClrType));
+                tableDescriptorMapper.ColumnMappers.ForEach(p=> resultDataTable.Columns.Add(p.Target.Name, p.Target.DataType.GetClrType()));
                 // copy rows
                 foreach (DataRow row in dataTable.Rows)
                 {
@@ -41,7 +41,7 @@ namespace ChangeDB.Default
 
         private bool CanUseOriginTable(TableDescriptorMapper mapper)
         {
-            return mapper.ColumnMappers.All(p => p.Source.Name == p.Target.Name && p.Source.DataType.ClrType==p.Target.DataType.ClrType);
+            return mapper.ColumnMappers.All(p => p.Source.Name == p.Target.Name && p.Source.DataType.GetClrType()==p.Target.DataType.GetClrType());
         }
 
         private object GetTargetItemValue(object sourceValue, DataTypeDescriptor sourceType, DataTypeDescriptor targetType)
@@ -51,11 +51,11 @@ namespace ChangeDB.Default
                 return sourceValue;
             }
 
-            if (sourceType?.ClrType == targetType?.ClrType)
+            if (sourceType?.GetClrType() == targetType?.GetClrType())
             {
                 return sourceValue;
             }
-            return ChangeValueType(sourceType, targetType.ClrType);
+            return ChangeValueType(sourceType, targetType.GetClrType());
         }
 
         private object ChangeValueType(object value, Type targetType)

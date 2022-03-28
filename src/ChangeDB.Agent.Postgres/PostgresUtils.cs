@@ -154,7 +154,7 @@ namespace ChangeDB.Agent.Postgres
                 baseColumnDesc.SetOriginStoreType(column.StoreType);
                 if (!string.IsNullOrEmpty(defaultValue))
                 {
-                    baseColumnDesc.SetOriginDefaultType(defaultValue);
+                    baseColumnDesc.SetOriginDefaultValue(defaultValue);
                 }
                 if (column.ValueGenerated == ValueGenerated.OnAdd)
                 {
@@ -173,6 +173,8 @@ namespace ChangeDB.Agent.Postgres
                     }
                     var sequenceInfo = allIdentityColumns[column];
                     baseColumnDesc.IdentityInfo.CurrentValue = sequenceInfo.CurrentValue;
+                    baseColumnDesc.DefaultValue = null;
+                    baseColumnDesc.SetOriginDefaultValue(null);
                 }
 
 

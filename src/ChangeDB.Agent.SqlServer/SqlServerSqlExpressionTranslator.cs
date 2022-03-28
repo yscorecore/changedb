@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Data;
 using System.Text.RegularExpressions;
 using ChangeDB.Descriptors;
 using ChangeDB.Migration;
@@ -32,6 +33,30 @@ namespace ChangeDB.Agent.SqlServer
             {
                 var sql = $"select cast({trimmedExpression} as {context.StoreType})";
                 var value = ValueCache.GetOrAdd(sql, (s) => context.Connection.ExecuteScalar(s));
+                return new SqlExpressionDescriptor() { Constant = value };
+            }
+        }
+
+        public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, string storeType, IDbConnection dbConnection)
+        {
+            var trimmedExpression = TrimBrackets(sqlExpression);
+            if (string.IsNullOrEmpty(trimmedExpression))
+            {
+                return null;
+            }
+            if (IsEmptyArgumentFunction(trimmedExpression, out var function))
+            {
+                return function.ToLower() switch
+                {
+                    "getdate" => new SqlExpressionDescriptor { Function = Function.Now },
+                    "newid" => new SqlExpressionDescriptor { Function = Function.Uuid },
+                    _ => new SqlExpressionDescriptor { Constant = trimmedExpression }
+                };
+            }
+            else
+            {
+                var sql = $"select cast({trimmedExpression} as {storeType})";
+                var value = ValueCache.GetOrAdd(sql, (s) => dbConnection.ExecuteScalar(s));
                 return new SqlExpressionDescriptor() { Constant = value };
             }
         }

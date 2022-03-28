@@ -12,7 +12,9 @@ namespace ChangeDB.Agent.SqlServer
 
         public virtual Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext)
         {
-            var databaseDescriptor = GetDataBaseDescriptorByEFCore(migrationContext.SourceConnection);
+            var databaseDescriptor = GetDataBaseDescriptorByEFCore(migrationContext.SourceConnection,
+                SqlServerDataTypeMapper.Default,
+                SqlServerSqlExpressionTranslator.Default);
             return Task.FromResult(databaseDescriptor);
         }
 

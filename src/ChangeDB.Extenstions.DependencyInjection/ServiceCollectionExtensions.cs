@@ -18,6 +18,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton<IAgentFactory, DefaultAgentFactory>();
             services.AddSingleton<IDatabaseSqlDumper, DefaultSqlDumper>();
             services.AddSingleton<IDatabaseSqlImporter, DefaultSqlImporter>();
+            services.AddSingleton<IDatabaseMapper, DefaultDatabaseMapper>();
+            services.AddSingleton<ITableDataMapper, DefaultTableDataMapper>();
             AddAgentFactory(services);
             return services;
         }

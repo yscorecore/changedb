@@ -43,7 +43,16 @@ namespace ChangeDB
         }
         public static void SetOriginStoreType(this ColumnDescriptor columnDescriptor, string storeType)
         {
-            columnDescriptor.Values[OriginStoreTypeKey] = storeType;
+            if (string.IsNullOrEmpty(storeType))
+            {
+                columnDescriptor.Values.Remove(OriginStoreTypeKey);
+            }
+            else
+            {
+                columnDescriptor.Values[OriginStoreTypeKey] = storeType;
+            }
+
+           
         }
 
         public static string GetOriginDefaultValue(this ColumnDescriptor columnDescriptor)
@@ -54,9 +63,16 @@ namespace ChangeDB
             }
             return default;
         }
-        public static void SetOriginDefaultType(this ColumnDescriptor columnDescriptor, string defaultValue)
+        public static void SetOriginDefaultValue(this ColumnDescriptor columnDescriptor, string defaultValue)
         {
-            columnDescriptor.Values[OriginDefaultValueKey] = defaultValue;
+            if (string.IsNullOrEmpty(defaultValue))
+            {
+                columnDescriptor.Values.Remove(OriginDefaultValueKey);
+            }
+            else
+            {
+                columnDescriptor.Values[OriginDefaultValueKey] = defaultValue;
+            }
         }
     }
 }
