@@ -1,6 +1,6 @@
 ﻿namespace ChangeDB
 {
-    public record SequenceDescriptor:INameObject
+    public class SequenceDescriptor :INameObject
     {
         public  string Name { get; set; }
         public  string Schema { get; set; }

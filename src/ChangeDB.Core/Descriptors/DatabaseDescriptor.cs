@@ -2,7 +2,7 @@
 
 namespace ChangeDB
 {
-    public record DatabaseDescriptor
+    public class DatabaseDescriptor
     {
         //public string Collation { get; set; }
         //public string DefaultSchema { get; set; }

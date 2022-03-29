@@ -28,7 +28,7 @@ namespace ChangeDB.Default
             // sequence
             foreach (var seq in sourceDatabase.Sequences)
             {
-                var seqMapper = new SequenceDescriptorMapper { Source = seq, Target = seq with {} };
+                var seqMapper = new SequenceDescriptorMapper { Source = seq, Target = seq.DeepClone() };
                 databaseMapper.SequenceMappers.Add(seqMapper);
                 databaseMapper.Target.Sequences.Add(seqMapper.Target);
             }
@@ -42,7 +42,7 @@ namespace ChangeDB.Default
                 };
                 foreach (var column in table.Columns)
                 {
-                    var columnMapper = new ColumnDescriptorMapper { Source = column, Target = column with {} };
+                    var columnMapper = new ColumnDescriptorMapper { Source = column, Target = column.DeepClone() };
                     tableMapper.ColumnMappers.Add(columnMapper);
                     tableMapper.Target.Columns.Add(columnMapper.Target);
                 }

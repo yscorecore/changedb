@@ -4,7 +4,7 @@ using ChangeDB.Descriptors;
 
 namespace ChangeDB
 {
-    public record ColumnDescriptor : ExtensionObject, INameObject
+    public class ColumnDescriptor : ExtensionObject, INameObject
     {
 
         public string Name { get; set; }

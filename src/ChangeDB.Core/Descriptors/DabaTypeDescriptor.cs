@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace ChangeDB
 {
-    public record DataTypeDescriptor
+    public class DataTypeDescriptor
     {
 
         public CommonDataType DbType { get; set; }

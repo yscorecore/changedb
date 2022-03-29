@@ -1,6 +1,6 @@
 ﻿namespace ChangeDB
 {
-    public record IdentityDescriptor : ExtensionObject
+    public class IdentityDescriptor : ExtensionObject
     {
         public virtual long StartValue { get; set; } = 1;
         public virtual int IncrementBy { get; set; } = 1;

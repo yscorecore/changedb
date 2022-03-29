@@ -2,7 +2,7 @@
 
 namespace ChangeDB
 {
-    public record ExtensionObject
+    public class ExtensionObject
     {
         public Dictionary<string, object> Values { get; set; } = new Dictionary<string, object>();
     }

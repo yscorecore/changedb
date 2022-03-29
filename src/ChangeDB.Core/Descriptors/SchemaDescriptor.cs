@@ -1,6 +1,6 @@
 ﻿namespace ChangeDB
 {
-    public record SchemaDescriptor : INameObject
+    public class SchemaDescriptor : INameObject
     {
         public string Name { get; set; }
         public string Description { get; set; }

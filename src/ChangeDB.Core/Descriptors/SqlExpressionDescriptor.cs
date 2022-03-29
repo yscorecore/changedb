@@ -1,6 +1,6 @@
 ﻿namespace ChangeDB.Descriptors
 {
-    public record SqlExpressionDescriptor : ExtensionObject
+    public class SqlExpressionDescriptor : ExtensionObject
     {
         public Function? Function { get; set; }
 

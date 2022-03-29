@@ -1,5 +1,8 @@
 ﻿using System;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.Json;
+using System.Xml.Serialization;
 
 namespace ChangeDB
 {
@@ -7,8 +10,23 @@ namespace ChangeDB
     {
         public static T DeepClone<T>(this T source)
         {
-            var text = JsonSerializer.Serialize(source);
-            return JsonSerializer.Deserialize<T>(text);
+            if (source == null) return default(T);
+
+            //using (var ms = new MemoryStream())
+            //{
+            //    BinaryFormatter bf = new BinaryFormatter();
+            //    bf.Serialize(ms, source);
+            //    ms.Seek(0, SeekOrigin.Begin);
+            //    return (T)bf.Deserialize(ms);
+            //}
+            Type objType = source.GetType();
+            XmlSerializer tXmlSerializer = new XmlSerializer(objType);
+            using (MemoryStream ms = new MemoryStream(1024))
+            {
+                tXmlSerializer.Serialize(ms, source);
+                ms.Seek(0, SeekOrigin.Begin);
+                return (T)tXmlSerializer.Deserialize(ms);
+            }
         }
 
         public static T DoIfNotNull<T>(this T source, Action<T> action)

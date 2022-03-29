@@ -133,11 +133,11 @@ namespace ChangeDB.Agent.SqlServer
                     Collation = column.Collation,
                     Comment = column.Comment,
                     ComputedColumnSql = column.ComputedColumnSql,
-                    DefaultValueSql = defaultValue,
+                    //DefaultValueSql = defaultValue,
                     Name = column.Name,
                     IsStored = column.IsStored ?? false,
                     IsNullable = column.IsNullable,
-                    StoreType = column.StoreType,
+                    //StoreType = column.StoreType,
                     DataType = dataTypeMapper.ToCommonDatabaseType(column.StoreType),
                     DefaultValue = sqlExpressionTranslator.ToCommonSqlExpression(defaultValue, column.StoreType, dbConnection)
                 };
