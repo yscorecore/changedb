@@ -11,9 +11,12 @@ namespace ChangeDB.Migration
         SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context);
 
         SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, string storeType, IDbConnection dbConnection);
-
+        [Obsolete("use another one")]
         string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context);
+
+        string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, string storeType);
     }
+    [Obsolete]
     public record SqlExpressionTranslatorContext
     {
         public SqlExpressionTranslatorContext()

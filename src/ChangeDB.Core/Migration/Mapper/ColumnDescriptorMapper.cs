@@ -2,7 +2,7 @@
 
 namespace ChangeDB.Mapper
 {
-    public class ColumnDescriptorMapper : BaseMapper<ColumnDescriptor>
+    public record ColumnDescriptorMapper : BaseMapper<ColumnDescriptor>
     {
 
     }

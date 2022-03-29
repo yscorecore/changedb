@@ -49,7 +49,7 @@ namespace ChangeDB.IntegrationTest
                 var targetConnectionString = databaseEnvironment.NewConnectionString(targetType);
                 var migrationContext = new MigrationContext()
                 {
-                    Setting = new MigrationSetting() { MaxTaskCount = 5 },
+                    Setting = new MigrationSetting() { MaxTaskCount = 1 },
                     SourceDatabase = new DatabaseInfo() { DatabaseType = sourceType, ConnectionString = sourceConnectionString },
                     TargetDatabase = new DatabaseInfo() { DatabaseType = targetType, ConnectionString = targetConnectionString },
                 };

@@ -82,12 +82,13 @@ namespace ChangeDB.Agent.Postgres
 
         private Task BulkInsertTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
         {
+            var dataTypeMapper = PostgresDataTypeMapper.Default;
             var conn = migrationContext.TargetConnection as NpgsqlConnection;
             conn.TryOpen();
             using var writer = conn.BeginBinaryImport($"COPY {IdentityName(table)}({BuildColumnNames(table)}) FROM STDIN BINARY");
 
             var typeMapper = (from column in table.Columns
-                              let normalizeStoreType = NormalizeStoreType(column.StoreType ?? string.Empty)
+                              let normalizeStoreType = NormalizeStoreType(dataTypeMapper.ToDatabaseStoreType(column.DataType))
                               where NpgsqlTypeMapper.ContainsKey(normalizeStoreType)
                               select new { column.Name, NpgSqlType = NpgsqlTypeMapper[normalizeStoreType] })
                 .ToDictionary(p => p.Name, p => p.NpgSqlType);

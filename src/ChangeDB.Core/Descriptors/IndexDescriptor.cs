@@ -2,7 +2,7 @@
 
 namespace ChangeDB
 {
-    public class IndexDescriptor : INameObject
+    public record IndexDescriptor : INameObject
     {
         public string Name { get; set; }
         public bool IsUnique { get; set; }

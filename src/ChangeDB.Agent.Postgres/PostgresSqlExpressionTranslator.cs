@@ -19,6 +19,34 @@ namespace ChangeDB.Agent.Postgres
         {
             return FromCommonSqlExpressionInternal(sqlExpression, context);
         }
+
+        public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, string storeType)
+        {
+            if (sqlExpression?.Function != null)
+            {
+                return sqlExpression.Function.Value switch
+                {
+                    Function.Uuid => "gen_random_uuid()",
+                    Function.Now => "now()",
+                    _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
+                };
+            }
+            if ("boolean".Equals(storeType, StringComparison.InvariantCultureIgnoreCase) && sqlExpression?.Constant != null)
+            {
+                return Convert.ToBoolean(sqlExpression.Constant).ToString().ToLowerInvariant();
+            }
+
+
+            var text = PostgresRepr.ReprConstant(sqlExpression?.Constant);
+            if (sqlExpression?.Constant is Guid or DateTime or byte[] or DateTimeOffset)
+            {
+                return $"{text}::{storeType}";
+            }
+            return text;
+
+
+        }
+
         private string FromCommonSqlExpressionInternal(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
             if (sqlExpression?.Function != null)
@@ -37,10 +65,7 @@ namespace ChangeDB.Agent.Postgres
 
 
             var text = PostgresRepr.ReprConstant(sqlExpression?.Constant);
-            if (sqlExpression?.Constant is Guid ||
-                sqlExpression?.Constant is DateTime ||
-                sqlExpression?.Constant is byte[] ||
-                sqlExpression?.Constant is DateTimeOffset)
+            if (sqlExpression?.Constant is Guid or DateTime or byte[] or DateTimeOffset)
             {
                 return $"{text}::{context.StoreType}";
             }

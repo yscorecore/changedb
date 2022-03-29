@@ -1,6 +1,6 @@
 ﻿namespace ChangeDB.Migration.Mapper
 {
-    public class SequenceDescriptorMapper: BaseMapper<SequenceDescriptor>
+    public record SequenceDescriptorMapper: BaseMapper<SequenceDescriptor>
     {
         
     }

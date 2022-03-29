@@ -110,6 +110,26 @@ namespace ChangeDB.Agent.MySql
         {
             return FromCommonSqlExpressionInternal(sqlExpression, context);
         }
+
+        public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, string storeType)
+        {
+            if (sqlExpression?.Function != null)
+            {
+                return sqlExpression.Function.Value switch
+                {
+                    Function.Uuid => "(UUID_TO_BIN(UUID()))",
+                    Function.Now => "(NOW(6))",
+                    _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
+                };
+            }
+            var text = MySqlRepr.ReprConstant(sqlExpression?.Constant);
+            if (sqlExpression?.Constant is byte[] || sqlExpression?.Constant is Guid)
+            {
+                return $"({text})";
+            }
+            return text;
+        }
+
         private string FromCommonSqlExpressionInternal(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
             if (sqlExpression?.Function != null)

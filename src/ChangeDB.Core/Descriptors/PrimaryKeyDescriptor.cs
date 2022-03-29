@@ -2,7 +2,7 @@
 
 namespace ChangeDB
 {
-    public class PrimaryKeyDescriptor : INameObject
+    public record PrimaryKeyDescriptor : INameObject
     {
         public string Name { get; set; }
         public List<string> Columns { get; set; }

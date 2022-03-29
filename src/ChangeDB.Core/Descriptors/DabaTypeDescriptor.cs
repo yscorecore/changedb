@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace ChangeDB
 {
-    public class DataTypeDescriptor
+    public record DataTypeDescriptor
     {
 
         public CommonDataType DbType { get; set; }
@@ -92,9 +92,9 @@ namespace ChangeDB
         Decimal,
         [DataTypeMapper(typeof(DateTime))]
         Date,
-        [DataTypeMapper(typeof(TimeSpan))]
-        Time,
         [DataTypeMapper(typeof(DateTime))]
+        Time,
+        [DataTypeMapper(typeof(TimeSpan))]
         DateTime,
         [DataTypeMapper(typeof(DateTimeOffset))]
         DateTimeOffset,
@@ -106,6 +106,7 @@ namespace ChangeDB
     internal class DataTypeMapperAttribute : Attribute
     {
         internal static Dictionary<CommonDataType, Type> TypeMappers = typeof(CommonDataType).GetFields()
+            .Where(f=>Attribute.IsDefined(f,typeof(DataTypeMapperAttribute)))
             .ToDictionary(f => (CommonDataType)f.GetValue(null),
                 f => f.GetCustomAttribute<DataTypeMapperAttribute>()?.ClrType);
         public DataTypeMapperAttribute(Type clrType)

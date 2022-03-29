@@ -26,6 +26,7 @@ namespace ChangeDB.Agent.Postgres
         public Task PreMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
         {
             var dataTypeMapper = PostgresDataTypeMapper.Default;
+            var sqlExpression = PostgresSqlExpressionTranslator.Default;
             var dbConnection = migrationContext.TargetConnection;
             CreateSchemas();
             CreateTables();
@@ -176,6 +177,8 @@ namespace ChangeDB.Agent.Postgres
         }
         public Task PostMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
         {
+            var dataTypeMapper = PostgresDataTypeMapper.Default;
+            var sqlExpression = PostgresSqlExpressionTranslator.Default;
             var dbConnection = migrationContext.TargetConnection;
             AlterNotnullColumns();
             AddDefaultValues();
@@ -202,10 +205,12 @@ namespace ChangeDB.Agent.Postgres
                     var tableFullName = PostgresUtils.IdentityName(table.Schema, table.Name);
                     foreach (var column in table.Columns)
                     {
-                        if (!string.IsNullOrEmpty(column.DefaultValueSql))
+                        if (column.DefaultValue != null)
                         {
+                            var dataType = dataTypeMapper.ToDatabaseStoreType(column.DataType);
+                            var defaultValueSql = sqlExpression.FromCommonSqlExpression(column.DefaultValue, dataType);
                             var columnName = PostgresUtils.IdentityName(column.Name);
-                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} SET DEFAULT {column.DefaultValueSql};");
+                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} SET DEFAULT {defaultValueSql};");
                         }
                     }
                 }

@@ -101,7 +101,18 @@ namespace ChangeDB.Agent.SqlServer
             return SqlServerRepr.ReprConstant(sqlExpression?.Constant);
         }
 
-
-
+        public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, string storeType)
+        {
+            if (sqlExpression?.Function != null)
+            {
+                return sqlExpression.Function.Value switch
+                {
+                    Function.Now => "getdate()",
+                    Function.Uuid => "newid()",
+                    _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
+                };
+            }
+            return SqlServerRepr.ReprConstant(sqlExpression?.Constant);
+        }
     }
 }
