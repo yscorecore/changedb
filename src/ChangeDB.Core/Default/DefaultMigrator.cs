@@ -47,7 +47,7 @@ namespace ChangeDB.Default
                 Agent = targetAgent,
                 Descriptor = null,
             };
-            var sourceDatabaseDescriptor = await GetSourceDatabaseDescriptor(sourceAgent, sourceConnection, context);
+            var sourceDatabaseDescriptor = await sourceAgent.MetadataMigrator.GetSourceDatabaseDescriptor(context);
 
             var databaseDescriptorMapper =
                 await _databaseMapper.MapDatabase(sourceDatabaseDescriptor, targetAgent.AgentSetting, context.Setting);
@@ -61,11 +61,6 @@ namespace ChangeDB.Default
 
         }
 
-        protected virtual async Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(IMigrationAgent sourceAgent, DbConnection sourceConnection, MigrationContext migrationContext)
-        {
-            Log("start getting source database metadata.");
-            return await sourceAgent.MetadataMigrator.GetSourceDatabaseDescriptor(migrationContext);
-        }
 
 
 

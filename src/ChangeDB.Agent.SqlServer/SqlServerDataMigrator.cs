@@ -11,7 +11,12 @@ namespace ChangeDB.Agent.SqlServer
     public class SqlServerDataMigrator : IDataMigrator
     {
         public static readonly IDataMigrator Default = new SqlServerDataMigrator();
-        private static readonly HashSet<string> canNotOrderByTypes = new HashSet<string>() { "image", "text", "ntext", "xml" };
+        private static readonly HashSet<CommonDataType> canNotOrderByTypes = new HashSet<CommonDataType>()
+        {
+            CommonDataType.Blob,
+            CommonDataType.Text,
+            CommonDataType.NText
+        };
         private static string BuildColumnNames(IEnumerable<string> names) => string.Join(", ", names.Select(p => $"[{p}]"));
         private static string BuildColumnNames(TableDescriptor table) =>
             BuildColumnNames(table.Columns.Select(p => p.Name));
@@ -23,7 +28,7 @@ namespace ChangeDB.Agent.SqlServer
                 return BuildColumnNames(table.PrimaryKey?.Columns.ToArray());
             }
 
-            var names = table.Columns.Where(p => !canNotOrderByTypes.Contains(p.StoreType.ToLower())).Select(p => p.Name);
+            var names = table.Columns.Where(p => !canNotOrderByTypes.Contains(p.DataType.DbType)).Select(p => p.Name);
 
             return BuildColumnNames(names);
         }

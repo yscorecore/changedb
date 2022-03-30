@@ -87,7 +87,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             _dbConnection.ExecuteNonQuery($"create table table1(id {storeType});");
             var databaseDescriptor = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            var columnStoreType = databaseDescriptor.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).Single();
+            var columnStoreType = databaseDescriptor.Tables.SelectMany(p => p.Columns).Select(p => p.GetOriginStoreType()).Single();
             var commonDataType = _dataTypeMapper.ToCommonDatabaseType(columnStoreType);
 
             var method = typeof(DataTypeDescriptor).GetMethod(Enum.GetName(commonDbType) ?? string.Empty,

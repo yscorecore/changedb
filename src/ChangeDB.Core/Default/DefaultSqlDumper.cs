@@ -13,12 +13,16 @@ namespace ChangeDB.Default
 {
     public class DefaultSqlDumper : IDatabaseSqlDumper
     {
+        private IDatabaseMapper _databaseMapper;
 
+        private ITableDataMapper _tableDataMapper;
         protected IAgentFactory AgentFactory { get; }
         protected static Action<string> Log = (a) => { };
-        public DefaultSqlDumper(IAgentFactory agentFactory)
+        public DefaultSqlDumper(IAgentFactory agentFactory, IDatabaseMapper databaseMapper, ITableDataMapper tableDataMapper)
         {
             AgentFactory = agentFactory;
+            _databaseMapper = databaseMapper;
+            _tableDataMapper = tableDataMapper;
         }
 
         public async Task DumpSql(DumpContext context)
@@ -37,20 +41,23 @@ namespace ChangeDB.Default
                 Agent = sourceAgent,
                 Descriptor = null,
             };
-            context.Writer = sqlWriter;
-            var sourceDatabaseDescriptor = await GetSourceDatabaseDescriptor(sourceAgent, sourceConnection, context);
-
-            context.Source.Descriptor = sourceDatabaseDescriptor;
-
             context.Target = new AgentRunTimeInfo
             {
                 Agent = targetAgent,
-                Descriptor = sourceDatabaseDescriptor.DeepClone(),
+                Descriptor = null,
             };
+            context.Writer = sqlWriter;
+            
+            var sourceDatabaseDescriptor = await sourceAgent.MetadataMigrator.GetSourceDatabaseDescriptor(context);
 
+            var databaseDescriptorMapper =
+                await _databaseMapper.MapDatabase(sourceDatabaseDescriptor, targetAgent.AgentSetting, context.Setting);
 
-            await ApplyMigrationSettings(context);
-            await ApplyTargetAgentSettings(context);
+            context.DatabaseMapper = databaseDescriptorMapper;
+            context.Source.Descriptor = databaseDescriptorMapper.Source;
+            context.Target.Descriptor = databaseDescriptorMapper.Target;
+            
+            
             await DoDumpDatabase(context);
             await ApplyCustomScripts(context);
             // flush to file
@@ -59,22 +66,8 @@ namespace ChangeDB.Default
 
 
 
-        protected virtual async Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(IMigrationAgent sourceAgent, DbConnection sourceConnection, MigrationContext migrationContext)
-        {
-            Log("start getting source database metadata.");
-            return await sourceAgent.MetadataMigrator.GetSourceDatabaseDescriptor(migrationContext);
-        }
-
-        protected virtual Task ApplyMigrationSettings(MigrationContext migrationContext)
-        {
-            SettingsApplier.ApplySettingForTarget(migrationContext);
-            return Task.CompletedTask;
-        }
-
-        protected virtual Task ApplyTargetAgentSettings(MigrationContext migrationContext)
-        {
-            return SettingsApplier.ApplyAgentSettings(migrationContext);
-        }
+    
+       
 
         protected virtual async Task DoDumpDatabase(DumpContext dumpContext)
         {
