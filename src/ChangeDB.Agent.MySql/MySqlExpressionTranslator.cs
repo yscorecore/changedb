@@ -106,6 +106,7 @@ namespace ChangeDB.Agent.MySql
 
         }
 
+        [Obsolete]
         public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
             return FromCommonSqlExpressionInternal(sqlExpression, context);
@@ -130,6 +131,7 @@ namespace ChangeDB.Agent.MySql
             return text;
         }
 
+        [Obsolete]
         private string FromCommonSqlExpressionInternal(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
             if (sqlExpression?.Function != null)
@@ -149,7 +151,7 @@ namespace ChangeDB.Agent.MySql
             return text;
         }
 
-
+        [Obsolete]
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
         {
             if (string.IsNullOrWhiteSpace(sqlExpression))

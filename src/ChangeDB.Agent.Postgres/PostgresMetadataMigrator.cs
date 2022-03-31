@@ -76,7 +76,7 @@ namespace ChangeDB.Agent.Postgres
                         //serial
                         var mappedDataType = column.DataType.DbType switch
                         {
-                             CommonDataType.Int => "serial",
+                            CommonDataType.Int => "serial",
                             CommonDataType.SmallInt => "smallserial",
                             CommonDataType.BigInt => "bigserial",
                             _ => throw new ArgumentException($"not support {column.DataType.DbType} as serial"),

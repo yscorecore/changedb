@@ -32,7 +32,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             var databaseModelFactory = GetModelFactory();
             var model = databaseModelFactory.Create(dbConnection, new DatabaseModelFactoryOptions());
-            return FromDatabaseModel(model, dbConnection,dataTypeMapper,sqlExpressionTranslator);
+            return FromDatabaseModel(model, dbConnection, dataTypeMapper, sqlExpressionTranslator);
         }
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.")]
         private static IDatabaseModelFactory GetModelFactory()
@@ -46,7 +46,7 @@ namespace ChangeDB.Agent.SqlServer
         }
 
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
-        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection,IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
+        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
         {
             // exclude views
             var allTables = dbConnection.ExecuteReaderAsList<string, string>("select table_schema ,table_name from information_schema.tables t where t.table_type ='BASE TABLE'");
@@ -125,8 +125,8 @@ namespace ChangeDB.Agent.SqlServer
             //https://github.com/dotnet/efcore/blob/252ece7a6bdf14139d90525a4dd0099616a82b4c/src/EFCore.SqlServer/Scaffolding/Internal/SqlServerDatabaseModelFactory.cs
             ColumnDescriptor FromColumnModel(DatabaseColumn column)
             {
-                var defaultValue=allDefaultValues.Where(p =>
-                        p.Item1 == column.Table.Schema && p.Item2 == column.Table.Name && p.Item3 == column.Name)
+                var defaultValue = allDefaultValues.Where(p =>
+                          p.Item1 == column.Table.Schema && p.Item2 == column.Table.Name && p.Item3 == column.Name)
                     .Select(p => p.Item4).SingleOrDefault();
                 var baseColumnDesc = new ColumnDescriptor
                 {
@@ -161,7 +161,7 @@ namespace ChangeDB.Agent.SqlServer
                     {
                         baseColumnDesc.IdentityInfo.IncrementBy = 1;
                     }
-                    
+
                     baseColumnDesc.DefaultValue = null;
                     baseColumnDesc.SetOriginDefaultValue(null);
                 }

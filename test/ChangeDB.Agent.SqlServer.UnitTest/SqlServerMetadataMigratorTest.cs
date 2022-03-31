@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
+using ChangeDB.Descriptors;
 using ChangeDB.Migration;
 using FluentAssertions;
 using Xunit;
@@ -105,7 +106,7 @@ namespace ChangeDB.Agent.SqlServer
             var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
             databaseDesc.Tables.Single().Indexes.Should()
                 .BeEquivalentTo(new List<IndexDescriptor>
-                {   
+                {
                     new IndexDescriptor
                     {
                         Name = "nm_index",
@@ -333,7 +334,7 @@ namespace ChangeDB.Agent.SqlServer
                     Schema = "dbo",
                     Columns = new List<ColumnDescriptor>
                     {
-                       new ColumnDescriptor{ Name="abc", IsNullable=true, StoreType = "uniqueidentifier",DefaultValueSql="(newid())" }
+                       new ColumnDescriptor{ Name="abc", IsNullable=true, DataType = DataTypeDescriptor.Uuid() ,DefaultValue=SqlExpressionDescriptor.FromFunction(Function.Uuid) }
                     }
                 });
         }
@@ -350,7 +351,7 @@ namespace ChangeDB.Agent.SqlServer
                     Schema = "dbo",
                     Columns = new List<ColumnDescriptor>
                     {
-                       new ColumnDescriptor{ Name="id", IsNullable=true, StoreType = "datetime", DefaultValueSql="(getdate())"}
+                       new ColumnDescriptor{ Name="id", IsNullable=true, DataType = DataTypeDescriptor.DateTime(6), DefaultValue = SqlExpressionDescriptor.FromFunction(Function.Now)}
                     }
                 });
         }
@@ -367,9 +368,9 @@ namespace ChangeDB.Agent.SqlServer
                     Schema = "dbo",
                     Columns = new List<ColumnDescriptor>
                     {
-                        new ColumnDescriptor{ Name="id", IsNullable=false,DataType=DataTypeDescriptor.Int(), DefaultValueSql="((0))"},
-                        new ColumnDescriptor{ Name="nm", IsNullable=true, StoreType = "varchar(10)", DefaultValueSql="('abc')"},
-                        new ColumnDescriptor{ Name="val", IsNullable=true, StoreType = "money", DefaultValueSql="((0))"}
+                        new ColumnDescriptor{ Name="id", IsNullable=false,DataType=DataTypeDescriptor.Int(), DefaultValue = SqlExpressionDescriptor.FromConstant(0)},
+                        new ColumnDescriptor{ Name="nm", IsNullable=true, DataType = DataTypeDescriptor.Varchar(10), DefaultValue = SqlExpressionDescriptor.FromConstant("abc")},
+                        new ColumnDescriptor{ Name="val", IsNullable=true, DataType = DataTypeDescriptor.Decimal(19,4),  DefaultValue = SqlExpressionDescriptor.FromConstant(0m)}
                     }
                 });
         }
@@ -742,11 +743,11 @@ namespace ChangeDB.Agent.SqlServer
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id",DataType=DataTypeDescriptor.Int(), DefaultValueSql="((1))"},
-                             new ColumnDescriptor { Name="nm", StoreType="nvarchar(10)", DefaultValueSql="('abc')"},
-                             new ColumnDescriptor { Name="used", StoreType="bit", DefaultValueSql="((1))"},
-                             new ColumnDescriptor {Name="rid", StoreType="uniqueidentifier", DefaultValueSql="(newid())"},
-                             new ColumnDescriptor { Name="createtime", StoreType="datetime2", DefaultValueSql="(getdate())"},
+                            new ColumnDescriptor { Name="id",DataType=DataTypeDescriptor.Int(), DefaultValue = SqlExpressionDescriptor.FromConstant(1)},
+                             new ColumnDescriptor { Name="nm", DataType = DataTypeDescriptor.Varchar(10), DefaultValue = SqlExpressionDescriptor.FromConstant("abc")},
+                             new ColumnDescriptor { Name="used", DataType = DataTypeDescriptor.Boolean(), DefaultValue = SqlExpressionDescriptor.FromConstant(true)},
+                             new ColumnDescriptor {Name="rid", DataType = DataTypeDescriptor.Uuid(), DefaultValue = SqlExpressionDescriptor.FromFunction(Function.Uuid)},
+                             new ColumnDescriptor { Name="createtime", DataType = DataTypeDescriptor.DateTime(3),DefaultValue = SqlExpressionDescriptor.FromFunction(Function.Now)},
                         },
                         PrimaryKey = new PrimaryKeyDescriptor{ Name="pk_table1_id", Columns = new List<string>{"id"}}
                     }
@@ -802,7 +803,7 @@ namespace ChangeDB.Agent.SqlServer
                         {
                            new ColumnDescriptor
                            {
-                                Name="id", StoreType = "bigint", IsIdentity =true,
+                                Name="id", DataType =DataTypeDescriptor.BigInt(), IsIdentity =true,
                                 IdentityInfo = new IdentityDescriptor
                                 {
                                     StartValue=2,

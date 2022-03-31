@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using FluentAssertions;
@@ -66,7 +66,7 @@ namespace ChangeDB.Agent.SqlCe
         {
             _dbConnection.ExecuteNonQuery($"create table table1(id {storeType});");
             var databaseDescriptor = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            var columnStoreType = databaseDescriptor.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).Single();
+            var columnStoreType = databaseDescriptor.Tables.SelectMany(p => p.Columns).Select(p => p.GetOriginStoreType()).Single();
             var commonDataType = _dataTypeMapper.ToCommonDatabaseType(columnStoreType);
             var method = typeof(DataTypeDescriptor).GetMethod(Enum.GetName(commonDbType) ?? string.Empty,
                 BindingFlags.Static | BindingFlags.Public);
@@ -85,7 +85,7 @@ namespace ChangeDB.Agent.SqlCe
             var targetType = _dataTypeMapper.ToDatabaseStoreType(dataTypeDescriptor);
             _dbConnection.ExecuteNonQuery($"create table table1(id {targetType});");
             var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            var targetTypeInDatabase = databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).First();
+            var targetTypeInDatabase = databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.GetOriginStoreType()).First();
             targetTypeInDatabase.Should().Be(targetStoreType);
         }
 

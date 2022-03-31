@@ -20,6 +20,8 @@ namespace ChangeDB.Agent.SqlServer
 
         public virtual Task PreMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
         {
+            var dataTypeMapper = SqlServerDataTypeMapper.Default;
+            var sqlExpressionTranslator = SqlServerSqlExpressionTranslator.Default;
             var dbConnection = migrationContext.TargetConnection;
             CreateSchemas();
             CreateTables();
@@ -48,7 +50,7 @@ namespace ChangeDB.Agent.SqlServer
                 string BuildColumnBasicDesc(ColumnDescriptor column)
                 {
                     var columnName = IdentityName(column.Name);
-                    var dataType = column.StoreType;
+                    var dataType = dataTypeMapper.ToDatabaseStoreType(column.DataType);
                     var identityInfo = column.IsIdentity && column.IdentityInfo != null
                         ? $"IDENTITY({column.IdentityInfo.StartValue},{column.IdentityInfo.IncrementBy})"
                         : string.Empty;
@@ -68,10 +70,13 @@ namespace ChangeDB.Agent.SqlServer
                     {
                         var columnName = IdentityName(column);
                         var columnDesc = table.Columns.Single(p => p.Name == column);
-                        dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} {columnDesc.StoreType} NOT NULL;");
-                        if (!string.IsNullOrEmpty(columnDesc.DefaultValueSql))
+                        var dataType = dataTypeMapper.ToDatabaseStoreType(columnDesc.DataType);
+                        var defaultValue =
+                            sqlExpressionTranslator.FromCommonSqlExpression(columnDesc.DefaultValue, dataType);
+                        dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} {dataType} NOT NULL;");
+                        if (!string.IsNullOrEmpty(defaultValue))
                         {
-                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD CONSTRAINT DF_DEFAULT_{table.Schema}_{table.Name}_{column} DEFAULT ({columnDesc.DefaultValueSql}) FOR {columnName};");
+                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD CONSTRAINT DF_DEFAULT_{table.Schema}_{table.Name}_{column} DEFAULT ({defaultValue}) FOR {columnName};");
                         }
                     }
 
@@ -90,6 +95,8 @@ namespace ChangeDB.Agent.SqlServer
 
         public virtual Task PostMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
         {
+            var dataTypeMapper = SqlServerDataTypeMapper.Default;
+            var sqlExpressionTranslator = SqlServerSqlExpressionTranslator.Default;
             var dbConnection = migrationContext.TargetConnection;
             AlterNotNullColumns();
             AddDefaultValues();
@@ -105,10 +112,11 @@ namespace ChangeDB.Agent.SqlServer
                     {
                         var columnName = IdentityName(column.Name);
                         var isPrimaryKey = table.PrimaryKey?.Columns?.Contains(column.Name) ?? false;
+                        var dataType = dataTypeMapper.ToDatabaseStoreType(column.DataType);
 
                         if (column.IdentityInfo == null && !column.IsNullable && !isPrimaryKey)
                         {
-                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} {column.StoreType} NOT NULL");
+                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} {dataType} NOT NULL");
                         }
                     }
                 }
@@ -158,11 +166,14 @@ namespace ChangeDB.Agent.SqlServer
                     foreach (var column in table.Columns)
                     {
                         var isPrimaryKey = table.PrimaryKey?.Columns?.Contains(column.Name) ?? false;
-                        if (!string.IsNullOrEmpty(column.DefaultValueSql) && !isPrimaryKey)
+                        var dataType = dataTypeMapper.ToDatabaseStoreType(column.DataType);
+                        var defaultValue =
+                            sqlExpressionTranslator.FromCommonSqlExpression(column.DefaultValue, dataType);
+                        if (!string.IsNullOrEmpty(defaultValue) && !isPrimaryKey)
                         {
                             var columnName = IdentityName(column.Name);
                             var constraintName = Regex.Replace($"DF_{table.Name}_{column.Name}", "[^a-zA-Z1-9]", "_");
-                            var defaultValueExpression = column.DefaultValueSql.StartsWith('(') && column.DefaultValueSql.EndsWith(')') ? column.DefaultValueSql : $"({column.DefaultValueSql})";
+                            var defaultValueExpression = defaultValue.StartsWith('(') && defaultValue.EndsWith(')') ? defaultValue : $"({defaultValue})";
                             dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ADD CONSTRAINT {constraintName} DEFAULT {defaultValueExpression} FOR {columnName};");
                         }
                     }

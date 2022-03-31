@@ -513,7 +513,7 @@ namespace ChangeDB.Agent.Postgres
             await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
             var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
             actualDatabaseDesc.Tables.First().PrimaryKey.Should()
-                .BeEquivalentTo(new PrimaryKeyDescriptor { Name="table1_id_pkey", Columns = new List<string>{"id" } });
+                .BeEquivalentTo(new PrimaryKeyDescriptor { Name = "table1_id_pkey", Columns = new List<string> { "id" } });
         }
 
         [Fact]
@@ -538,7 +538,7 @@ namespace ChangeDB.Agent.Postgres
             await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
             var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
             actualDatabaseDesc.Tables.First().PrimaryKey.Columns.Should()
-                .BeEquivalentTo(new List<string>{"id" });
+                .BeEquivalentTo(new List<string> { "id" });
         }
 
         [Fact]
@@ -768,7 +768,7 @@ namespace ChangeDB.Agent.Postgres
             };
             await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
             var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            actualDatabaseDesc.Tables.Single(p=>p.Name=="table2").ForeignKeys.Should()
+            actualDatabaseDesc.Tables.Single(p => p.Name == "table2").ForeignKeys.Should()
                 .BeEquivalentTo(new List<ForeignKeyDescriptor>
                          {
                              new ForeignKeyDescriptor
@@ -864,7 +864,7 @@ namespace ChangeDB.Agent.Postgres
         //                Name="table1",
         //                Columns =new List<ColumnDescriptor>
         //                {
-        //                    new ColumnDescriptor { Name="id", StoreType="integer", DefaultValueSql="1"},
+        //                    new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int(), DefaultValueSql="1"},
         //                    new ColumnDescriptor { Name="nm", StoreType="character varying(10)", DefaultValueSql="'abc'::character varying"},
         //                    new ColumnDescriptor { Name="used", StoreType="boolean", DefaultValueSql="true"},
         //                    new ColumnDescriptor { Name="rid", StoreType="uuid", DefaultValueSql="gen_random_uuid()"},
@@ -983,7 +983,7 @@ namespace ChangeDB.Agent.Postgres
                         {
                             new ColumnDescriptor
                             {
-                                Name="id", StoreType = "bigint", IsIdentity =true,
+                                Name="id", DataType = DataTypeDescriptor.BigInt(), IsIdentity =true,
                                 IdentityInfo = new IdentityDescriptor
                                 {
                                     IsCyclic =false,
@@ -1096,20 +1096,22 @@ namespace ChangeDB.Agent.Postgres
             actualDatabaseDesc.Tables.First().Columns.First()
                 .Should().BeEquivalentTo(new ColumnDescriptor
                 {
-                    Name="id", DataType = DataTypeDescriptor.Int(), IsIdentity =true,
+                    Name = "id",
+                    DataType = DataTypeDescriptor.Int(),
+                    IsIdentity = true,
                     IdentityInfo = new IdentityDescriptor
                     {
-                        IsCyclic =false,
+                        IsCyclic = false,
                         Values = new Dictionary<string, object>
                         {
-                            [PostgresUtils.IdentityType]="ALWAYS"
+                            [PostgresUtils.IdentityType] = "ALWAYS"
                         }
                     },
                     Values = new Dictionary<string, object>
                     {
-                    [ColumnDescriptorExtensions.OriginStoreTypeKey]="integer"
+                        [ColumnDescriptorExtensions.OriginStoreTypeKey] = "integer"
                     }
-                
+
                 });
         }
 
@@ -1147,14 +1149,17 @@ namespace ChangeDB.Agent.Postgres
             var column = actualDatabaseDesc.Tables.First().Columns.First();
             column.Should().BeEquivalentTo(new ColumnDescriptor
             {
-                Name="id", IsNullable=false, DataType = DataTypeDescriptor.Int(),  IsIdentity = false,
+                Name = "id",
+                IsNullable = false,
+                DataType = DataTypeDescriptor.Int(),
+                IsIdentity = false,
                 IdentityInfo = new IdentityDescriptor
                 {
                     IsCyclic = false
                 },
                 Values = new Dictionary<string, object>
                 {
-                    [ColumnDescriptorExtensions.OriginStoreTypeKey]="integer"
+                    [ColumnDescriptorExtensions.OriginStoreTypeKey] = "integer"
                 }
             });
         }

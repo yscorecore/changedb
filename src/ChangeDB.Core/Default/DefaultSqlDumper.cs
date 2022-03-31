@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ChangeDB.Dump;
 using ChangeDB.Migration;
+using ChangeDB.Migration.Mapper;
 
 namespace ChangeDB.Default
 {
@@ -47,7 +48,7 @@ namespace ChangeDB.Default
                 Descriptor = null,
             };
             context.Writer = sqlWriter;
-            
+
             var sourceDatabaseDescriptor = await sourceAgent.MetadataMigrator.GetSourceDatabaseDescriptor(context);
 
             var databaseDescriptorMapper =
@@ -56,8 +57,8 @@ namespace ChangeDB.Default
             context.DatabaseMapper = databaseDescriptorMapper;
             context.Source.Descriptor = databaseDescriptorMapper.Source;
             context.Target.Descriptor = databaseDescriptorMapper.Target;
-            
-            
+
+
             await DoDumpDatabase(context);
             await ApplyCustomScripts(context);
             // flush to file
@@ -66,8 +67,8 @@ namespace ChangeDB.Default
 
 
 
-    
-       
+
+
 
         protected virtual async Task DoDumpDatabase(DumpContext dumpContext)
         {
@@ -107,31 +108,30 @@ namespace ChangeDB.Default
             migrationContext.EventReporter.RaiseStageChanged(StageKind.StartingTableData);
             if (NeedOrderByDependency())
             {
-                await MigrateTableInSingleTask(OrderByDependency(migrationContext.Source.Descriptor.Tables));
+                await MigrateTableInSingleTask(OrderByDependency(migrationContext.DatabaseMapper.TableMappers));
             }
             else
             {
-                await MigrateTableInSingleTask(migrationContext.Source.Descriptor.Tables);
+                await MigrateTableInSingleTask(migrationContext.DatabaseMapper.TableMappers);
             }
             migrationContext.EventReporter.RaiseStageChanged(StageKind.FinishedTableData);
 
             bool NeedOrderByDependency() => migrationContext.Setting.MigrationScope == MigrationScope.Data;
 
 
-            async Task MigrateTableInSingleTask(IEnumerable<TableDescriptor> tables)
+            async Task MigrateTableInSingleTask(IEnumerable<TableDescriptorMapper> tables)
             {
                 // single task
-                foreach (var sourceTable in tables)
+                foreach (var tableMapper in tables)
                 {
-                    await DumpTable(migrationContext, sourceTable);
+                    await DumpTable(migrationContext, tableMapper);
                 }
             }
 
-
-            IEnumerable<TableDescriptor> OrderByDependency(List<TableDescriptor> tableDescriptors)
+            IEnumerable<TableDescriptorMapper> OrderByDependency(List<TableDescriptorMapper> tableDescriptors)
             {
                 var cloneTables = tableDescriptors.ToArray().ToList();
-                List<TableDescriptor> results = new List<TableDescriptor>();
+                List<TableDescriptorMapper> results = new List<TableDescriptorMapper>();
                 HashSet<string> resultKeys = new HashSet<string>();
                 while (cloneTables.Count > 0)
                 {
@@ -152,8 +152,9 @@ namespace ChangeDB.Default
                 Debug.Assert(results.Count == tableDescriptors.Count);
                 return results;
 
-                bool AllDependenciesOk(TableDescriptor table)
+                bool AllDependenciesOk(TableDescriptorMapper tableMapper)
                 {
+                    var table = tableMapper.Target;
                     if (table.ForeignKeys == null || table.ForeignKeys.Count == 0)
                     {
                         return true;
@@ -169,17 +170,17 @@ namespace ChangeDB.Default
 
                 string TableKey(string schema, string name) => string.IsNullOrEmpty(schema) ? $"\"{name}\"" : $"\"{schema}\".\"{name}\"";
 
-                void AddResults(IEnumerable<TableDescriptor> pickedTables)
+                void AddResults(IEnumerable<TableDescriptorMapper> pickedTables)
                 {
                     pickedTables.Each(p =>
                     {
                         results.Add(p);
-                        resultKeys.Add(TableKey(p.Schema, p.Name));
+                        resultKeys.Add(TableKey(p.Target.Schema, p.Target.Name));
                         cloneTables.Remove(p);
                     });
                 }
 
-                string BuildTableNames(IEnumerable<TableDescriptor> tables) => string.Join(",", tables.Select(p => TableKey(p.Schema, p.Name)));
+                string BuildTableNames(IEnumerable<TableDescriptorMapper> tables) => string.Join(",", tables.Select(p => TableKey(p.Target.Schema, p.Target.Name)));
             }
         }
 
@@ -194,57 +195,30 @@ namespace ChangeDB.Default
             return Task.CompletedTask;
         }
 
-        private async IAsyncEnumerable<DataTable> ConvertToTargetDataTable(IAsyncEnumerable<DataTable> dataTables, MigrationSetting migrationSetting)
+        private async IAsyncEnumerable<DataTable> ConvertToTargetDataTable(IAsyncEnumerable<DataTable> dataTables, TableDescriptorMapper tableDescriptorMapper, MigrationSetting migrationSetting)
         {
             await foreach (var dataTable in dataTables)
             {
-                dataTable.Columns.OfType<DataColumn>().Each(p =>
-                   p.ColumnName = migrationSetting.TargetNameStyle.ColumnNameFunc(p.ColumnName));
-                yield return dataTable;
+                yield return await _tableDataMapper.MapDataTable(dataTable, tableDescriptorMapper, migrationSetting);
             }
         }
 
 
-        protected virtual async Task DumpTable(DumpContext dumpContext, TableDescriptor sourceTable)
+        protected virtual async Task DumpTable(DumpContext dumpContext, TableDescriptorMapper tableMapper)
         {
             var (source, target) = (dumpContext.Source, dumpContext.Target);
-            var migrationSetting = dumpContext.Setting;
-            var targetTableName = migrationSetting.TargetNameStyle.TableNameFunc(sourceTable.Name);
-            var targetTableDesc = target.Descriptor.GetTable(targetTableName);
-            var targetTableFullName = dumpContext.Target.Agent.AgentSetting.IdentityName(targetTableDesc.Schema, targetTableDesc.Name);
+            var targetTableFullName = dumpContext.Target.Agent.AgentSetting.IdentityName(tableMapper.Target.Schema, tableMapper.Target.Name);
 
-            await target.Agent.DataMigrator.BeforeWriteTargetTable(targetTableDesc, dumpContext);
-            var sourceCount = await source.Agent.DataMigrator.CountSourceTable(sourceTable, dumpContext);
+            await target.Agent.DataMigrator.BeforeWriteTargetTable(tableMapper.Source, dumpContext);
+            var sourceCount = await source.Agent.DataMigrator.CountSourceTable(tableMapper.Source, dumpContext);
 
-            var sourceDataTables = source.Agent.DataMigrator.ReadSourceTable(sourceTable, dumpContext);
-            var targetDataTables = ConvertToTargetDataTable(sourceDataTables, dumpContext.Setting);
-            await target.Agent.DataDumper.WriteTables(targetDataTables, targetTableDesc, dumpContext);
-
-            //while (totalCount > 0)
-            //{
+            var sourceDataTables = source.Agent.DataMigrator.ReadSourceTable(tableMapper.Source, dumpContext);
+            var targetDataTables = ConvertToTargetDataTable(sourceDataTables, tableMapper, dumpContext.Setting);
+            await target.Agent.DataDumper.WriteTables(targetDataTables, tableMapper.Target, dumpContext);
 
 
-            //    var pageInfo = new PageInfo { Offset = migratedCount, Limit = Math.Max(1, fetchCount) };
-            //    var dataTable = await source.Agent.DataMigrator.ReadSourceTable(sourceTable, pageInfo, migrationContext);
-            //    // convert target column name
-            //    dataTable.Columns.OfType<DataColumn>().Each(p =>
-            //        p.ColumnName = migrationSetting.TargetNameStyle.ColumnNameFunc(p.ColumnName));
-            //    await target.Agent.DataMigrator.WriteTargetTable(dataTable, targetTableDesc, migrationContext);
-
-            //    migratedCount += dataTable.Rows.Count;
-            //    totalCount = Math.Max(totalCount, migratedCount);
-            //    maxRowSize = Math.Max(maxRowSize, dataTable.MaxRowSize());
-            //    fetchCount = Math.Min(fetchCount * migrationSetting.GrowthSpeed, Math.Max(1, migrationSetting.FetchDataMaxSize / maxRowSize));
-
-            //    if (dataTable.Rows.Count < pageInfo.Limit)
-            //    {
-            //        migrationContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, migratedCount, migratedCount, false);
-            //        break;
-            //    }
-            //    migrationContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, totalCount, migratedCount, false);
-            //}
-            await target.Agent.DataMigrator.AfterWriteTargetTable(targetTableDesc, dumpContext);
-            var targetCount = await target.Agent.DataMigrator.CountSourceTable(sourceTable, dumpContext);
+            await target.Agent.DataMigrator.AfterWriteTargetTable(tableMapper.Target, dumpContext);
+            var targetCount = await target.Agent.DataMigrator.CountSourceTable(tableMapper.Target, dumpContext);
             dumpContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, sourceCount, targetCount, true);
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using ChangeDB.Agent.SqlCe.EFCore.SqlServerCompact;
+using ChangeDB.Migration;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
@@ -18,16 +19,16 @@ namespace ChangeDB.Agent.SqlCe
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
 
-        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
+        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
         {
 
             var databaseModelFactory = new SqlCeDatabaseModelFactory();
             var options = new DatabaseModelFactoryOptions();
             var model = databaseModelFactory.Create(dbConnection, options);
-            return FromDatabaseModel(model, dbConnection);
+            return FromDatabaseModel(model, dbConnection, dataTypeMapper, sqlExpressionTranslator);
         }
 
-        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection)
+        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
         {
 
             var allDefaultValues = dbConnection.ExecuteReaderAsList<string, string, string>(
@@ -94,21 +95,27 @@ namespace ChangeDB.Agent.SqlCe
             //https://github.com/dotnet/efcore/blob/252ece7a6bdf14139d90525a4dd0099616a82b4c/src/EFCore.SqlServer/Scaffolding/Internal/SqlServerDatabaseModelFactory.cs
             ColumnDescriptor FromColumnModel(DatabaseColumn column)
             {
+                var defaultValue = allDefaultValues.Where(p =>
+                          p.Item1 == column.Table.Name && p.Item2 == column.Name)
+                    .Select(p => p.Item3).SingleOrDefault();
                 var baseColumnDesc = new ColumnDescriptor
                 {
                     Collation = column.Collation,
                     Comment = column.Comment,
                     ComputedColumnSql = column.ComputedColumnSql,
-                    DefaultValueSql = column.DefaultValueSql,
+                    DefaultValue = sqlExpressionTranslator.ToCommonSqlExpression(defaultValue, column.StoreType, dbConnection),
                     Name = column.Name,
                     IsStored = column.IsStored ?? false,
                     IsNullable = column.IsNullable,
-                    StoreType = column.StoreType,
+                    DataType = dataTypeMapper.ToCommonDatabaseType(column.StoreType)
                 };
-
+                baseColumnDesc.SetOriginStoreType(column.StoreType);
+                if (!string.IsNullOrEmpty(defaultValue))
+                {
+                    baseColumnDesc.SetOriginDefaultValue(defaultValue);
+                }
                 if (column.ValueGenerated == ValueGenerated.OnAdd)
                 {
-                    var tableFullName = IdentityName(column.Table.Schema, column.Table.Name);
                     baseColumnDesc.IsIdentity = true;
                     var identityInfo = addIdentityInfos.Single(p => p.Item1 == column.Table.Schema && p.Item2 == column.Table.Name);
                     baseColumnDesc.IdentityInfo = new IdentityDescriptor
@@ -122,14 +129,10 @@ namespace ChangeDB.Agent.SqlCe
                     {
                         baseColumnDesc.IdentityInfo.IncrementBy = 1;
                     }
+                    baseColumnDesc.DefaultValue = null;
+                    baseColumnDesc.SetOriginDefaultValue(null);
                 }
-                else
-                {
-                    // reassign defaultValue Sql, because efcore will filter clr default
-                    baseColumnDesc.DefaultValueSql = allDefaultValues.Where(p =>
-                             p.Item1 == column.Table.Name && p.Item2 == column.Name)
-                        .Select(p => p.Item3).SingleOrDefault();
-                }
+
 
                 return baseColumnDesc;
             }

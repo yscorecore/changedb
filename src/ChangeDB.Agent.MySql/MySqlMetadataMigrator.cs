@@ -15,12 +15,14 @@ namespace ChangeDB.Agent.MySql
             // mysql get descriptor need a new connection
             using var newSourceConnection =
                 migrationContext.Source.Agent.CreateConnection(migrationContext.SourceDatabase.ConnectionString);
-            var databaseDescriptor = GetDataBaseDescriptorByEFCore(newSourceConnection);
+            var databaseDescriptor = GetDataBaseDescriptorByEFCore(newSourceConnection, MySqlDataTypeMapper.Default, MySqlExpressionTranslator.Default);
             return Task.FromResult(databaseDescriptor);
         }
 
         public Task PreMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
         {
+            var datatypeMapper = MySqlDataTypeMapper.Default;
+            var sqlExpressionTranslator = MySqlExpressionTranslator.Default;
             CreateTables();
             CreateIndexs();
             return Task.CompletedTask;
@@ -40,7 +42,7 @@ namespace ChangeDB.Agent.MySql
                 string BuildColumnBasicDesc(ColumnDescriptor column)
                 {
                     var columnName = IdentityName(column.Name);
-                    var dataType = column.StoreType;
+                    var dataType = datatypeMapper.ToDatabaseStoreType(column.DataType);
                     var nullable = column.IsNullable ? "null" : "not null";
 
                     if (column.IsIdentity && column.IdentityInfo != null)
@@ -95,6 +97,8 @@ namespace ChangeDB.Agent.MySql
         }
         public Task PostMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
         {
+            var datatypeMapper = MySqlDataTypeMapper.Default;
+            var sqlExpressionTranslator = MySqlExpressionTranslator.Default;
             var dbConnection = migrationContext.TargetConnection;
             AddDefaultValues();
             AddForeignKeys();
@@ -106,10 +110,13 @@ namespace ChangeDB.Agent.MySql
                     var tableFullName = IdentityName(table.Schema, table.Name);
                     foreach (var column in table.Columns)
                     {
-                        if (!string.IsNullOrEmpty(column.DefaultValueSql))
+                        var dataType = datatypeMapper.ToDatabaseStoreType(column.DataType);
+                        var defaultValue =
+                            sqlExpressionTranslator.FromCommonSqlExpression(column.DefaultValue, dataType);
+                        if (!string.IsNullOrEmpty(defaultValue))
                         {
                             var columnName = IdentityName(column.Name);
-                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} SET DEFAULT {column.DefaultValueSql};");
+                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} SET DEFAULT {defaultValue};");
                         }
                     }
                 }

@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using ChangeDB.Migration;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
@@ -19,11 +20,11 @@ namespace ChangeDB.Agent.MySql
         public static string IdentityName(string schema, string objectName) => $"{IdentityName(objectName)}";
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
-        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
+        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
         {
             var databaseModelFactory = GetModelFactory();
             var model = databaseModelFactory.Create(dbConnection, new DatabaseModelFactoryOptions());
-            return FromDatabaseModel(model, dbConnection);
+            return FromDatabaseModel(model, dbConnection, dataTypeMapper, sqlExpressionTranslator);
         }
 
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.")]
@@ -37,7 +38,7 @@ namespace ChangeDB.Agent.MySql
             return provider.GetRequiredService<IDatabaseModelFactory>();
         }
 
-        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection)
+        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
         {
             var allDefaultValues = dbConnection.ExecuteReaderAsList<string, string, string, string, string>(
                 @"SELECT TABLE_NAME ,COLUMN_NAME , COLUMN_DEFAULT, COLUMN_TYPE, EXTRA
@@ -147,18 +148,26 @@ order by a.TABLE_NAME , a.CONSTRAINT_NAME,b.ORDINAL_POSITION";
             //
             ColumnDescriptor FromColumnModel(DatabaseColumn column)
             {
+                var defaultValue = allDefaultValues.Where(p =>
+                          p.Item1 == column.Table.Schema && p.Item2 == column.Table.Name && p.Item3 == column.Name)
+                    .Select(p => p.Item4).SingleOrDefault();
+
                 var baseColumnDesc = new ColumnDescriptor
                 {
                     Collation = column.Collation,
                     Comment = column.Comment,
                     ComputedColumnSql = column.ComputedColumnSql,
-                    DefaultValueSql = column.DefaultValueSql,
+                    DefaultValue = sqlExpressionTranslator.ToCommonSqlExpression(defaultValue, column.StoreType, dbConnection),
                     Name = column.Name,
                     IsStored = column.IsStored ?? false,
                     IsNullable = column.IsNullable,
-                    StoreType = column.StoreType,
+                    DataType = dataTypeMapper.ToCommonDatabaseType(column.StoreType),
                 };
-
+                baseColumnDesc.SetOriginStoreType(column.StoreType);
+                if (!string.IsNullOrEmpty(defaultValue))
+                {
+                    baseColumnDesc.SetOriginDefaultValue(defaultValue);
+                }
                 if (column.ValueGenerated == ValueGenerated.OnAdd)
                 {
                     var tableFullName = IdentityName(column.Table.Schema, column.Table.Name);
@@ -175,34 +184,14 @@ order by a.TABLE_NAME , a.CONSTRAINT_NAME,b.ORDINAL_POSITION";
                     {
                         baseColumnDesc.IdentityInfo.IncrementBy = 1;
                     }
+
+                    baseColumnDesc.DefaultValue = null;
+                    baseColumnDesc.SetOriginDefaultValue(null);
                 }
-                else
-                {
-                    // reassign defaultValue Sql, because efcore will filter clr default
-                    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/1974429313f541eedfbe9d5ad748cd44f44989fa/src/EFCore.MySql/Scaffolding/Internal/MySqlDatabaseModelFactory.cs#L371
-                    baseColumnDesc.DefaultValueSql = allDefaultValues.Where(p =>
-                            p.Item1 == column.Table.Name && p.Item2 == column.Name)
-                        .Select(p => NormalizeDefaultValue(p.Item3, p.Item4, p.Item5)).SingleOrDefault();
-                }
+
 
 
                 return baseColumnDesc;
-            }
-
-            static string NormalizeDefaultValue(string defaultValue, string dataType, string extra)
-            {
-                if (defaultValue == null) return null;
-                var isFunction = extra == "DEFAULT_GENERATED";
-                if (isFunction)
-                {
-                    return HasWrapBrackets() ? defaultValue : $"({defaultValue})";
-                }
-
-                return IsNumberType() ? defaultValue : $"'{defaultValue}'";
-
-                bool HasWrapBrackets() => defaultValue.StartsWith("(") && defaultValue.EndsWith(")");
-
-                bool IsNumberType() => NumberTypes.Any(dataType.StartsWith);
             }
 
             ForeignKeyDescriptor FromForeignKeyModel(DatabaseForeignKey foreignKey)

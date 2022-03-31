@@ -107,7 +107,7 @@ namespace ChangeDB.Agent.SqlServer
             var targetType = _dataTypeMapper.ToDatabaseStoreType(dataTypeDescriptor);
             _dbConnection.ExecuteNonQuery($"create table table1(id {targetType});");
             var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            var targetTypeInDatabase = databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.StoreType).First();
+            var targetTypeInDatabase = databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.GetOriginStoreType()).First();
             targetTypeInDatabase.Should().Be(targetStoreType);
         }
 

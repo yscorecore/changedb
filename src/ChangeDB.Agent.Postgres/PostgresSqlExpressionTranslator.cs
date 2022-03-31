@@ -15,6 +15,7 @@ namespace ChangeDB.Agent.Postgres
         private static readonly ConcurrentDictionary<string, object> ValueCache =
             new ConcurrentDictionary<string, object>();
 
+        [Obsolete]
         public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
             return FromCommonSqlExpressionInternal(sqlExpression, context);
@@ -47,6 +48,7 @@ namespace ChangeDB.Agent.Postgres
 
         }
 
+        [Obsolete]
         private string FromCommonSqlExpressionInternal(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
             if (sqlExpression?.Function != null)
@@ -74,7 +76,7 @@ namespace ChangeDB.Agent.Postgres
 
         }
 
-
+        [Obsolete]
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
         {
             if (string.IsNullOrEmpty(sqlExpression))

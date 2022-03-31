@@ -15,16 +15,16 @@ namespace ChangeDB
         public static DataTypeDescriptor Boolean() => new() { DbType = CommonDataType.Boolean };
         public static DataTypeDescriptor TinyInt() => new() { DbType = CommonDataType.TinyInt };
         public static DataTypeDescriptor Int() => new() { DbType = CommonDataType.Int };
-        public static DataTypeDescriptor SmallInt() => new() { DbType = CommonDataType.SmallInt,  };
+        public static DataTypeDescriptor SmallInt() => new() { DbType = CommonDataType.SmallInt, };
         public static DataTypeDescriptor BigInt() => new() { DbType = CommonDataType.BigInt };
         public static DataTypeDescriptor Uuid() => new() { DbType = CommonDataType.Uuid };
-        public static DataTypeDescriptor Text() => new() { DbType = CommonDataType.Text};
-        public static DataTypeDescriptor NText() => new() { DbType = CommonDataType.NText};
-        public static DataTypeDescriptor Blob() => new() { DbType = CommonDataType.Blob};
+        public static DataTypeDescriptor Text() => new() { DbType = CommonDataType.Text };
+        public static DataTypeDescriptor NText() => new() { DbType = CommonDataType.NText };
+        public static DataTypeDescriptor Blob() => new() { DbType = CommonDataType.Blob };
         public static DataTypeDescriptor Float() => new() { DbType = CommonDataType.Float };
         public static DataTypeDescriptor Double() => new() { DbType = CommonDataType.Double };
         public static DataTypeDescriptor Decimal(int size, int scale) => new() { DbType = CommonDataType.Decimal, Arg1 = size, Arg2 = scale };
-        public static DataTypeDescriptor Char(int length) => new() { DbType = CommonDataType.Char, Arg1 = length};
+        public static DataTypeDescriptor Char(int length) => new() { DbType = CommonDataType.Char, Arg1 = length };
         public static DataTypeDescriptor NChar(int length) => new() { DbType = CommonDataType.NChar, Arg1 = length };
         public static DataTypeDescriptor Varchar(int length) => new() { DbType = CommonDataType.Varchar, Arg1 = length };
         public static DataTypeDescriptor NVarchar(int length) => new() { DbType = CommonDataType.NVarchar, Arg1 = length };
@@ -33,12 +33,12 @@ namespace ChangeDB
 
         public static DataTypeDescriptor Date() => new() { DbType = CommonDataType.Date };
 
-        public static DataTypeDescriptor Time(int scale) => new() { DbType = CommonDataType.Time, Arg1 = scale};
+        public static DataTypeDescriptor Time(int scale) => new() { DbType = CommonDataType.Time, Arg1 = scale };
         public static DataTypeDescriptor DateTime(int scale) => new() { DbType = CommonDataType.DateTime, Arg1 = scale };
 
         public static DataTypeDescriptor DateTimeOffset(int scale) => new() { DbType = CommonDataType.DateTimeOffset, Arg1 = scale };
 
-        public static DataTypeDescriptor UnKnow() => new() { DbType = CommonDataType.UnKnow};
+        public static DataTypeDescriptor UnKnow() => new() { DbType = CommonDataType.UnKnow };
     }
 
     public static class DataTypeDescriptorExtensions
@@ -102,11 +102,11 @@ namespace ChangeDB
         UnKnow,
     }
 
-    [AttributeUsage(AttributeTargets.Field,AllowMultiple = false,Inherited = false)]
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
     internal class DataTypeMapperAttribute : Attribute
     {
         internal static Dictionary<CommonDataType, Type> TypeMappers = typeof(CommonDataType).GetFields()
-            .Where(f=>Attribute.IsDefined(f,typeof(DataTypeMapperAttribute)))
+            .Where(f => Attribute.IsDefined(f, typeof(DataTypeMapperAttribute)))
             .ToDictionary(f => (CommonDataType)f.GetValue(null),
                 f => f.GetCustomAttribute<DataTypeMapperAttribute>()?.ClrType);
         public DataTypeMapperAttribute(Type clrType)
@@ -115,7 +115,7 @@ namespace ChangeDB
         }
 
         public Type ClrType { get; private set; }
-        
-        
+
+
     }
 }

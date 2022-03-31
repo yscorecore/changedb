@@ -15,7 +15,7 @@ namespace ChangeDB.Default
     {
         protected IAgentFactory AgentFactory { get; }
 
-        
+
         private IDatabaseMapper _databaseMapper;
 
         private ITableDataMapper _tableDataMapper;
@@ -233,7 +233,7 @@ namespace ChangeDB.Default
 
             while (totalCount > 0)
             {
-                
+
                 var pageInfo = new PageInfo { Offset = migratedCount, Limit = Math.Max(1, fetchCount) };
                 var srcDataTable = await source.Agent.DataMigrator.ReadSourceTable(tableMapper.Source, pageInfo, migrationContext);
 
@@ -255,7 +255,7 @@ namespace ChangeDB.Default
             await target.Agent.DataMigrator.AfterWriteTargetTable(tableMapper.Target, migrationContext);
 
             migrationContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, migratedCount, migratedCount, true);
-            
+
         }
 
     }

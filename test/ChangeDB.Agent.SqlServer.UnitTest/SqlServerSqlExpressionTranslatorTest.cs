@@ -24,7 +24,7 @@ namespace ChangeDB.Agent.SqlServer
 
         [Theory]
         [ClassData(typeof(MapToCommonSqlExpression))]
-
+        [Obsolete]
         public void ShouldMapToCommonSqlExpression(string sqlExpression, string storeType, SqlExpressionDescriptor sqlExpressionDescriptor)
         {
             sqlTranslator.ToCommonSqlExpression(sqlExpression, new SqlExpressionTranslatorContext { StoreType = storeType, Connection = _dbConnection })
@@ -32,6 +32,7 @@ namespace ChangeDB.Agent.SqlServer
         }
         [Theory]
         [ClassData(typeof(MapFromCommonSqlExpression))]
+        [Obsolete]
         public void ShouldMapFromCommonSqlExpression(SqlExpressionDescriptor sourceSqlExpression, string sqlExpression)
         {
             var targetSqlExpression = sqlTranslator

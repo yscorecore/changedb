@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
+using ChangeDB.Descriptors;
 using ChangeDB.Migration;
 using FluentAssertions;
 using Xunit;
@@ -69,8 +70,8 @@ namespace ChangeDB.Agent.SqlCe
                     Schema = null,
                     Columns = new List<ColumnDescriptor>
                     {
-                        new ColumnDescriptor { Name="id", IsNullable=true, StoreType="int", IsStored = false},
-                        new ColumnDescriptor { Name="nm", IsNullable=false, StoreType="int", IsStored = false}
+                        new ColumnDescriptor { Name="id", IsNullable=true, DataType = DataTypeDescriptor.Int(), IsStored = false},
+                        new ColumnDescriptor { Name="nm", IsNullable=false, DataType = DataTypeDescriptor.Int(), IsStored = false}
                     }
                 });
         }
@@ -247,7 +248,7 @@ namespace ChangeDB.Agent.SqlCe
                     {
                        new ColumnDescriptor
                        {
-                            Name="id", StoreType = "int", IsIdentity =true,IsStored= false,
+                            Name="id", DataType = DataTypeDescriptor.Int(), IsIdentity =true,IsStored= false,
                             IdentityInfo = new IdentityDescriptor
                             {
                                 IsCyclic =false,
@@ -275,7 +276,7 @@ namespace ChangeDB.Agent.SqlCe
                     {
                         new ColumnDescriptor
                         {
-                            Name="id", StoreType = "int", IsIdentity =true,IsStored= false,IsNullable= false,
+                            Name="id", DataType = DataTypeDescriptor.Int(), IsIdentity =true,IsStored= false,IsNullable= false,
                             IdentityInfo = new IdentityDescriptor
                             {
                                 IsCyclic =false,
@@ -286,7 +287,7 @@ namespace ChangeDB.Agent.SqlCe
                         },
                         new ColumnDescriptor
                         {
-                            Name="val", StoreType = "int", IsIdentity =false,IsStored= false,IsNullable =true
+                            Name="val", DataType = DataTypeDescriptor.Int(), IsIdentity =false,IsStored= false,IsNullable =true
                         }
                     }
                 });
@@ -309,7 +310,7 @@ namespace ChangeDB.Agent.SqlCe
                     {
                        new ColumnDescriptor
                        {
-                            Name="id", StoreType = "int", IsIdentity =true,IsStored= false,IsNullable= false,
+                            Name="id", DataType = DataTypeDescriptor.Int(), IsIdentity =true,IsStored= false,IsNullable= false,
                             IdentityInfo = new IdentityDescriptor
                             {
                                 IsCyclic =false,
@@ -320,7 +321,7 @@ namespace ChangeDB.Agent.SqlCe
                        },
                        new ColumnDescriptor
                        {
-                            Name="val", StoreType = "int", IsIdentity =false,IsStored= false,IsNullable =true
+                            Name="val", DataType = DataTypeDescriptor.Int(), IsIdentity =false,IsStored= false,IsNullable =true
                        }
                     }
                 });
@@ -339,7 +340,7 @@ namespace ChangeDB.Agent.SqlCe
                     Schema = null,
                     Columns = new List<ColumnDescriptor>
                     {
-                       new ColumnDescriptor{ Name="abc", IsNullable=true, StoreType = "uniqueidentifier",DefaultValueSql="newid()" }
+                       new ColumnDescriptor{ Name="abc", IsNullable=true, DataType =DataTypeDescriptor.Uuid(),DefaultValue=SqlExpressionDescriptor.FromFunction(Function.Uuid) }
                     }
                 });
         }
@@ -356,7 +357,7 @@ namespace ChangeDB.Agent.SqlCe
                     Schema = null,
                     Columns = new List<ColumnDescriptor>
                     {
-                       new ColumnDescriptor{ Name="id", IsNullable=true, StoreType = "datetime", DefaultValueSql="getdate()"}
+                       new ColumnDescriptor{ Name="id", IsNullable=true,DataType = DataTypeDescriptor.DateTime(3), DefaultValue = SqlExpressionDescriptor.FromFunction(Function.Now)}
                     }
                 });
         }
@@ -373,9 +374,9 @@ namespace ChangeDB.Agent.SqlCe
                     Schema = null,
                     Columns = new List<ColumnDescriptor>
                     {
-                        new ColumnDescriptor{ Name="id", IsNullable=false, StoreType = "int", DefaultValueSql="0"},
-                        new ColumnDescriptor{ Name="nm", IsNullable=true, StoreType = "nvarchar(10)", DefaultValueSql="'abc'"},
-                        new ColumnDescriptor{ Name="val", IsNullable=true, StoreType = "money", DefaultValueSql="0"}
+                        new ColumnDescriptor{ Name="id", IsNullable=false, DataType = DataTypeDescriptor.Int(), DefaultValue =SqlExpressionDescriptor.FromConstant(0)},
+                        new ColumnDescriptor{ Name="nm", IsNullable=true, DataType =DataTypeDescriptor.NVarchar(10),DefaultValue =SqlExpressionDescriptor.FromConstant("abc")},
+                        new ColumnDescriptor{ Name="val", IsNullable=true, DataType =DataTypeDescriptor.Decimal(19,4),DefaultValue=SqlExpressionDescriptor.FromConstant(0m)}
                     }
                 });
         }
@@ -395,7 +396,7 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="int", IsNullable = true}
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int(), IsNullable = true}
                         }
                     }
                 }
@@ -416,7 +417,7 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="int" }
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int() }
                         }
                     }
                 }
@@ -438,7 +439,7 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="int" }
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int() }
                         },
                          PrimaryKey = new PrimaryKeyDescriptor { Name="table1_id_pkey", Columns = new List<string>{"id" } },
                     }
@@ -461,7 +462,7 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="int" }
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int() }
                         },
                         PrimaryKey = new PrimaryKeyDescriptor { Columns = new List<string>{"id" } },
                     }
@@ -484,7 +485,7 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="int" }
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int() }
                         },
                         Uniques = new List<UniqueDescriptor>
                         {
@@ -511,8 +512,8 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="int" },
-                            new ColumnDescriptor { Name="nm", StoreType="int" }
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int() },
+                            new ColumnDescriptor { Name="nm", DataType = DataTypeDescriptor.Int() }
                         },
                         Uniques = new List<UniqueDescriptor>
                         {
@@ -539,7 +540,7 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="int" }
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int() }
                         },
                         Indexes = new List<IndexDescriptor>
                         {
@@ -566,8 +567,8 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="int" },
-                             new ColumnDescriptor { Name="nm", StoreType="int" }
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int() },
+                             new ColumnDescriptor { Name="nm", DataType = DataTypeDescriptor.Int() }
                         },
                         Indexes = new List<IndexDescriptor>
                         {
@@ -594,8 +595,8 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="int",IsNullable = false },
-                            new ColumnDescriptor { Name="id2", StoreType="int",IsNullable = true }
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int(),IsNullable = false },
+                            new ColumnDescriptor { Name="id2", DataType = DataTypeDescriptor.Int(),IsNullable = true }
                         }
                     }
                 }
@@ -617,7 +618,7 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="int"},
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int()},
                         },
                         Uniques = new List<UniqueDescriptor>
                         {
@@ -630,7 +631,7 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table2",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id2", StoreType="int"},
+                            new ColumnDescriptor { Name="id2", DataType = DataTypeDescriptor.Int()},
                         },
                          ForeignKeys = new List<ForeignKeyDescriptor>
                          {
@@ -665,8 +666,8 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="int"},
-                            new ColumnDescriptor { Name="nm", StoreType="int"},
+                            new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int()},
+                            new ColumnDescriptor { Name="nm", DataType = DataTypeDescriptor.Int()},
                         },
                         Uniques = new List<UniqueDescriptor>
                         {
@@ -679,8 +680,8 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table2",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id2", StoreType="int"},
-                             new ColumnDescriptor { Name="nm2", StoreType="int"},
+                            new ColumnDescriptor { Name="id2", DataType = DataTypeDescriptor.Int()},
+                             new ColumnDescriptor { Name="nm2", DataType = DataTypeDescriptor.Int()},
                         },
                          ForeignKeys = new List<ForeignKeyDescriptor>
                          {
@@ -715,11 +716,11 @@ namespace ChangeDB.Agent.SqlCe
                         Name="table1",
                         Columns =new List<ColumnDescriptor>
                         {
-                            new ColumnDescriptor { Name="id", StoreType="int", DefaultValueSql="1"},
-                             new ColumnDescriptor { Name="nm", StoreType="nvarchar(10)", DefaultValueSql="('abc')"},
-                             new ColumnDescriptor { Name="used", StoreType="bit", DefaultValueSql="1"},
-                             new ColumnDescriptor {Name="rid", StoreType="uniqueidentifier", DefaultValueSql="(newid())"},
-                             new ColumnDescriptor { Name="createtime", StoreType="datetime", DefaultValueSql="(getdate())"},
+                             new ColumnDescriptor { Name="id", DataType = DataTypeDescriptor.Int(), DefaultValue=SqlExpressionDescriptor.FromConstant(1)},
+                             new ColumnDescriptor { Name="nm",DataType = DataTypeDescriptor.Varchar(10), DefaultValue=SqlExpressionDescriptor.FromConstant("abc")},
+                             new ColumnDescriptor { Name="used", DataType = DataTypeDescriptor.Boolean(),DefaultValue=SqlExpressionDescriptor.FromConstant(true)},
+                             new ColumnDescriptor {Name="rid", DataType = DataTypeDescriptor.Uuid(),DefaultValue=SqlExpressionDescriptor.FromFunction(Function.Uuid)},
+                             new ColumnDescriptor { Name="createtime", DataType = DataTypeDescriptor.DateTime(6),DefaultValue = SqlExpressionDescriptor.FromFunction(Function.Now)},
                         },
                         PrimaryKey = new PrimaryKeyDescriptor{ Name="pk_table1_id", Columns = new List<string>{"id"}}
                     }
@@ -728,8 +729,8 @@ namespace ChangeDB.Agent.SqlCe
             await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
             var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
             var expectedDatabaseDesc = databaseDesc.DeepClone();
-            expectedDatabaseDesc.Tables.SelectMany(p => p.Columns)
-                .Where(p => !p.DefaultValueSql.StartsWith('(')).Each(c => c.DefaultValueSql = $"({c.DefaultValueSql})");
+            // expectedDatabaseDesc.Tables.SelectMany(p => p.Columns)
+            //     .Where(p => !p.DefaultValueSql.StartsWith('(')).Each(c => c.DefaultValueSql = $"({c.DefaultValueSql})");
             actualDatabaseDesc.Should().BeEquivalentTo(expectedDatabaseDesc);
         }
 
@@ -749,7 +750,7 @@ namespace ChangeDB.Agent.SqlCe
                         {
                            new ColumnDescriptor
                            {
-                                Name="id", StoreType = "int", IsIdentity =true,
+                                Name="id", DataType = DataTypeDescriptor.Int(), IsIdentity =true,
                                 IdentityInfo = new IdentityDescriptor
                                 {
 
@@ -778,7 +779,7 @@ namespace ChangeDB.Agent.SqlCe
                         {
                            new ColumnDescriptor
                            {
-                                Name="id", StoreType = "bigint", IsIdentity =true,
+                                Name="id",DataType  = DataTypeDescriptor.BigInt(), IsIdentity =true,
                                 IdentityInfo = new IdentityDescriptor
                                 {
                                     StartValue=2,

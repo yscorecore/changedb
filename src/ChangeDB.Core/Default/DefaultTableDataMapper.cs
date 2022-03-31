@@ -21,7 +21,7 @@ namespace ChangeDB.Default
             else
             {
                 var resultDataTable = new DataTable();
-                tableDescriptorMapper.ColumnMappers.ForEach(p=> resultDataTable.Columns.Add(p.Target.Name, p.Target.DataType.GetClrType()));
+                tableDescriptorMapper.ColumnMappers.ForEach(p => resultDataTable.Columns.Add(p.Target.Name, p.Target.DataType.GetClrType()));
                 // copy rows
                 foreach (DataRow row in dataTable.Rows)
                 {
@@ -29,10 +29,10 @@ namespace ChangeDB.Default
                     foreach (var columnMapper in tableDescriptorMapper.ColumnMappers)
                     {
                         var sourceItemValue = row[columnMapper.Source.Name];
-                        var targetItemValue = GetTargetItemValue(sourceItemValue,columnMapper.Source.DataType,columnMapper.Target.DataType);
+                        var targetItemValue = GetTargetItemValue(sourceItemValue, columnMapper.Source.DataType, columnMapper.Target.DataType);
                         newRow[columnMapper.Target.Name] = targetItemValue;
                     }
-                    
+
                     resultDataTable.Rows.Add(newRow);
                 }
                 return Task.FromResult(resultDataTable);
@@ -41,12 +41,12 @@ namespace ChangeDB.Default
 
         private bool CanUseOriginTable(TableDescriptorMapper mapper)
         {
-            return mapper.ColumnMappers.All(p => p.Source.Name == p.Target.Name && p.Source.DataType.GetClrType()==p.Target.DataType.GetClrType());
+            return mapper.ColumnMappers.All(p => p.Source.Name == p.Target.Name && p.Source.DataType.GetClrType() == p.Target.DataType.GetClrType());
         }
 
         private object GetTargetItemValue(object sourceValue, DataTypeDescriptor sourceType, DataTypeDescriptor targetType)
         {
-            if (Convert.IsDBNull(sourceValue)||sourceValue==null)
+            if (Convert.IsDBNull(sourceValue) || sourceValue == null)
             {
                 return sourceValue;
             }
@@ -72,7 +72,7 @@ namespace ChangeDB.Default
                 }
                 return JsonSerializer.Serialize(value);
             }
-            if (targetType == typeof(bool) || targetType == typeof(int)|| targetType==typeof(short)|| targetType==typeof(byte)|| targetType==typeof(double)|| targetType==typeof(float)|| targetType==typeof(decimal))
+            if (targetType == typeof(bool) || targetType == typeof(int) || targetType == typeof(short) || targetType == typeof(byte) || targetType == typeof(double) || targetType == typeof(float) || targetType == typeof(decimal))
             {
                 return Convert.ChangeType(value, targetType);
             }
@@ -83,7 +83,7 @@ namespace ChangeDB.Default
                     return guid.ToByteArray();
                 }
             }
-            return value;   
+            return value;
         }
     }
 }

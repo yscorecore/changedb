@@ -88,8 +88,8 @@ namespace ChangeDB.Agent.SqlServer
                 Name = "table1",
                 Columns = new List<ColumnDescriptor>
                 {
-                    new ColumnDescriptor{ Name = "id", StoreType = "int"},
-                    new ColumnDescriptor{Name = "nm", StoreType = "varchar(64)"}
+                    new ColumnDescriptor{ Name = "id", DataType = DataTypeDescriptor.Int()},
+                    new ColumnDescriptor{Name = "nm", DataType = DataTypeDescriptor.Varchar(64)}
                 }
             };
             await WriteTargetTable(table, tableDescriptor, _migrationContext);
@@ -119,14 +119,14 @@ namespace ChangeDB.Agent.SqlServer
                 {
                     new ColumnDescriptor
                     {
-                        Name = "id", StoreType  = "integer", IsIdentity = true,
+                        Name = "id",  DataType = DataTypeDescriptor.Int(), IsIdentity = true,
                         IdentityInfo = new IdentityDescriptor
                         {
                             IsCyclic =false,
                             CurrentValue = 5
                         }
                     },
-                    new ColumnDescriptor{Name = "nm",StoreType = "varchar(64)"}
+                    new ColumnDescriptor{Name = "nm",DataType = DataTypeDescriptor.Varchar(64)}
                 }
             };
             await WriteTargetTable(table, tableDescriptor, _migrationContext);

@@ -26,7 +26,7 @@ namespace ChangeDB.Agent.Postgres
 
 
         [ClassData(typeof(MapToCommonSqlExpression))]
-
+        [Obsolete]
         public void ShouldMapToCommonSqlExpression(string sqlExpression, string storeType, SqlExpressionDescriptor sqlExpressionDescriptor)
         {
             sqlTranslator.ToCommonSqlExpression(sqlExpression, new SqlExpressionTranslatorContext { StoreType = storeType, Connection = _dbConnection })
@@ -36,6 +36,7 @@ namespace ChangeDB.Agent.Postgres
 
 
         [ClassData(typeof(MapFromCommonSqlExpression))]
+        [Obsolete]
         public void ShouldMapFromCommonSqlExpression(SqlExpressionDescriptor sourceSqlExpression, string storeType, string sqlExpression)
         {
             var targetSqlExpression = sqlTranslator

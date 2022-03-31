@@ -13,6 +13,8 @@ namespace ChangeDB.Agent.SqlServer
 
         private static readonly ConcurrentDictionary<string, object> ValueCache =
             new ConcurrentDictionary<string, object>();
+
+        [Obsolete]
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
         {
             var trimmedExpression = TrimBrackets(sqlExpression);
@@ -87,6 +89,7 @@ namespace ChangeDB.Agent.SqlServer
             return match.Success;
         }
 
+        [Obsolete]
         public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
         {
             if (sqlExpression?.Function != null)
