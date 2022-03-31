@@ -14,30 +14,6 @@ namespace ChangeDB.Agent.SqlServer
         private static readonly ConcurrentDictionary<string, object> ValueCache =
             new ConcurrentDictionary<string, object>();
 
-        [Obsolete]
-        public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
-        {
-            var trimmedExpression = TrimBrackets(sqlExpression);
-            if (string.IsNullOrEmpty(trimmedExpression))
-            {
-                return null;
-            }
-            if (IsEmptyArgumentFunction(trimmedExpression, out var function))
-            {
-                return function.ToLower() switch
-                {
-                    "getdate" => new SqlExpressionDescriptor { Function = Function.Now },
-                    "newid" => new SqlExpressionDescriptor { Function = Function.Uuid },
-                    _ => new SqlExpressionDescriptor { Constant = trimmedExpression }
-                };
-            }
-            else
-            {
-                var sql = $"select cast({trimmedExpression} as {context.StoreType})";
-                var value = ValueCache.GetOrAdd(sql, (s) => context.Connection.ExecuteScalar(s));
-                return new SqlExpressionDescriptor() { Constant = value };
-            }
-        }
 
         public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, string storeType, IDbConnection dbConnection)
         {
@@ -89,20 +65,6 @@ namespace ChangeDB.Agent.SqlServer
             return match.Success;
         }
 
-        [Obsolete]
-        public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
-        {
-            if (sqlExpression?.Function != null)
-            {
-                return sqlExpression.Function.Value switch
-                {
-                    Function.Now => "getdate()",
-                    Function.Uuid => "newid()",
-                    _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
-                };
-            }
-            return SqlServerRepr.ReprConstant(sqlExpression?.Constant);
-        }
 
         public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, string storeType)
         {

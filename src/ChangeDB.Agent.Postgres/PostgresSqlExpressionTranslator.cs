@@ -15,11 +15,7 @@ namespace ChangeDB.Agent.Postgres
         private static readonly ConcurrentDictionary<string, object> ValueCache =
             new ConcurrentDictionary<string, object>();
 
-        [Obsolete]
-        public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
-        {
-            return FromCommonSqlExpressionInternal(sqlExpression, context);
-        }
+
 
         public string FromCommonSqlExpression(SqlExpressionDescriptor sqlExpression, string storeType)
         {
@@ -48,64 +44,6 @@ namespace ChangeDB.Agent.Postgres
 
         }
 
-        [Obsolete]
-        private string FromCommonSqlExpressionInternal(SqlExpressionDescriptor sqlExpression, SqlExpressionTranslatorContext context)
-        {
-            if (sqlExpression?.Function != null)
-            {
-                return sqlExpression.Function.Value switch
-                {
-                    Function.Uuid => "gen_random_uuid()",
-                    Function.Now => "now()",
-                    _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
-                };
-            }
-            if ("boolean".Equals(context.StoreType, StringComparison.InvariantCultureIgnoreCase) && sqlExpression?.Constant != null)
-            {
-                return Convert.ToBoolean(sqlExpression.Constant).ToString().ToLowerInvariant();
-            }
-
-
-            var text = PostgresRepr.ReprConstant(sqlExpression?.Constant);
-            if (sqlExpression?.Constant is Guid or DateTime or byte[] or DateTimeOffset)
-            {
-                return $"{text}::{context.StoreType}";
-            }
-            return text;
-
-
-        }
-
-        [Obsolete]
-        public SqlExpressionDescriptor ToCommonSqlExpression(string sqlExpression, SqlExpressionTranslatorContext context)
-        {
-            if (string.IsNullOrEmpty(sqlExpression))
-            {
-                return null;
-            }
-
-
-
-            sqlExpression = ReplaceTypeConvert(sqlExpression.Trim());
-            if (Regex.IsMatch(sqlExpression, @"CURRENT_TIMESTAMP(\(\d\))?", RegexOptions.IgnoreCase))
-            {
-                return new SqlExpressionDescriptor { Function = Function.Now };
-            }
-
-            if (IsEmptyArgumentFunction(sqlExpression, out var function))
-            {
-                return function.ToLowerInvariant() switch
-                {
-                    "now" => new SqlExpressionDescriptor { Function = Function.Now },
-                    "gen_random_uuid" => new SqlExpressionDescriptor { Function = Function.Uuid },
-                    _ => new SqlExpressionDescriptor { Constant = sqlExpression }
-                };
-            }
-
-            var sql = $"select cast({sqlExpression} as {context.StoreType})";
-            var val = ValueCache.GetOrAdd(sql, (s) => context.Connection.ExecuteScalar(s));
-            return new SqlExpressionDescriptor { Constant = val };
-        }
 
         private string ReplaceTypeConvert(string sqlExpression)
         {
