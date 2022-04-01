@@ -9,8 +9,6 @@ namespace ChangeDB.Agent.SqlCe
     {
         public IDataMigrator DataMigrator => SqlCeDataMigrator.Default;
         public IMetadataMigrator MetadataMigrator => SqlCeMetadataMigrator.Default;
-        public IDataTypeMapper DataTypeMapper => SqlCeDataTypeMapper.Default;
-        public ISqlExpressionTranslator ExpressionTranslator => SqlServerSqlExpressionTranslator.Default;
         public IDatabaseManager DatabaseManger => SqlCeDatabaseManager.Default;
         public AgentSetting AgentSetting => new AgentSetting { DefaultSchema = null, ObjectNameMaxLength = 128, IdentityName = SqlCeUtils.IdentityName };
         public IRepr Repr => SqlServerRepr.Default;

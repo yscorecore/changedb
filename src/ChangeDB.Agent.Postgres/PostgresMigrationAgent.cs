@@ -9,10 +9,8 @@ namespace ChangeDB.Agent.Postgres
     {
         public IDataMigrator DataMigrator => PostgresDataMigrator.Default;
         public IMetadataMigrator MetadataMigrator => PostgresMetadataMigrator.Default;
-        public IDataTypeMapper DataTypeMapper => PostgresDataTypeMapper.Default;
-        public ISqlExpressionTranslator ExpressionTranslator => PostgresSqlExpressionTranslator.Default;
         public IDatabaseManager DatabaseManger => PostgresDatabaseManager.Default;
-        public AgentSetting AgentSetting => new AgentSetting { ObjectNameMaxLength = 64, DefaultSchema = "public", SupportSchema = true, IdentityName = PostgresUtils.IdentityName };
+        public AgentSetting AgentSetting => new AgentSetting { ObjectNameMaxLength = 63, DefaultSchema = "public", SupportSchema = true, IdentityName = PostgresUtils.IdentityName };
         public IRepr Repr => PostgresRepr.Default;
         public IDataDumper DataDumper => PostgresDataDumper.Default;
 

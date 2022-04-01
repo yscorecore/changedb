@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using ChangeDB.Agent.SqlServer;
 using ChangeDB.Migration;
 using FluentAssertions;
 using Xunit;
@@ -14,7 +15,7 @@ namespace ChangeDB.Agent.SqlCe
     public class SqlCeDataTypeMapperTest : IDisposable
     {
         private readonly IMetadataMigrator _metadataMigrator = new SqlCeMigrationAgent().MetadataMigrator;
-        private readonly IDataTypeMapper _dataTypeMapper = new SqlCeMigrationAgent().DataTypeMapper;
+        private readonly IDataTypeMapper _dataTypeMapper = SqlCeDataTypeMapper.Default;
         private readonly MigrationContext _migrationContext = new MigrationContext { };
         private readonly DbConnection _dbConnection;
 

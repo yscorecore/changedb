@@ -9,17 +9,16 @@ namespace ChangeDB
 
         public string Name { get; set; }
         public string Comment { get; set; }
-        // [Obsolete("use DataType")]
-        // public string StoreType { get; set; }
+
         public DataTypeDescriptor DataType { get; set; }
-        // [Obsolete]
-        // public string DefaultValueSql { get; set; }
+
 
         public SqlExpressionDescriptor DefaultValue { get; set; }
         public bool IsNullable { get; set; }
         public string Collation { get; set; }
 
         #region Computed
+        [Obsolete]
         public string ComputedColumnSql { get; set; }
         public bool IsStored { get; set; }
         #endregion

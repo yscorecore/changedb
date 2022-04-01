@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using ChangeDB.Agent.SqlServer;
 using ChangeDB.Descriptors;
 using ChangeDB.Migration;
 using FluentAssertions;
@@ -11,7 +12,7 @@ namespace ChangeDB.Agent.SqlCe
     [Collection(nameof(DatabaseEnvironment))]
     public class SqlCeSqlExpressionTranslatorTest
     {
-        private readonly ISqlExpressionTranslator sqlTranslator = new SqlCeMigrationAgent().ExpressionTranslator;
+        private readonly ISqlExpressionTranslator sqlTranslator = SqlServerSqlExpressionTranslator.Default;
 
         private readonly DbConnection _dbConnection;
 

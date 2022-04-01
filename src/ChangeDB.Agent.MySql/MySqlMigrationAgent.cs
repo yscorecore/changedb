@@ -12,10 +12,6 @@ namespace ChangeDB.Agent.MySql
 
         public IMetadataMigrator MetadataMigrator => MySqlMetadataMigrator.Default;
 
-        public IDataTypeMapper DataTypeMapper => MySqlDataTypeMapper.Default;
-
-        public ISqlExpressionTranslator ExpressionTranslator => MySqlExpressionTranslator.Default;
-
         public IDatabaseManager DatabaseManger => MySqlDatabaseManager.Default;
 
         public IRepr Repr => MySqlRepr.Default;
