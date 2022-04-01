@@ -1,4 +1,5 @@
-﻿using System.Data.Common;
+﻿using System.Data;
+using System.Data.Common;
 using System.Data.SqlServerCe;
 using ChangeDB.Agent.SqlServer;
 using ChangeDB.Migration;
