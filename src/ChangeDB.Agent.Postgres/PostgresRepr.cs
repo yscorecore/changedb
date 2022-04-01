@@ -6,9 +6,9 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.Postgres
 {
-    public class PostgresRepr : IRepr
+    public class PostgresRepr 
     {
-        public static readonly IRepr Default = new PostgresRepr();
+        public static readonly PostgresRepr Default = new PostgresRepr();
 
         // https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-STRINGS-ESCAPE
         private static readonly Dictionary<string, string> ReplaceChars = new Dictionary<string, string>()

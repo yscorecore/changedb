@@ -13,7 +13,7 @@ namespace ChangeDB.Agent.SqlCe
     [Collection(nameof(DatabaseEnvironment))]
     public class SqlCeMetadataMigratorTest : IDisposable
     {
-        private readonly IMetadataMigrator _metadataMigrator = new SqlCeMigrationAgent().MetadataMigrator;
+        private readonly IMetadataMigrator _metadataMigrator = new SqlCeAgent().MetadataMigrator;
         private readonly MigrationContext _migrationContext;
         private readonly DbConnection _dbConnection;
 

@@ -10,7 +10,7 @@ namespace ChangeDB.Agent.SqlCe
 {
     public class SqlCeDatabaseManagerTest
     {
-        private readonly IDatabaseManager _databaseManager = new SqlCeMigrationAgent().DatabaseManger;
+        private readonly IDatabaseManager _databaseManager = new SqlCeAgent().DatabaseManger;
         private readonly MigrationContext _migrationContext;
         private readonly DbConnection _dbConnection;
 

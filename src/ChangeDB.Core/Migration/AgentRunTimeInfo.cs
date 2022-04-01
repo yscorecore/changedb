@@ -1,8 +1,11 @@
-﻿namespace ChangeDB.Migration
+﻿using System;
+
+namespace ChangeDB.Migration
 {
+    [Obsolete]
     public record AgentRunTimeInfo
     {
-        public IMigrationAgent Agent { get; set; }
+        public IAgent Agent { get; set; }
         public DatabaseDescriptor Descriptor { get; set; }
     }
 }

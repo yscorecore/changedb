@@ -4,7 +4,7 @@ using MySqlConnector;
 
 namespace ChangeDB.Agent.MySql
 {
-    public class MySqlMigrationAgent : IMigrationAgent
+    public class MySqlAgent : IAgent
     {
         public DbConnection CreateConnection(string connectionString) => new MySqlConnection(connectionString);
 
@@ -13,8 +13,6 @@ namespace ChangeDB.Agent.MySql
         public IMetadataMigrator MetadataMigrator => MySqlMetadataMigrator.Default;
 
         public IDatabaseManager DatabaseManger => MySqlDatabaseManager.Default;
-
-        public IRepr Repr => MySqlRepr.Default;
 
         public AgentSetting AgentSetting => new AgentSetting
         { SupportSchema = false, DefaultSchema = null, ObjectNameMaxLength = 64 };

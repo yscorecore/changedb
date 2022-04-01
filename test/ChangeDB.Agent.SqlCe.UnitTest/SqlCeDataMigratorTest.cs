@@ -12,7 +12,7 @@ namespace ChangeDB.Agent.SqlCe
     [Collection(nameof(DatabaseEnvironment))]
     public class SqlCeDataMigratorTest : IDisposable
     {
-        private readonly IDataMigrator _dataMigrator = new SqlCeMigrationAgent().DataMigrator;
+        private readonly IDataMigrator _dataMigrator = new SqlCeAgent().DataMigrator;
         private readonly MigrationContext _migrationContext;
         private readonly DbConnection _dbConnection;
 

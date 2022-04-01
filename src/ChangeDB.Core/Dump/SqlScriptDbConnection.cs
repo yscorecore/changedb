@@ -10,27 +10,14 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Dump
 {
+    [Obsolete]
     internal class SqlScriptDbConnection : DbConnection
     {
-        //public SqlScriptDbConnection(string outputScriptFile, bool createNew, IRepr repr)
-        //{
 
-        //    _ = outputScriptFile ?? throw new ArgumentNullException(nameof(outputScriptFile));
-        //    Repr = repr ?? throw new ArgumentNullException(nameof(repr));
-        //    FileStream = new Lazy<StreamWriter>(() =>
-        //    {
-        //        var baseStream = File.Open(outputScriptFile, createNew ? FileMode.CreateNew : FileMode.Create, FileAccess.Write, FileShare.Read);
-        //        return new StreamWriter(baseStream);
-
-
-        //    }, true);
-
-        //}
-        public SqlScriptDbConnection(TextWriter writer, IRepr repr)
+        public SqlScriptDbConnection(TextWriter writer)
         {
 
             Writer = writer ?? throw new ArgumentNullException(nameof(writer));
-            Repr = repr ?? throw new ArgumentNullException(nameof(repr));
 
 
         }
@@ -41,7 +28,6 @@ namespace ChangeDB.Dump
         public override ConnectionState State { get; }
 
 
-        public IRepr Repr { get; }
 
         public TextWriter Writer { get; }
 
@@ -88,17 +74,7 @@ namespace ChangeDB.Dump
         }
         private string BuildCommandText()
         {
-            var dataDic = this.DbParameterCollection.OfType<DbParameter>()
-               .ToDictionary(p => p.ParameterName, p => this.Connection.Repr.ReprValue(p.Value, p.DbType));
-            if (dataDic.Count == 0) return this.CommandText;
-            return Regex.Replace(CommandText, @"@\w+", (m) =>
-            {
-                if (dataDic.TryGetValue(m.Value, out var text))
-                {
-                    return text;
-                }
-                return m.Value;
-            });
+            return this.CommandText;
         }
         public override object ExecuteScalar() => throw new NotImplementedException();
         public override void Prepare() { }

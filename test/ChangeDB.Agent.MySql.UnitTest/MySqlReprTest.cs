@@ -8,7 +8,7 @@ namespace ChangeDB.Agent.MySql.UnitTest
     public class MySqlReprTest
     {
         private readonly DatabaseEnvironment _databaseEnvironment;
-        private readonly IRepr _repr = MySqlRepr.Default;
+        private readonly MySqlRepr _repr = MySqlRepr.Default;
         public MySqlReprTest(DatabaseEnvironment databaseEnvironment)
         {
             _databaseEnvironment = databaseEnvironment;

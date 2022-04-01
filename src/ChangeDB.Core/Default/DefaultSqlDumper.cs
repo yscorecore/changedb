@@ -33,8 +33,7 @@ namespace ChangeDB.Default
             await using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
             var createNew = context.Setting.DropTargetDatabaseIfExists;
             await using var sqlWriter = new StreamWriter(context.DumpInfo.SqlScriptFile, false);
-            await using var targetConnection = new SqlScriptDbConnection(sqlWriter,
-                targetAgent.Repr);
+            await using var targetConnection = new SqlScriptDbConnection(sqlWriter);
             context.SourceConnection = sourceConnection;
             context.TargetConnection = targetConnection;
             context.Source = new AgentRunTimeInfo

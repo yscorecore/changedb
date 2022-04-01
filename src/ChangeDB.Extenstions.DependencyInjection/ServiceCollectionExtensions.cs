@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ChangeDB;
 using ChangeDB.Default;
 using ChangeDB.Dump;
 using ChangeDB.Import;
@@ -27,20 +28,20 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             var rootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var agentDlls = Directory.GetFiles(rootPath, "ChangeDB.Agent.*.dll");
-            var allAgentTypes = agentDlls.SelectMany(p => Assembly.LoadFrom(p).GetTypes().Where(t => !t.IsAbstract && typeof(IMigrationAgent).IsAssignableFrom(t))).ToList();
+            var allAgentTypes = agentDlls.SelectMany(p => Assembly.LoadFrom(p).GetTypes().Where(t => !t.IsAbstract && typeof(IAgent).IsAssignableFrom(t))).ToList();
 
             foreach (var agentType in allAgentTypes)
             {
                 services.AddSingleton(agentType);
             }
 
-            services.AddSingleton<IDictionary<string, IMigrationAgent>>(sp =>
+            services.AddSingleton<IDictionary<string, IAgent>>(sp =>
             {
-                var agentInstances = allAgentTypes.Select(p => sp.GetService(p) as IMigrationAgent);
+                var agentInstances = allAgentTypes.Select(p => sp.GetService(p) as IAgent);
                 return agentInstances.ToDictionary(GetAgentName, StringComparer.InvariantCultureIgnoreCase);
             });
         }
-        private static string GetAgentName(IMigrationAgent agent)
+        private static string GetAgentName(IAgent agent)
         {
             var typeName = agent.GetType().Name;
             return typeName.EndsWith("migrationagent", StringComparison.InvariantCultureIgnoreCase) ? typeName[..^"migrationagent".Length] : typeName;

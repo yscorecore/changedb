@@ -9,7 +9,7 @@ namespace ChangeDB.Agent.Postgres
     public class PostgresReprTest
     {
         private readonly DatabaseEnvironment _databaseEnvironment;
-        private readonly IRepr _repr = PostgresRepr.Default;
+        private readonly PostgresRepr _repr = PostgresRepr.Default;
         public PostgresReprTest(DatabaseEnvironment databaseEnvironment)
         {
             _databaseEnvironment = databaseEnvironment;
