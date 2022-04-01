@@ -7,10 +7,10 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.MySql
 {
-    public class MySqlExpressionTranslator : ISqlExpressionTranslator
+    public class MySqlExpressionTranslator
     {
 
-        public static readonly ISqlExpressionTranslator Default = new MySqlExpressionTranslator();
+        public static readonly MySqlExpressionTranslator Default = new MySqlExpressionTranslator();
 
         private static readonly ConcurrentDictionary<string, object> ValueCache =
             new ConcurrentDictionary<string, object>();

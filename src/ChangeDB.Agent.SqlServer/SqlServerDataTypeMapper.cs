@@ -4,9 +4,9 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlServerDataTypeMapper : IDataTypeMapper
+    public class SqlServerDataTypeMapper
     {
-        public static IDataTypeMapper Default = new SqlServerDataTypeMapper();
+        public static SqlServerDataTypeMapper Default = new SqlServerDataTypeMapper();
 
         /*
 smallint	16	5	smallint		System.Int16

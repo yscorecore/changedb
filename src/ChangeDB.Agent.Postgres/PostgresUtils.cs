@@ -32,7 +32,7 @@ namespace ChangeDB.Agent.Postgres
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
-        public static DatabaseDescriptor GetDataBaseDescriptorByEfCore(DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
+        public static DatabaseDescriptor GetDataBaseDescriptorByEfCore(DbConnection dbConnection, PostgresDataTypeMapper dataTypeMapper, PostgresSqlExpressionTranslator sqlExpressionTranslator)
         {
             var databaseModelFactory = GetModelFactory();
             var model = databaseModelFactory.Create(dbConnection, new DatabaseModelFactoryOptions());
@@ -50,7 +50,8 @@ namespace ChangeDB.Agent.Postgres
             return provider.GetRequiredService<IDatabaseModelFactory>();
         }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
-        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
+        [System.Obsolete]
+        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection, PostgresDataTypeMapper dataTypeMapper, PostgresSqlExpressionTranslator sqlExpressionTranslator)
         {
             // exclude views
             var allTables = dbConnection.ExecuteReaderAsList<string, string>("select table_schema ,table_name from information_schema.tables t where t.table_type ='BASE TABLE'");

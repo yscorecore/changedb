@@ -20,7 +20,7 @@ namespace ChangeDB.Agent.MySql
         public static string IdentityName(string schema, string objectName) => $"{IdentityName(objectName)}";
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
-        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
+        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection, MySqlDataTypeMapper dataTypeMapper, MySqlExpressionTranslator sqlExpressionTranslator)
         {
             var databaseModelFactory = GetModelFactory();
             var model = databaseModelFactory.Create(dbConnection, new DatabaseModelFactoryOptions());
@@ -38,7 +38,8 @@ namespace ChangeDB.Agent.MySql
             return provider.GetRequiredService<IDatabaseModelFactory>();
         }
 
-        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
+        [System.Obsolete]
+        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection, MySqlDataTypeMapper dataTypeMapper, MySqlExpressionTranslator sqlExpressionTranslator)
         {
             var allDefaultValues = dbConnection.ExecuteReaderAsList<string, string, string, string, string>(
                 @"SELECT TABLE_NAME ,COLUMN_NAME , COLUMN_DEFAULT, COLUMN_TYPE, EXTRA

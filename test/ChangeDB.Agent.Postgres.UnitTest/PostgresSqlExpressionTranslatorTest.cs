@@ -11,7 +11,7 @@ namespace ChangeDB.Agent.Postgres
     [Collection(nameof(DatabaseEnvironment))]
     public class PostgresSqlExpressionTranslatorTest
     {
-        private readonly ISqlExpressionTranslator sqlTranslator = PostgresSqlExpressionTranslator.Default;
+        private readonly PostgresSqlExpressionTranslator sqlTranslator = PostgresSqlExpressionTranslator.Default;
         private readonly DbConnection _dbConnection;
 
 

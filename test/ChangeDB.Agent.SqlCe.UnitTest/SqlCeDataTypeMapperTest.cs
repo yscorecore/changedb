@@ -15,7 +15,7 @@ namespace ChangeDB.Agent.SqlCe
     public class SqlCeDataTypeMapperTest : IDisposable
     {
         private readonly IMetadataMigrator _metadataMigrator = new SqlCeMigrationAgent().MetadataMigrator;
-        private readonly IDataTypeMapper _dataTypeMapper = SqlCeDataTypeMapper.Default;
+        private readonly SqlCeDataTypeMapper _dataTypeMapper = SqlCeDataTypeMapper.Default;
         private readonly MigrationContext _migrationContext = new MigrationContext { };
         private readonly DbConnection _dbConnection;
 

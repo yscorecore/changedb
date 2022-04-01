@@ -7,10 +7,10 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.Postgres
 {
-    public class PostgresSqlExpressionTranslator : ISqlExpressionTranslator
+    public class PostgresSqlExpressionTranslator
     {
 
-        public static readonly ISqlExpressionTranslator Default = new PostgresSqlExpressionTranslator();
+        public static readonly PostgresSqlExpressionTranslator Default = new PostgresSqlExpressionTranslator();
 
         private static readonly ConcurrentDictionary<string, object> ValueCache =
             new ConcurrentDictionary<string, object>();

@@ -4,9 +4,9 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlCeDataTypeMapper : IDataTypeMapper
+    public class SqlCeDataTypeMapper
     {
-        public static IDataTypeMapper Default = new SqlCeDataTypeMapper();
+        public static SqlCeDataTypeMapper Default = new SqlCeDataTypeMapper();
 
         //https://docs.microsoft.com/en-us/previous-versions/sql/compact/sql-server-compact-4.0/ms172424(v=sql.110)?redirectedfrom=MSDN
         public DataTypeDescriptor ToCommonDatabaseType(string storeType)

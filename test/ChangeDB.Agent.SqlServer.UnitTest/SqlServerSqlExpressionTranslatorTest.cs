@@ -11,7 +11,7 @@ namespace ChangeDB.Agent.SqlServer
     [Collection(nameof(DatabaseEnvironment))]
     public class SqlServerSqlExpressionTranslatorTest
     {
-        private readonly ISqlExpressionTranslator sqlTranslator = SqlServerSqlExpressionTranslator.Default;
+        private readonly SqlServerSqlExpressionTranslator sqlTranslator = SqlServerSqlExpressionTranslator.Default;
 
         private readonly DbConnection _dbConnection;
 

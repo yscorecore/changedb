@@ -28,11 +28,11 @@ namespace ChangeDB.Agent.SqlServer
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
-        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
+        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
         {
             var databaseModelFactory = GetModelFactory();
             var model = databaseModelFactory.Create(dbConnection, new DatabaseModelFactoryOptions());
-            return FromDatabaseModel(model, dbConnection, dataTypeMapper, sqlExpressionTranslator);
+            return FromDatabaseModel(model, dbConnection);
         }
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.")]
         private static IDatabaseModelFactory GetModelFactory()
@@ -46,8 +46,11 @@ namespace ChangeDB.Agent.SqlServer
         }
 
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
-        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection, IDataTypeMapper dataTypeMapper, ISqlExpressionTranslator sqlExpressionTranslator)
+        [Obsolete]
+        private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection)
         {
+            var dataTypeMapper = SqlServerDataTypeMapper.Default;
+            var sqlExpressionTranslator = SqlServerSqlExpressionTranslator.Default;
             // exclude views
             var allTables = dbConnection.ExecuteReaderAsList<string, string>("select table_schema ,table_name from information_schema.tables t where t.table_type ='BASE TABLE'");
 

@@ -7,9 +7,9 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlServerSqlExpressionTranslator : ISqlExpressionTranslator
+    public class SqlServerSqlExpressionTranslator
     {
-        public static readonly ISqlExpressionTranslator Default = new SqlServerSqlExpressionTranslator();
+        public static readonly SqlServerSqlExpressionTranslator Default = new SqlServerSqlExpressionTranslator();
 
         private static readonly ConcurrentDictionary<string, object> ValueCache =
             new ConcurrentDictionary<string, object>();

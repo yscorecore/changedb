@@ -1,7 +1,9 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 
 namespace ChangeDB.Migration
 {
+    [Obsolete]
     public interface IRepr
     {
         string ReprValue(object value, string storeType);

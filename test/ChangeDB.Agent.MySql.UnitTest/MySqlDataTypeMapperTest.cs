@@ -14,7 +14,7 @@ namespace ChangeDB.Agent.MySql.UnitTest
     [Collection(nameof(DatabaseEnvironment))]
     public class MySqlDataTypeMapperTest : IDisposable
     {
-        private readonly IDataTypeMapper _dataTypeMapper = MySqlDataTypeMapper.Default;
+        private readonly MySqlDataTypeMapper _dataTypeMapper = MySqlDataTypeMapper.Default;
         private readonly IMetadataMigrator _metadataMigrator = MySqlMetadataMigrator.Default;
         private readonly MigrationContext _migrationContext;
         private readonly DbConnection _dbConnection;

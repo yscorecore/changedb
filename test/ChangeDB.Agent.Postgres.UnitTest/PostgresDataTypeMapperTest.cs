@@ -13,7 +13,7 @@ namespace ChangeDB.Agent.Postgres
     [Collection(nameof(DatabaseEnvironment))]
     public class PostgresDataTypeMapperTest : IDisposable
     {
-        private readonly IDataTypeMapper _dataTypeMapper = PostgresDataTypeMapper.Default;
+        private readonly PostgresDataTypeMapper _dataTypeMapper = PostgresDataTypeMapper.Default;
         private readonly IMetadataMigrator _metadataMigrator = PostgresMetadataMigrator.Default;
         private readonly MigrationContext _migrationContext;
         private readonly DbConnection _dbConnection;

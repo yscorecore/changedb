@@ -14,7 +14,7 @@ namespace ChangeDB.Agent.SqlServer
     public class SqlServerDataTypeMapperTest : IDisposable
     {
         private readonly IMetadataMigrator _metadataMigrator = SqlServerMetadataMigrator.Default;
-        private readonly IDataTypeMapper _dataTypeMapper = SqlServerDataTypeMapper.Default;
+        private readonly SqlServerDataTypeMapper _dataTypeMapper = SqlServerDataTypeMapper.Default;
         private readonly MigrationContext _migrationContext = new MigrationContext { };
         private readonly DbConnection _dbConnection;
 

@@ -3,7 +3,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.Postgres
 {
-    public class PostgresDataTypeMapper : IDataTypeMapper
+    public class PostgresDataTypeMapper
     {
 
         public static readonly PostgresDataTypeMapper Default = new PostgresDataTypeMapper();
