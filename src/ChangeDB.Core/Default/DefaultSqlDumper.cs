@@ -29,11 +29,10 @@ namespace ChangeDB.Default
         public async Task DumpSql(DumpContext context)
         {
             var sourceAgent = AgentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
-            var targetAgent = AgentFactory.CreateAgent(context.DumpInfo.DatabaseType);
+            var targetAgent = AgentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
             await using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
             var createNew = context.Setting.DropTargetDatabaseIfExists;
-            await using var sqlWriter = new StreamWriter(context.DumpInfo.SqlScriptFile, false);
-            await using var targetConnection = new SqlScriptDbConnection(sqlWriter);
+            await using var targetConnection = new SqlScriptDbConnection(context.Writer);
             context.SourceConnection = sourceConnection;
             context.TargetConnection = targetConnection;
             context.Source = new AgentRunTimeInfo
@@ -46,7 +45,6 @@ namespace ChangeDB.Default
                 Agent = targetAgent,
                 Descriptor = null,
             };
-            context.Writer = sqlWriter;
 
             var sourceDatabaseDescriptor = await sourceAgent.MetadataMigrator.GetSourceDatabaseDescriptor(context);
 
@@ -61,7 +59,7 @@ namespace ChangeDB.Default
             await DoDumpDatabase(context);
             await ApplyCustomScripts(context);
             // flush to file
-            await sqlWriter.FlushAsync();
+            await context.Writer.FlushAsync();
         }
 
 
@@ -184,12 +182,20 @@ namespace ChangeDB.Default
         }
 
 
-        protected virtual Task ApplyCustomScripts(MigrationContext migrationContext)
+        protected virtual Task ApplyCustomScripts(DumpContext dumpContext)
         {
-            var migrationSetting = migrationContext.Setting;
+            var migrationSetting = dumpContext.Setting;
             if (!string.IsNullOrEmpty(migrationSetting.PostScript?.SqlFile))
             {
-                migrationContext.TargetConnection.ExecuteSqlScriptFile(migrationSetting.PostScript.SqlFile, migrationSetting.PostScript.SqlSplit);
+                if (File.Exists(migrationSetting.PostScript.SqlFile))
+                {
+                    using var reader = new StreamReader(migrationSetting.PostScript.SqlFile);
+                    dumpContext.Writer.AppendReader(reader);
+                }
+                else
+                {
+                    throw new ChangeDBException($"script file '{migrationSetting.PostScript.SqlFile}' not found.");
+                }
             }
             return Task.CompletedTask;
         }

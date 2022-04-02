@@ -9,7 +9,7 @@ namespace ChangeDB
 {
     public static class Shell
     {
-        public static (int, string, string) Exec(string fileName, string arguments, IDictionary<string, object> envs = null, int maxTimeOutSeconds = 60 * 30)
+        public static (int ExitCode,string OutPut,string Error) Exec(string fileName, string arguments, IDictionary<string, object> envs = null, int maxTimeOutSeconds = 60 * 30)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -62,6 +62,11 @@ namespace ChangeDB
             }
             else
             {
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                    process.WaitForExit();
+                }
                 throw new Exception($"Exec process timeout, total seconds > {maxTimeOutSeconds}s, output: {outputBuilder}");
             }
 

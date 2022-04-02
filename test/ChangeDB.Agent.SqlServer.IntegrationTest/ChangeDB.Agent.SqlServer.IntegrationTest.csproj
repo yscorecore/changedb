@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Nullable>enable</Nullable>
+        <RootNamespace>ChangeDB.Agent.SqlServer</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\ChangeDB.Agent.SqlServer\ChangeDB.Agent.SqlServer.csproj" />
+        <ProjectReference Include="..\ChangeDB.Test\ChangeDB.Test.csproj" />
+    </ItemGroup>
+</Project>

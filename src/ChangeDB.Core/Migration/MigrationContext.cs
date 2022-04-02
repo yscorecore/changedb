@@ -41,7 +41,6 @@ namespace ChangeDB.Migration
     }
 
 
-
     public record EventReporter
     {
         public event EventHandler<ObjectInfo> ObjectCreated;
