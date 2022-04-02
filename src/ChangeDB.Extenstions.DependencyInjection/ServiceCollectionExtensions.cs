@@ -44,7 +44,7 @@ namespace Microsoft.Extensions.DependencyInjection
         private static string GetAgentName(IAgent agent)
         {
             var typeName = agent.GetType().Name;
-            return typeName.EndsWith("migrationagent", StringComparison.InvariantCultureIgnoreCase) ? typeName[..^"migrationagent".Length] : typeName;
+            return typeName.EndsWith("agent", StringComparison.InvariantCultureIgnoreCase) ? typeName[..^"agent".Length] : typeName;
         }
     }
 }
