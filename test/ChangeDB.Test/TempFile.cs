@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ChangeDB
 {
-    public class TempFile : IDisposable
+    public class TempFile : IDisposable,IAsyncDisposable
     {
         public TempFile()
         {
@@ -24,6 +24,10 @@ namespace ChangeDB
             {
                 File.Delete(this.FilePath);
             }
+        }
+        public async ValueTask DisposeAsync()
+        {
+            await Task.Run(Dispose);
         }
     }
 }
