@@ -43,10 +43,59 @@ namespace ChangeDB.Agent.Postgres
             _dbConnection.ClearDatabase();
         }
 
+
+        //[Theory]
+        //[InlineData("varchar(64)", "'abc'")]
+        //[InlineData("timestamp", "'2022-04-07'")]
+        //[InlineData("timestamp", "'2022-04-07 16:16:16'")]
+        //[InlineData("timestamp", "'2022-04-07 16:16:16.123'")]
+        //[InlineData("timestamp", "'2022-04-07 16:16:16.123456'")]
+        // TODO Slip ON CI
+        private async Task ShouldImportDumpDataByPsql_DataType(string dataType, string value)
+        {
+
+            _dbConnection.ExecuteNonQuery(
+                "create schema ts;",
+                $"create table ts.table1(id int primary key,nm {dataType});",
+                $"INSERT INTO ts.table1(id,nm) VALUES(1,{value});"
+             );
+
+            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var tableDesc = databaseDesc.Tables.Single(p => p.Name == "table1");
+
+            var tableData = _dbConnection.ExecuteReaderAsTable("select * from ts.table1");
+            var tableDataDic = _dbConnection.ExecuteReaderAsDataList("select * from ts.table1");
+            // clear data
+            _dbConnection.ExecuteNonQuery("delete from ts.table1");
+
+
+            string dumpFile = $"dump_{Path.GetRandomFileName()}.sql";
+            await using (var writer = new StreamWriter(dumpFile))
+            {
+                var dumpContext = new DumpContext
+                {
+                    Setting = new MigrationSetting { OptimizeInsertion = true },
+                    Writer = writer
+
+                };
+                await _dataDumper.WriteTables(ToAsyncTable(tableData), tableDesc, dumpContext);
+                await writer.FlushAsync();
+            }
+
+            // can use psql insert dump file
+            PSql(dumpFile, _dbConnection.Database, port: _databaseEnvironment.DBPort);
+
+            var importedTableDataDic = _dbConnection.ExecuteReaderAsDataList("select * from ts.table1");
+
+            importedTableDataDic.Should().BeEquivalentTo(tableDataDic);
+
+        }
+
         //[Theory]
         //[InlineData(false)]
         //[InlineData(true)]
-        public async Task ShouldImportDumpDataByPsql(bool optimizeInsertion)
+        // TODO Slip ON CI
+        private async Task ShouldImportDumpDataByPsql(bool optimizeInsertion)
         {
 
             _dbConnection.ExecuteNonQuery(
@@ -76,7 +125,7 @@ namespace ChangeDB.Agent.Postgres
 
                 };
                 await _dataDumper.WriteTables(ToAsyncTable(tableData), tableDesc, dumpContext);
-                writer.Flush();
+                await writer.FlushAsync();
             }
 
             // can use psql insert dump file
@@ -87,7 +136,6 @@ namespace ChangeDB.Agent.Postgres
             importedTableDataDic.Should().BeEquivalentTo(tableDataDic);
 
         }
-
 
         [Fact]
         public async Task ShouldUseInsertStatementWhenOptimizeInsertionIsFalse()

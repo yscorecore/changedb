@@ -62,9 +62,9 @@ namespace ChangeDB.Agent.Postgres
                 case byte[] bytes:
                     return $"'\\x{string.Join("", bytes.Select(p => p.ToString("X2")))}'";
                 case DateTime dateTime:
-                    return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'"; ;
+                    return $"'{FormatDateTime(dateTime)}'"; ;
                 case DateTimeOffset dateTimeOffset:
-                    return $"'{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}'";
+                    return $"'{FormatDateTimeOffset(dateTimeOffset)}'";
                 default:
                     return constant.ToString();
             }
@@ -89,10 +89,37 @@ namespace ChangeDB.Agent.Postgres
                 double or float or long or int or short or char or byte or decimal or bool => constant.ToString(),
                 Guid guid => $"{guid}",
                 byte[] bytes => $"\\\\x{string.Join("", bytes.Select(p => p.ToString("X2")))}",
-                DateTime dateTime => $"{dateTime:yyyy-MM-dd HH:mm:ss}",
-                DateTimeOffset dateTimeOffset => $"{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}",
+                DateTime dateTime => $"{FormatDateTime(dateTime)}",
+                DateTimeOffset dateTimeOffset => $"{FormatDateTimeOffset(dateTimeOffset)}",
                 _ => constant.ToString(),
             };
+        }
+
+        private static string FormatDateTime(DateTime dateTime)
+        {
+            if (dateTime.TimeOfDay == TimeSpan.Zero)
+            {
+                return dateTime.ToString("yyyy-MM-dd");
+            }
+            else if (dateTime.Millisecond == 0)
+            {
+                return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
+            }
+            else
+            {
+                return dateTime.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
+            }
+        }
+        private static string FormatDateTimeOffset(DateTimeOffset dateTime)
+        {
+            if (dateTime.Millisecond == 0)
+            {
+                return dateTime.ToString("yyyy-MM-dd HH:mm:ss zzz");
+            }
+            else
+            {
+                return dateTime.ToString("yyyy-MM-dd HH:mm:ss.ffffff zzz");
+            }
         }
     }
 }
