@@ -4,8 +4,4 @@
         <RootNamespace>ChangeDB</RootNamespace>
     </PropertyGroup>
 
-    <ItemGroup>
-      <Folder Include="Core\" />
-    </ItemGroup>
-
 </Project>

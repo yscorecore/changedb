@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ChangeDB
 {
-    public class TempFile : IDisposable,IAsyncDisposable
+    public class TempFile : IDisposable, IAsyncDisposable
     {
         public TempFile()
         {

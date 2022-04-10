@@ -1,12 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using System.Data;
+using System.Threading.Tasks;
 
 namespace ChangeDB.Migration
 {
     public interface IDatabaseManager
     {
-        Task DropTargetDatabaseIfExists(MigrationContext migrationContext);
+        Task CleanDatabase(IDbConnection connection, MigrationSetting migrationSetting);
 
-        Task CreateTargetDatabase(MigrationContext migrationContext);
+        Task CreateDatabase(string connectionString, MigrationSetting migrationSetting);
 
+        Task DropTargetDatabaseIfExists(string connectionString, MigrationSetting migrationSetting);
     }
 }

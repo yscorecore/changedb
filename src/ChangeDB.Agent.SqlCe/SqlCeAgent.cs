@@ -11,10 +11,10 @@ namespace ChangeDB.Agent.SqlCe
         public IDataMigrator DataMigrator => SqlCeDataMigrator.Default;
         public IMetadataMigrator MetadataMigrator => SqlCeMetadataMigrator.Default;
         public IDatabaseManager DatabaseManger => SqlCeDatabaseManager.Default;
-        public AgentSetting AgentSetting => new AgentSetting { DefaultSchema = null, ObjectNameMaxLength = 128, IdentityName = SqlCeUtils.IdentityName };
+        public AgentSetting AgentSetting => new AgentSetting { DefaultSchema = null, ObjectNameMaxLength = 128, IdentityName = SqlCeUtils.IdentityName, DatabaseType="sqlce" };
         public IDataDumper DataDumper => SqlServerDataDumper.Default;
 
-        public DbConnection CreateConnection(string connectionString) => new SqlCeConnection(connectionString);
+        public IConnectionProvider ConnectionProvider => SqlCeConnectionProvider.Default;
 
     }
 }

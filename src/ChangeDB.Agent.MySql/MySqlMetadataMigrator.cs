@@ -10,11 +10,12 @@ namespace ChangeDB.Agent.MySql
 
         public static readonly IMetadataMigrator Default = new MySqlMetadataMigrator();
 
+        [System.Obsolete]
         public Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext)
         {
             // mysql get descriptor need a new connection
             using var newSourceConnection =
-                migrationContext.Source.Agent.CreateConnection(migrationContext.SourceDatabase.ConnectionString);
+                migrationContext.Source.Agent.ConnectionProvider.CreateConnection(migrationContext.SourceDatabase.ConnectionString);
             var databaseDescriptor = GetDataBaseDescriptorByEFCore(newSourceConnection, MySqlDataTypeMapper.Default, MySqlExpressionTranslator.Default);
             return Task.FromResult(databaseDescriptor);
         }

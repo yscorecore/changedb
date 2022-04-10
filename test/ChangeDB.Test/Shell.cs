@@ -9,7 +9,7 @@ namespace ChangeDB
 {
     public static class Shell
     {
-        public static (int ExitCode,string OutPut,string Error) Exec(string fileName, string arguments, IDictionary<string, object> envs = null, int maxTimeOutSeconds = 60 * 30)
+        public static (int ExitCode, string OutPut, string Error) Exec(string fileName, string arguments, IDictionary<string, object> envs = null, int maxTimeOutSeconds = 60 * 10)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -72,6 +72,11 @@ namespace ChangeDB
 
         }
 
-
+        public static (int ExitCode, string OutPut, string Error) ExecOrDebug(string fileName, string arguments, IDictionary<string, object> envs = null, int maxTimeOutSeconds = 60 * 30)
+        {
+            var newDic = envs == null ? new Dictionary<string, object>() : new Dictionary<string, object>(envs);
+            newDic["DEBUGING"] = true;
+            return Exec(fileName, arguments, newDic, maxTimeOutSeconds);
+        }
     }
 }

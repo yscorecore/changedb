@@ -7,7 +7,6 @@ namespace ChangeDB.Agent.MySql
 {
     public class MySqlAgent : IAgent
     {
-        public DbConnection CreateConnection(string connectionString) => new MySqlConnection(connectionString);
 
         public IDataMigrator DataMigrator => MySqlDataMigrator.Default;
 
@@ -16,8 +15,10 @@ namespace ChangeDB.Agent.MySql
         public IDatabaseManager DatabaseManger => MySqlDatabaseManager.Default;
 
         public AgentSetting AgentSetting => new AgentSetting
-        { SupportSchema = false, DefaultSchema = null, ObjectNameMaxLength = 64 };
+        { SupportSchema = false, DefaultSchema = null, ObjectNameMaxLength = 64, DatabaseType="mysql" };
 
         public IDataDumper DataDumper => MySqlDataDumper.Default;
+
+        public IConnectionProvider ConnectionProvider => MysqlConnectionProvider.Default;
     }
 }

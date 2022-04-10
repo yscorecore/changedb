@@ -12,10 +12,12 @@ namespace ChangeDB.Default
         {
             AgentFactory = agentFactory;
         }
+
+        [System.Obsolete]
         public async Task Import(ImportContext context)
         {
             var targetAgent = AgentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
-            await using var targetConnection = targetAgent.CreateConnection(context.TargetDatabase.ConnectionString);
+            await using var targetConnection = targetAgent.ConnectionProvider.CreateConnection(context.TargetDatabase.ConnectionString);
 
             var migrationContext = new MigrationContext()
             {
@@ -31,7 +33,7 @@ namespace ChangeDB.Default
             };
             if (context.ReCreateTargetDatabase)
             {
-                await CreateTargetDatabase(migrationContext);
+                await CreateTargetDatabase(targetAgent, context.TargetDatabase.ConnectionString);
             }
             targetConnection.ExecuteSqlScriptFile(context.SqlScripts.SqlFile, context.SqlScripts.SqlSplit,
                 (info) =>
@@ -39,11 +41,13 @@ namespace ChangeDB.Default
                     context.ReportSqlExecuted(info.StartLine, info.LineCount, info.Sql, info.Result);
                 });
         }
-        private async Task CreateTargetDatabase(MigrationContext migrationContext)
+
+        [System.Obsolete]
+        private async Task CreateTargetDatabase(IAgent agent,string connectionString)
         {
-            var targetAgent = migrationContext.Target.Agent;
-            await targetAgent.DatabaseManger.DropTargetDatabaseIfExists(migrationContext);
-            await targetAgent.DatabaseManger.CreateTargetDatabase(migrationContext);
+           
+            await agent.DatabaseManger.DropTargetDatabaseIfExists(connectionString,new MigrationSetting());
+            await agent.DatabaseManger.CreateDatabase(connectionString,new MigrationSetting());
         }
     }
 }

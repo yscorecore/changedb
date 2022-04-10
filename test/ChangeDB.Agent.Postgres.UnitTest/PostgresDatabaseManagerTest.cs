@@ -18,33 +18,35 @@ namespace ChangeDB.Agent.Postgres
 
         public PostgresDatabaseManagerTest(DatabaseEnvironment databaseEnvironment)
         {
-            _dbConnection = databaseEnvironment.NewDatabaseConnection();
-            _migrationContext = new MigrationContext
-            {
-                TargetConnection = _dbConnection
-            };
+            //_dbConnection = databaseEnvironment.NewDatabaseConnection();
+            //_migrationContext = new MigrationContext
+            //{
+            //    TargetConnection = _dbConnection
+            //};
 
-            _dbConnection.CreateDatabase();
+            //_dbConnection.CreateDatabase();
         }
         [Fact]
+        [Obsolete]
         public async Task ShouldDropCurrentDatabase()
         {
-            await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
-            Action action = () =>
-            {
-                _dbConnection.Open();
-            };
-            action.Should().Throw<PostgresException>()
-                .WithMessage("3D000: database \"*\" does not exist");
+            //await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
+            //Action action = () =>
+            //{
+            //    _dbConnection.Open();
+            //};
+            //action.Should().Throw<PostgresException>()
+            //    .WithMessage("3D000: database \"*\" does not exist");
 
         }
         [Fact]
+        [Obsolete]
         public async Task ShouldCreateNewDatabase()
         {
-            await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
-            await _databaseManager.CreateTargetDatabase(_migrationContext);
-            var currentDatabase = _dbConnection.ExecuteScalar<string>("select current_database()");
-            currentDatabase.Should().NotBeEmpty();
+            //await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
+            //await _databaseManager.CreateTargetDatabase(_migrationContext);
+            //var currentDatabase = _dbConnection.ExecuteScalar<string>("select current_database()");
+            //currentDatabase.Should().NotBeEmpty();
         }
     }
 }

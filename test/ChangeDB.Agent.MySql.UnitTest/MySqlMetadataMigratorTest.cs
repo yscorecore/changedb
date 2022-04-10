@@ -17,6 +17,7 @@ namespace ChangeDB.Agent.MySql.UnitTest
         private readonly MigrationContext _migrationContext;
         private readonly DbConnection _dbConnection;
 
+        [Obsolete]
         public MySqlMetadataMigratorTest(DatabaseEnvironment databaseEnvironment)
         {
             _dbConnection = databaseEnvironment.CreateNewDatabase();

@@ -19,7 +19,7 @@ namespace ChangeDB.Agent.SqlCe
 
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
-
+        [Obsolete]
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
         {
 

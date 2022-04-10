@@ -12,7 +12,7 @@ namespace ChangeDB.Agent.SqlServer
         public DatabaseEnvironment()
         {
             DBPort = Utility.GetRandomTcpPort();
-            DockerCompose.Up(new Dictionary<string, object> { ["DBPORT"] = DBPort }, "db:1433");
+            sqlserver=DockerCompose.Up(new Dictionary<string, object> { ["DBPORT"] = DBPort }, "db:1433");
 
             DbConnection = NewDatabaseConnection();
             DbConnection.CreateDatabase();
@@ -21,9 +21,10 @@ namespace ChangeDB.Agent.SqlServer
         public int DBPort { get; }
         public DbConnection DbConnection { get; }
 
+        private IDisposable sqlserver;
         public void Dispose()
         {
-            DockerCompose.Down();
+            sqlserver?.Dispose();
         }
 
         public DbConnection NewDatabaseConnection()

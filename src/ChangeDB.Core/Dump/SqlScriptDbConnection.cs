@@ -22,8 +22,8 @@ namespace ChangeDB.Dump
         public override void Open() { }
         protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel) => throw new NotImplementedException();
         protected override DbCommand CreateDbCommand() => new SqlScriptDbCommand(this.Writer);
-        
-        
+
+
         internal class SqlScriptDbCommand : DbCommand
         {
             public SqlScriptDbCommand(TextWriter writer)

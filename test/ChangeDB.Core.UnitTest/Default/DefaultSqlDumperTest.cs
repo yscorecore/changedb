@@ -22,9 +22,9 @@ namespace ChangeDB.Core.Default
             var mockMetadataProvider = Mock.Of<IMetadataMigrator>(p => p.GetSourceDatabaseDescriptor(It.IsAny<MigrationContext>()) == emptyDatabaseTask);
             var mockSourceAgent = Mock.Of<IAgent>(p => p.MetadataMigrator == mockMetadataProvider && p.AgentSetting == mockAgentSetting);
             var mockAgentFactory = Mock.Of<IAgentFactory>(p => p.CreateAgent(It.IsAny<string>()) == mockSourceAgent);
-            var databaseMapper = Mock.Of<IDatabaseMapper>(p=>p.MapDatabase(It.IsAny<DatabaseDescriptor>(),It.IsAny<AgentSetting>(),It.IsAny<MigrationSetting>())==Task.FromResult(new DatabaseDescriptorMapper()));
+            var databaseMapper = Mock.Of<IDatabaseMapper>(p => p.MapDatabase(It.IsAny<DatabaseDescriptor>(), It.IsAny<AgentSetting>(), It.IsAny<MigrationSetting>()) == Task.FromResult(new DatabaseDescriptorMapper()));
             var tableDataMapper = Mock.Of<ITableDataMapper>();
-            var dumper = new DefaultSqlDumper(mockAgentFactory,databaseMapper,tableDataMapper);
+            var dumper = new DefaultSqlDumper(mockAgentFactory, databaseMapper, tableDataMapper);
             var customSqlScript = Path.GetTempFileName();
             File.WriteAllLines(customSqlScript, new string[]
             {

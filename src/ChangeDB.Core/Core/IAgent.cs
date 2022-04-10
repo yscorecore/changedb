@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.Common;
 using ChangeDB.Migration;
 
@@ -6,7 +7,7 @@ namespace ChangeDB
 {
     public interface IAgent
     {
-        DbConnection CreateConnection(string connectionString);
+        IConnectionProvider ConnectionProvider { get; }
         IDataMigrator DataMigrator { get; }
         IMetadataMigrator MetadataMigrator { get; }
         IDatabaseManager DatabaseManger { get; }

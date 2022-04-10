@@ -11,9 +11,10 @@ namespace ChangeDB.Agent.SqlServer
         public IDataMigrator DataMigrator => SqlServerDataMigrator.Default;
         public IMetadataMigrator MetadataMigrator => SqlServerMetadataMigrator.Default;
         public IDatabaseManager DatabaseManger => SqlServerDatabaseManager.Default;
-        public AgentSetting AgentSetting => new AgentSetting { ObjectNameMaxLength = 128, DefaultSchema = "dbo", SupportSchema = true, IdentityName = SqlServerUtils.IdentityName };
+        public AgentSetting AgentSetting => new AgentSetting { ObjectNameMaxLength = 128, DefaultSchema = "dbo", SupportSchema = true, IdentityName = SqlServerUtils.IdentityName, DatabaseType="sqlserver" };
         public IDataDumper DataDumper => SqlServerDataDumper.Default;
-        public DbConnection CreateConnection(string connectionString) => new SqlConnection(connectionString);
+
+        public IConnectionProvider ConnectionProvider => SqlServerConnectionProvider.Default;
 
     }
 }

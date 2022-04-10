@@ -12,8 +12,10 @@ namespace ChangeDB.Migration
         public MigrationSetting Setting { get; init; } = new MigrationSetting();
         public EventReporter EventReporter { get; set; } = new EventReporter();
 
+        [Obsolete]
         public AgentRunTimeInfo Source { get; set; }
 
+        [Obsolete]
         public AgentRunTimeInfo Target { get; set; }
 
         public DatabaseDescriptorMapper DatabaseMapper { get; set; }
@@ -29,12 +31,13 @@ namespace ChangeDB.Migration
             SourceConnection?.Dispose();
         }
 
+        [Obsolete]
         public MigrationContext Fork()
         {
             return this with
             {
-                TargetConnection = Target?.Agent?.CreateConnection(TargetDatabase.ConnectionString),
-                SourceConnection = Source?.Agent?.CreateConnection(SourceDatabase.ConnectionString),
+                TargetConnection = Target?.Agent?.ConnectionProvider?.CreateConnection(TargetDatabase.ConnectionString),
+                SourceConnection = Source?.Agent?.ConnectionProvider?.CreateConnection(SourceDatabase.ConnectionString),
             };
         }
 

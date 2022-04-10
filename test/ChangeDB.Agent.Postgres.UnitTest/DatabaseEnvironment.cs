@@ -12,18 +12,21 @@ namespace ChangeDB.Agent.Postgres
         public DatabaseEnvironment()
         {
             DBPort = Utility.GetRandomTcpPort();
-            DockerCompose.Up(new Dictionary<string, object> { ["DBPORT"] = DBPort }, "db:5432");
+            postgres = DockerCompose.Up(new Dictionary<string, object> { ["DBPORT"] = DBPort }, "db:5432");
 
             DbConnection = NewDatabaseConnection();
             DbConnection.CreateDatabase();
         }
 
         public int DBPort { get; }
+
+        private readonly IDisposable postgres;
+
         public DbConnection DbConnection { get; }
 
         public void Dispose()
         {
-            DockerCompose.Down();
+            postgres?.Dispose();
         }
 
         public DbConnection NewDatabaseConnection()

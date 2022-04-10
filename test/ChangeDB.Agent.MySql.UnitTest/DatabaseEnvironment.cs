@@ -14,7 +14,7 @@ namespace ChangeDB.Agent.MySql
         {
 
             DBPort = Utility.GetRandomTcpPort();
-            DockerCompose.Up(new Dictionary<string, object>
+            mySql = DockerCompose.Up(new Dictionary<string, object>
             {
                 ["DBPORT"] = DBPort
             }, "db:3306");
@@ -33,7 +33,7 @@ namespace ChangeDB.Agent.MySql
         private readonly Lazy<DbConnection> defaultConnectionFactory;
         public DbConnection DbConnection => defaultConnectionFactory.Value;
 
-
+        private readonly IDisposable mySql;
         public string NewConnectionString(string database)
         {
             var builder = new MySqlConnectionStringBuilder(connectionTemplate)
@@ -56,7 +56,7 @@ namespace ChangeDB.Agent.MySql
 
         public void Dispose()
         {
-            DockerCompose.Down();
+            mySql?.Dispose();
         }
     }
 }

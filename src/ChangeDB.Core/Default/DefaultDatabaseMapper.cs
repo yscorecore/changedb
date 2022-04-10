@@ -19,6 +19,7 @@ namespace ChangeDB.Default
             ApplyNamingRules(mapper.Target, migrationSetting);
             FixEmptySchema(agentSetting, migrationSetting, mapper.Target);
             FixMaxObjectName(agentSetting, mapper.Target);
+            FixSqlServerSchemaNameIssue(mapper.Target);
             return Task.FromResult(mapper);
         }
 
@@ -238,5 +239,25 @@ namespace ChangeDB.Default
         }
         private static string GetNewName(string originName, int maxLength) => $"{originName.Substring(0, maxLength - 9)}_{originName.FixedHash():X8}";
 
+        void FixSqlServerSchemaNameIssue(DatabaseDescriptor targetDatabase, AgentSetting agentSetting)
+        {
+            // sqlserver cannot support schema named "public"
+            if ("sqlserver".Equals(agentSetting.DatabaseType, StringComparison.InvariantCultureIgnoreCase))
+            {
+                foreach (var table in targetDatabase.Tables)
+                { 
+                
+                }
+                foreach (var seq in targetDatabase.Sequences)
+                {
+                    if ("public".Equals(seq.Schema, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        seq.Schema = $"{seq.Schema}_";
+                    }
+                }
+            }
+
+            
+        }
     }
 }

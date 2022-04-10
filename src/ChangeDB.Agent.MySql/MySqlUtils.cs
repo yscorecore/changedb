@@ -20,6 +20,7 @@ namespace ChangeDB.Agent.MySql
         public static string IdentityName(string schema, string objectName) => $"{IdentityName(objectName)}";
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
+        [System.Obsolete]
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection, MySqlDataTypeMapper dataTypeMapper, MySqlExpressionTranslator sqlExpressionTranslator)
         {
             var databaseModelFactory = GetModelFactory();

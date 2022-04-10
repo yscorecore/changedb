@@ -28,12 +28,14 @@ namespace ChangeDB.Default
         }
 
         protected static Action<string> Log = (a) => { };
+
+        [Obsolete]
         public virtual async Task MigrateDatabase(MigrationContext context)
         {
             var sourceAgent = AgentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
             var targetAgent = AgentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
-            await using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
-            await using var targetConnection = targetAgent.CreateConnection(context.TargetDatabase.ConnectionString);
+            await using var sourceConnection = sourceAgent.ConnectionProvider.CreateConnection(context.SourceDatabase.ConnectionString);
+            await using var targetConnection = targetAgent.ConnectionProvider.CreateConnection(context.TargetDatabase.ConnectionString);
 
             context.SourceConnection = sourceConnection;
             context.TargetConnection = targetConnection;
@@ -87,23 +89,29 @@ namespace ChangeDB.Default
                 await PostMigrationMetadata(target, migrationContext);
             }
         }
+
+        [Obsolete]
         protected virtual async Task CreateTargetDatabase(MigrationContext migrationContext)
         {
             var (targetAgent, targetConnection) = (migrationContext.Target.Agent, migrationContext.TargetConnection);
             if (migrationContext.Setting.DropTargetDatabaseIfExists)
             {
                 Log("dropping target database if exists.");
-                await targetAgent.DatabaseManger.DropTargetDatabaseIfExists(migrationContext);
+                await targetAgent.DatabaseManger.DropTargetDatabaseIfExists(migrationContext.TargetDatabase.ConnectionString,migrationContext.Setting);
             }
             Log("creating target database.");
-            await targetAgent.DatabaseManger.CreateTargetDatabase(migrationContext);
+            await targetAgent.DatabaseManger.CreateDatabase(migrationContext.TargetDatabase.ConnectionString, migrationContext.Setting);
         }
+
+        [Obsolete]
         protected virtual async Task PreMigrationMetadata(AgentRunTimeInfo target, MigrationContext migrationContext)
         {
             migrationContext.RaiseStageChanged(StageKind.StartingPreMeta);
             await target.Agent.MetadataMigrator.PreMigrateTargetMetadata(target.Descriptor, migrationContext);
             migrationContext.RaiseStageChanged(StageKind.FinishedPreMeta);
         }
+
+        [Obsolete]
         protected virtual async Task PostMigrationMetadata(AgentRunTimeInfo target, MigrationContext migrationContext)
         {
             migrationContext.RaiseStageChanged(StageKind.StartingPostMeta);

@@ -26,11 +26,12 @@ namespace ChangeDB.Default
             _tableDataMapper = tableDataMapper;
         }
 
+        [Obsolete]
         public async Task DumpSql(DumpContext context)
         {
             var sourceAgent = AgentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
             var targetAgent = AgentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
-            await using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
+            await using var sourceConnection = sourceAgent.ConnectionProvider.CreateConnection(context.SourceDatabase.ConnectionString);
             var createNew = context.Setting.DropTargetDatabaseIfExists;
             await using var targetConnection = new SqlScriptDbConnection(context.Writer);
             context.SourceConnection = sourceConnection;
@@ -88,12 +89,15 @@ namespace ChangeDB.Default
             }
         }
 
+        [Obsolete]
         protected virtual async Task PreDumpMetadata(AgentRunTimeInfo target, DumpContext migrationContext)
         {
             migrationContext.RaiseStageChanged(StageKind.StartingPreMeta);
             await target.Agent.MetadataMigrator.PreMigrateTargetMetadata(target.Descriptor, migrationContext);
             migrationContext.RaiseStageChanged(StageKind.FinishedPreMeta);
         }
+
+        [Obsolete]
         protected virtual async Task PostDumpMetadata(AgentRunTimeInfo target, DumpContext migrationContext)
         {
             migrationContext.RaiseStageChanged(StageKind.StartingPostMeta);

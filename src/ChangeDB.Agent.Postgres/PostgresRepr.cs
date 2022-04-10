@@ -6,7 +6,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.Postgres
 {
-    public class PostgresRepr 
+    public class PostgresRepr
     {
         public static readonly PostgresRepr Default = new PostgresRepr();
 

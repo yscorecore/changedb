@@ -9,13 +9,6 @@ namespace ChangeDB
     public static class DockerCompose
     {
 
-        public static IDisposable Up(IDictionary<string, object> envs = null)
-        {
-            envs ??= new Dictionary<string, object>();
-            Shell.Exec("docker-compose", "up --build -d", envs);
-            return new DockerComposeGroup(null);
-        }
-
         public static IDisposable Up(string dockerComposeFile, IDictionary<string, object> envs, string waitingContainerPorts, int maxTimeOutSeconds = 120)
         {
             var actualDockerComposeFile = FindDockerComposeFile();
@@ -32,9 +25,11 @@ namespace ChangeDB
             // create empty status file
             File.WriteAllText(statusFile, string.Empty);
             // create docker compose file
+
+            var projectName = Guid.NewGuid().ToString("N");
             GeneratorWaitComposeFile();
 
-            string dockerComposeFileArgument = $"-f \"{actualDockerComposeFile}\" -f \"{waitComposeFile}\"";
+            string dockerComposeFileArgument = $"-f \"{actualDockerComposeFile}\" -f \"{waitComposeFile}\" -p {projectName}";
 
             using (AutoResetEvent waitReport = new AutoResetEvent(false))
             {
@@ -50,8 +45,11 @@ namespace ChangeDB
                     };
                     fileWatcher.EnableRaisingEvents = true;
 
-                    Shell.Exec("docker-compose", $"{dockerComposeFileArgument} up --build -d", envs);
-
+                    var (code,output,error)= Shell.Exec("docker-compose", $"{dockerComposeFileArgument} up --build -d", envs);
+                    if (code != 0)
+                    {
+                        throw new ApplicationException($"run docker-compose failed.\nexitcode:{code}\noutput: {output}\nerror: {error}");
+                    }
                     if (waitReport.WaitOne(maxTimeOutSeconds * 1000))
                     {
                         var status = int.Parse(File.ReadAllText(statusFile).Trim());
@@ -66,7 +64,7 @@ namespace ChangeDB
                     }
                 }
             }
-            return new DockerComposeGroup(tempFolder, actualDockerComposeFile, waitComposeFile);
+            return new DockerComposeGroup(tempFolder, projectName, actualDockerComposeFile, waitComposeFile);
             string GetDockerComposeVersionFromMainFile()
             {
                 var versionLine = File.ReadAllLines(actualDockerComposeFile).FirstOrDefault(p => p.StartsWith("version:"));
@@ -96,9 +94,7 @@ services:
             }
 
             string FindDockerComposeFile()
-
             {
-
                 var current = Environment.CurrentDirectory;
                 var root = Path.GetPathRoot(current);
                 while (true)
@@ -135,35 +131,25 @@ services:
             return Up("docker-compose.yml", envs, waitingContainerPorts, maxTimeOutSeconds);
         }
 
-
-
-
-        public static void Down()
-        {
-            Shell.Exec("docker-compose", "down", null);
-        }
         class DockerComposeGroup : IDisposable
         {
-            public DockerComposeGroup(string tempFolder, params string[] composeFiles)
+            public DockerComposeGroup(string tempFolder, string projectName, params string[] configFiles)
             {
                 TempFolder = tempFolder;
-                ComposeFiles = composeFiles;
+                ProjectName = projectName;
+                this.ConfigFiles = configFiles;
             }
 
             public string TempFolder { get; }
-            public string[] ComposeFiles { get; }
+            public string ProjectName { get; }
+            public string[] ConfigFiles { get; }
 
             public void Dispose()
             {
-                if (ComposeFiles.Length == 0)
-                {
-                    Shell.Exec("docker-compose", "down", null);
-                }
-                else
-                {
-                    var dockerComposeFileArgument = string.Join(" ", ComposeFiles.Select(p => $"-f \"{Path.GetFullPath(p)}\""));
-                    Shell.Exec("docker-compose", $"{dockerComposeFileArgument} down", null);
-                }
+                var configFileArguments = string.Join(" ", ConfigFiles.Select(p => $"-f \"{p}\""));
+
+                Shell.Exec("docker-compose", $"{configFileArguments} -p {ProjectName} down --remove-orphans", null);
+
                 if (string.IsNullOrEmpty(TempFolder))
                 {
                     DeleteFolder(TempFolder);
