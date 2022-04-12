@@ -2,7 +2,7 @@
 
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.12" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.4" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.12" />
         <PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
         <PackageReference Include="System.Security.Permissions" Version="5.0.0" />
