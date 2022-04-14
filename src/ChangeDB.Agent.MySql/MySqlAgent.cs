@@ -15,7 +15,7 @@ namespace ChangeDB.Agent.MySql
         public IDatabaseManager DatabaseManger => MySqlDatabaseManager.Default;
 
         public AgentSetting AgentSetting => new AgentSetting
-        { SupportSchema = false, DefaultSchema = null, ObjectNameMaxLength = 64, DatabaseType="mysql" };
+        { SupportSchema = false, DefaultSchema = null, ObjectNameMaxLength = 64, DatabaseType = "mysql", ScriptSplit = "", IdentityName = MySqlUtils.IdentityName };
 
         public IDataDumper DataDumper => MySqlDataDumper.Default;
 

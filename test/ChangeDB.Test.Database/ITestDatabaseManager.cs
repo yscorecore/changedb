@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChangeDB
 {
-    public interface ITestDatabaseManager : IDisposable,IAsyncDisposable
+    public interface ITestDatabaseManager : IDisposable, IAsyncDisposable
     {
         ITestDatabase CreateDatabase();
         ITestDatabase RequestDatabase();

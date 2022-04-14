@@ -17,6 +17,7 @@ namespace ChangeDB
         private readonly IDatabaseManager databaseManager;
         private readonly string connectionTemplate;
         private readonly Random random = new();
+        private readonly AgentSetting agentSetting;
 
         private bool isClear = false;
 
@@ -27,6 +28,7 @@ namespace ChangeDB
             var agent = TestAgentFactorys.GetAgentByDbType(dbType);
             connectionProvider = agent.ConnectionProvider;
             databaseManager = agent.DatabaseManger;
+            agentSetting = agent.AgentSetting;
         }
 
 
@@ -46,7 +48,7 @@ namespace ChangeDB
             var newConnectionString = connectionProvider.ChangeDatabase(connectionTemplate, databaseName);
             var newConnection = connectionProvider.CreateConnection(newConnectionString);
             databaseManager.CreateDatabase(newConnectionString, new MigrationSetting());
-            var database = new CachedDatabase(this, newConnectionString, newConnection, databaseName);
+            var database = new CachedDatabase(this, newConnectionString, newConnection, databaseName, agentSetting.ScriptSplit);
             cachedDatabase.TryAdd(database, true);
             return database;
 
@@ -60,7 +62,7 @@ namespace ChangeDB
             var databaseName = NewDatabaseName();
             var newConnectionString = connectionProvider.ChangeDatabase(connectionTemplate, databaseName);
             var newConnection = connectionProvider.CreateConnection(newConnectionString);
-            var database = new CachedDatabase(this, newConnectionString, newConnection, databaseName);
+            var database = new CachedDatabase(this, newConnectionString, newConnection, databaseName, agentSetting.ScriptSplit);
             cachedDatabase.TryAdd(database, true);
             return database;
         }
@@ -109,19 +111,20 @@ namespace ChangeDB
 
         private class CachedDatabase : ITestDatabase
         {
-            public CachedDatabase(CachedTestDatabaseManager databaseManager, string connection, IDbConnection dbConnection, string databaseName)
+            public CachedDatabase(CachedTestDatabaseManager databaseManager, string connection, IDbConnection dbConnection, string databaseName, string scriptSplit)
             {
                 this.databaseManager = databaseManager;
                 this.ConnectionString = connection ?? throw new ArgumentNullException(nameof(connection));
                 this.Connection = dbConnection ?? throw new ArgumentNullException(nameof(dbConnection));
                 this.DatabaseName = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
-
+                this.ScriptSplit = scriptSplit ?? string.Empty;
             }
             private readonly CachedTestDatabaseManager databaseManager;
 
             public IDbConnection Connection { get; }
             public string ConnectionString { get; }
             public string DatabaseName { get; }
+            public string ScriptSplit { get; }
 
             public void Dispose()
             {

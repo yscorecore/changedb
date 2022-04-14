@@ -63,11 +63,7 @@ namespace ChangeDB.Default
             await context.Writer.FlushAsync();
         }
 
-
-
-
-
-
+        [Obsolete]
         protected virtual async Task DoDumpDatabase(DumpContext dumpContext)
         {
             var (target, source, migrationSetting) = (dumpContext.Target, dumpContext.Source, dumpContext.Setting);
@@ -212,7 +208,7 @@ namespace ChangeDB.Default
             }
         }
 
-
+        [Obsolete]
         protected virtual async Task DumpTable(DumpContext dumpContext, TableDescriptorMapper tableMapper)
         {
             var (source, target) = (dumpContext.Source, dumpContext.Target);

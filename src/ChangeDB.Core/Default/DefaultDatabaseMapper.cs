@@ -19,7 +19,7 @@ namespace ChangeDB.Default
             ApplyNamingRules(mapper.Target, migrationSetting);
             FixEmptySchema(agentSetting, migrationSetting, mapper.Target);
             FixMaxObjectName(agentSetting, mapper.Target);
-            FixSqlServerSchemaNameIssue(mapper.Target);
+            FixSqlServerSchemaNameIssue(mapper.Target, agentSetting);
             return Task.FromResult(mapper);
         }
 
@@ -39,7 +39,16 @@ namespace ChangeDB.Default
                 var tableMapper = new TableDescriptorMapper
                 {
                     Source = table,
-                    Target = new TableDescriptor { Name = table.Name, Comment = table.Comment, Schema = table.Schema }
+                    Target = new TableDescriptor
+                    {
+                        Name = table.Name,
+                        Comment = table.Comment,
+                        Schema = table.Schema,
+                        PrimaryKey = table.PrimaryKey.DeepClone(),
+                        ForeignKeys = table.ForeignKeys.DeepClone(),
+                        Indexes = table.Indexes.DeepClone(),
+                        Uniques = table.Uniques.DeepClone()
+                    }
                 };
                 foreach (var column in table.Columns)
                 {
@@ -241,23 +250,36 @@ namespace ChangeDB.Default
 
         void FixSqlServerSchemaNameIssue(DatabaseDescriptor targetDatabase, AgentSetting agentSetting)
         {
+            // TODO report warnning
+            Func<string, bool> isPublic = p => "public".Equals(p, StringComparison.InvariantCultureIgnoreCase);
+            Func<string, string> fixName = p => $"{p}_";
             // sqlserver cannot support schema named "public"
             if ("sqlserver".Equals(agentSetting.DatabaseType, StringComparison.InvariantCultureIgnoreCase))
             {
                 foreach (var table in targetDatabase.Tables)
-                { 
-                
+                {
+                    if (isPublic(table.Schema))
+                    {
+                        table.Schema = fixName(table.Schema);
+                    }
+                    foreach (var foreignKey in table.ForeignKeys)
+                    {
+                        if (isPublic(foreignKey.PrincipalSchema))
+                        {
+                            foreignKey.PrincipalSchema = fixName(foreignKey.PrincipalSchema);
+                        }
+                    }
                 }
                 foreach (var seq in targetDatabase.Sequences)
                 {
-                    if ("public".Equals(seq.Schema, StringComparison.InvariantCultureIgnoreCase))
+                    if (isPublic(seq.Schema))
                     {
-                        seq.Schema = $"{seq.Schema}_";
+                        seq.Schema = fixName(seq.Schema);
                     }
                 }
             }
 
-            
+
         }
     }
 }

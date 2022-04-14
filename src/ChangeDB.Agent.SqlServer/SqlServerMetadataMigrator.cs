@@ -52,7 +52,8 @@ namespace ChangeDB.Agent.SqlServer
                     var identityInfo = column.IsIdentity && column.IdentityInfo != null
                         ? $"IDENTITY({column.IdentityInfo.StartValue},{column.IdentityInfo.IncrementBy})"
                         : string.Empty;
-                    return $"{columnName} {dataType} {identityInfo}".TrimEnd();
+                    var nullable = column.IsNullable ? string.Empty : "NOT NULL";
+                    return $"{columnName} {dataType} {nullable} {identityInfo}".TrimEnd();
                 }
             }
             void CreatePrimaryKeys()
@@ -66,8 +67,10 @@ namespace ChangeDB.Agent.SqlServer
                     // set primary key columns NOT NULL and with default value
                     foreach (var column in table.PrimaryKey?.Columns ?? Enumerable.Empty<string>())
                     {
+
                         var columnName = IdentityName(column);
                         var columnDesc = table.Columns.Single(p => p.Name == column);
+                        if (columnDesc.DefaultValue == null) continue;
                         var dataType = dataTypeMapper.ToDatabaseStoreType(columnDesc.DataType);
                         var defaultValue =
                             sqlExpressionTranslator.FromCommonSqlExpression(columnDesc.DefaultValue, dataType);
@@ -163,6 +166,7 @@ namespace ChangeDB.Agent.SqlServer
                     var tableFullName = IdentityName(table.Schema, table.Name);
                     foreach (var column in table.Columns)
                     {
+                        if (column.IsIdentity || column.DefaultValue == null) continue;
                         var isPrimaryKey = table.PrimaryKey?.Columns?.Contains(column.Name) ?? false;
                         var dataType = dataTypeMapper.ToDatabaseStoreType(column.DataType);
                         var defaultValue =

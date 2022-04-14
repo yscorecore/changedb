@@ -25,28 +25,16 @@ namespace ChangeDB.Agent.SqlCe
         }
         [Fact]
         [Obsolete]
-        public async Task ShouldDropCurrentDatabase()
+        public Task ShouldDropCurrentDatabase()
         {
-            //await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
-            //Action action = () =>
-            //{
-            //    _dbConnection.Open();
-            //};
-            //action.Should().Throw<SqlCeException>()
-            //    .WithMessage("The database file cannot be found. *");
-
+            return Task.CompletedTask;
         }
+
         [Fact]
         [Obsolete]
-        public async Task ShouldCreateNewDatabase()
+        public Task ShouldCreateNewDatabase()
         {
-            //await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
-            //await _databaseManager.CreateTargetDatabase(_migrationContext);
-            //Action action = () =>
-            //{
-            //    _dbConnection.Open();
-            //};
-            //action.Should().NotThrow();
+            return Task.CompletedTask;
         }
     }
 }

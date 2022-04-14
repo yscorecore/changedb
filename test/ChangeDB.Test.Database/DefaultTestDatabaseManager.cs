@@ -13,6 +13,7 @@ namespace ChangeDB
         private readonly IDatabaseManager databaseManager;
         private readonly string connectionTemplate;
         private readonly Random random = new();
+        private readonly AgentSetting agentSetting;
 
         public DefaultTestDatabaseManager(string dbType, string connectionTemplate)
         {
@@ -20,6 +21,7 @@ namespace ChangeDB
             var agent = TestAgentFactorys.GetAgentByDbType(dbType);
             connectionProvider = agent.ConnectionProvider;
             databaseManager = agent.DatabaseManger;
+            agentSetting = agent.AgentSetting;
         }
 
 
@@ -34,7 +36,8 @@ namespace ChangeDB
             {
                 ConnectionString = newConnectionString,
                 Connection = newConnection,
-                DatabaseName = databaseName
+                DatabaseName = databaseName,
+                ScriptSplit = agentSetting.ScriptSplit
             };
         }
 
@@ -43,9 +46,9 @@ namespace ChangeDB
 
         }
 
-        public ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
-            throw new NotImplementedException();
+            await Task.Run(Dispose);
         }
 
         public ITestDatabase RequestDatabase()
@@ -57,7 +60,8 @@ namespace ChangeDB
             {
                 ConnectionString = newConnectionString,
                 Connection = newConnection,
-                DatabaseName = databaseName
+                DatabaseName = databaseName,
+                ScriptSplit = agentSetting.ScriptSplit
             };
         }
 
@@ -77,6 +81,7 @@ namespace ChangeDB
             public IDbConnection Connection { get; set; }
             public string ConnectionString { get; set; }
             public string DatabaseName { get; set; }
+            public string ScriptSplit { get; set; }
 
             public void Dispose()
             {

@@ -22,12 +22,14 @@ namespace ChangeDB.ConsoleApp.End2EndTest
             var testdatabaseManager = TestDatabaseEnvironment.DatabaseManagers[dbType];
             return testdatabaseManager.CreateDatabase(initsqls);
         }
-        public ITestDatabase CreateDatabaseFromFile(string dbType, string fileName, string splitLine = "")
+        public ITestDatabase CreateDatabaseFromFile(string dbType, string fileName)
         {
             var testdatabaseManager = TestDatabaseEnvironment.DatabaseManagers[dbType];
             var testDatabase = testdatabaseManager.CreateDatabase();
-            testDatabase.Connection.ExecuteSqlScriptFile(fileName, splitLine);
+            testDatabase.Connection.ExecuteSqlScriptFile(fileName, testDatabase.ScriptSplit ?? string.Empty);
             return testDatabase;
+
+
         }
 
 
@@ -60,7 +62,7 @@ namespace ChangeDB.ConsoleApp.End2EndTest
             {
                 return args;
             }
-            return $"\"{args.Replace("\"", "\"\"")}\""; 
+            return $"\"{args.Replace("\"", "\"\"")}\"";
         }
     }
 }

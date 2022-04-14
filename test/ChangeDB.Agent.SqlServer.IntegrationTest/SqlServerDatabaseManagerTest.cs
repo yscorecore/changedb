@@ -26,25 +26,16 @@ namespace ChangeDB.Agent.SqlServer
         }
         [Fact]
         [Obsolete]
-        public async Task ShouldDropCurrentDatabase()
+        public Task ShouldDropCurrentDatabase()
         {
-            //await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
-            //Action action = () =>
-            //{
-            //    _dbConnection.Open();
-            //};
-            //action.Should().Throw<SqlException>()
-            //    .WithMessage("Cannot open database \"*\" *");
-
+            return Task.CompletedTask;
         }
+
         [Fact]
         [Obsolete]
-        public async Task ShouldCreateNewDatabase()
+        public Task ShouldCreateNewDatabase()
         {
-            //await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
-            //await _databaseManager.CreateTargetDatabase(_migrationContext);
-            //var currentDatabase = _dbConnection.ExecuteScalar<string>("select DB_NAME()");
-            //currentDatabase.Should().NotBeEmpty();
+            return Task.CompletedTask;
         }
     }
 }

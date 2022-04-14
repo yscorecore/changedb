@@ -9,7 +9,7 @@ namespace ChangeDB.Agent.SqlCe
     {
         public static readonly IDatabaseManager Default = new SqlCeDatabaseManager();
 
-      
+
         public Task CleanDatabase(IDbConnection connection, MigrationSetting migrationSetting)
         {
             connection.ClearDatabase();

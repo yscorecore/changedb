@@ -111,6 +111,7 @@ namespace ChangeDB.Agent.MySql
                     var tableFullName = IdentityName(table.Schema, table.Name);
                     foreach (var column in table.Columns)
                     {
+                        if (column.IsIdentity || column.DefaultValue == null) continue;
                         var dataType = datatypeMapper.ToDatabaseStoreType(column.DataType);
                         var defaultValue =
                             sqlExpressionTranslator.FromCommonSqlExpression(column.DefaultValue, dataType);

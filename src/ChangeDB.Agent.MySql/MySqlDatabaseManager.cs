@@ -7,7 +7,7 @@ namespace ChangeDB.Agent.MySql
     public class MySqlDatabaseManager : IDatabaseManager
     {
         public static readonly IDatabaseManager Default = new MySqlDatabaseManager();
-      
+
         public Task CleanDatabase(IDbConnection connection, MigrationSetting migrationSetting)
         {
             connection.ClearDatabase();

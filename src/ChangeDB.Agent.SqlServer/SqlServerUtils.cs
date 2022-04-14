@@ -28,6 +28,7 @@ namespace ChangeDB.Agent.SqlServer
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
+        [Obsolete]
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
         {
             var databaseModelFactory = GetModelFactory();

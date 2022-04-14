@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using ChangeDB.Agent.SqlCe.EFCore.SqlServerCompact;
-using ChangeDB.Agent.SqlServer;
 using ChangeDB.Migration;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding;
@@ -33,7 +32,7 @@ namespace ChangeDB.Agent.SqlCe
         private static DatabaseDescriptor FromDatabaseModel(DatabaseModel databaseModel, DbConnection dbConnection)
         {
             var dataTypeMapper = SqlCeDataTypeMapper.Default;
-            var sqlExpressionTranslator = SqlServerSqlExpressionTranslator.Default;
+            var sqlExpressionTranslator = SqlCeSqlExpressionTranslator.Default;
             var allDefaultValues = dbConnection.ExecuteReaderAsList<string, string, string>(
                 "SELECT TABLE_NAME,COLUMN_NAME,COLUMN_DEFAULT FROM INFORMATION_SCHEMA.COLUMNS");
 

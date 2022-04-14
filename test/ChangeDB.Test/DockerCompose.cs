@@ -45,7 +45,7 @@ namespace ChangeDB
                     };
                     fileWatcher.EnableRaisingEvents = true;
 
-                    var (code,output,error)= Shell.Exec("docker-compose", $"{dockerComposeFileArgument} up --build -d", envs);
+                    var (code, output, error) = Shell.Exec("docker-compose", $"{dockerComposeFileArgument} up --build -d", envs);
                     if (code != 0)
                     {
                         throw new ApplicationException($"run docker-compose failed.\nexitcode:{code}\noutput: {output}\nerror: {error}");

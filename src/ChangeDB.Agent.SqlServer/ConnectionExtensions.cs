@@ -15,10 +15,14 @@ namespace ChangeDB.Agent.SqlServer
                  $" drop database  if exists {SqlServerUtils.IdentityName(connectionInfo.InitialCatalog)}"
                  );
         }
-        public static void DropDatabaseIfExists(string connection)
+        public static void DropDatabaseIfExists(string connectionString)
         {
-            using var newConnection = CreateNoDatabaseConnection(connection);
-            var connectionInfo = new SqlConnectionStringBuilder(connection);
+            using (var connection = new SqlConnection(connectionString))
+            {
+                SqlConnection.ClearPool(connection);
+            }
+            using var newConnection = CreateNoDatabaseConnection(connectionString);
+            var connectionInfo = new SqlConnectionStringBuilder(connectionString);
             newConnection.ExecuteNonQuery(
                  $" drop database  if exists {SqlServerUtils.IdentityName(connectionInfo.InitialCatalog)}"
                  );
@@ -29,7 +33,7 @@ namespace ChangeDB.Agent.SqlServer
             var connectionInfo = new SqlConnectionStringBuilder(connection.ConnectionString);
             newConnection.ExecuteNonQuery($"create database {SqlServerUtils.IdentityName(connectionInfo.InitialCatalog)}");
         }
-        public static void CreateDatabase(string  connection)
+        public static void CreateDatabase(string connection)
         {
             using var newConnection = CreateNoDatabaseConnection(connection);
             var connectionInfo = new SqlConnectionStringBuilder(connection);

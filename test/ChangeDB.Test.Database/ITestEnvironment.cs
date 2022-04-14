@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChangeDB
 {
-    public interface ITestEnvironment:IDisposable
+    public interface ITestEnvironment : IDisposable
     {
 
     }

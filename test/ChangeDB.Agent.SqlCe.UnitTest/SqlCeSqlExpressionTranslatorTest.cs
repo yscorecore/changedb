@@ -12,7 +12,7 @@ namespace ChangeDB.Agent.SqlCe
     [Collection(nameof(DatabaseEnvironment))]
     public class SqlCeSqlExpressionTranslatorTest
     {
-        private readonly SqlServerSqlExpressionTranslator sqlTranslator = SqlServerSqlExpressionTranslator.Default;
+        private readonly SqlCeSqlExpressionTranslator sqlTranslator = SqlCeSqlExpressionTranslator.Default;
 
         private readonly DbConnection _dbConnection;
 

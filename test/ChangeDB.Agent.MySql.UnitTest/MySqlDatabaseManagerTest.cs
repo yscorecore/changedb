@@ -26,25 +26,16 @@ namespace ChangeDB.Agent.MySql.UnitTest
         }
         [Fact]
         [Obsolete]
-        public async Task ShouldDropCurrentDatabase()
+        public Task ShouldDropCurrentDatabase()
         {
-            //await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
-            //Action action = () =>
-            //{
-            //    _dbConnection.Open();
-            //};
-            //action.Should().Throw<Exception>()
-            //    .WithMessage("Unknown database '*'");
-
+            return Task.CompletedTask;
         }
+
         [Fact]
         [Obsolete]
-        public async Task ShouldCreateNewDatabase()
+        public Task ShouldCreateNewDatabase()
         {
-            //await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
-            //await _databaseManager.CreateTargetDatabase(_migrationContext);
-            //var currentDatabase = _dbConnection.ExecuteScalar<string>("select database()");
-            //currentDatabase.Should().NotBeEmpty();
+            return Task.CompletedTask;
         }
     }
 }

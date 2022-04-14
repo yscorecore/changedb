@@ -9,7 +9,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ChangeDB.Agent.SqlServer\ChangeDB.Agent.SqlServer.csproj" />
         <ProjectReference Include="..\ChangeDB.Core\ChangeDB.Core.csproj" />
     </ItemGroup>
 

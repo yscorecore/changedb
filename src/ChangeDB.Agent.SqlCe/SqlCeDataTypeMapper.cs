@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using ChangeDB.Migration;
 
-namespace ChangeDB.Agent.SqlServer
+namespace ChangeDB.Agent.SqlCe
 {
     public class SqlCeDataTypeMapper
     {

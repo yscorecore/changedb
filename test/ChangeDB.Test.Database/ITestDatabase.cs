@@ -8,5 +8,6 @@ namespace ChangeDB
         IDbConnection Connection { get; }
         string ConnectionString { get; }
         string DatabaseName { get; }
+        string ScriptSplit { get; }
     }
 }

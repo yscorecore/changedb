@@ -43,11 +43,11 @@ namespace ChangeDB.Default
         }
 
         [System.Obsolete]
-        private async Task CreateTargetDatabase(IAgent agent,string connectionString)
+        private async Task CreateTargetDatabase(IAgent agent, string connectionString)
         {
-           
-            await agent.DatabaseManger.DropTargetDatabaseIfExists(connectionString,new MigrationSetting());
-            await agent.DatabaseManger.CreateDatabase(connectionString,new MigrationSetting());
+
+            await agent.DatabaseManger.DropTargetDatabaseIfExists(connectionString, new MigrationSetting());
+            await agent.DatabaseManger.CreateDatabase(connectionString, new MigrationSetting());
         }
     }
 }

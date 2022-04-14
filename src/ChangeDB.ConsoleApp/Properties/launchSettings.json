@@ -4,6 +4,14 @@
       "commandName": "Project",
       "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" -f "
     },
+    "mssql_sqlce": {
+      "commandName": "Project",
+      "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" sqlce \"Data Source=Northwind.sdf\" -f "
+    },
+    "mssql_mysql": {
+      "commandName": "Project",
+      "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" mysql \"Server=127.0.0.1;Port=3306;Uid=root;Pwd=password;Database=Northwind\" -f "
+    },
     "mssql_postgres_metadata_only": {
       "commandName": "Project",
       "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" -f --migration-scope metadata "

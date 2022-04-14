@@ -74,9 +74,16 @@ namespace ChangeDB
 
         public static (int ExitCode, string OutPut, string Error) ExecOrDebug(string fileName, string arguments, IDictionary<string, object> envs = null, int maxTimeOutSeconds = 60 * 30)
         {
-            var newDic = envs == null ? new Dictionary<string, object>() : new Dictionary<string, object>(envs);
-            newDic["DEBUGING"] = true;
-            return Exec(fileName, arguments, newDic, maxTimeOutSeconds);
+            if (Debugger.IsAttached)
+            {
+                var newDic = envs == null ? new Dictionary<string, object>() : new Dictionary<string, object>(envs);
+                newDic["DEBUGING"] = true;
+                return Exec(fileName, arguments, newDic, maxTimeOutSeconds);
+            }
+            else
+            {
+                return Exec(fileName, arguments, envs, maxTimeOutSeconds);
+            }
         }
     }
 }

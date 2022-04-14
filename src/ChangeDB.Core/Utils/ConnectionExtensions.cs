@@ -74,10 +74,14 @@ namespace ChangeDB
 
         public static void ExecuteSqlScriptFile(this IDbConnection connection, string sqlFile, string sqlSplit = "", Action<(int StartLine, int LineCount, string Sql, int Result)> callback = null)
         {
+            ExecuteSqlScriptFile(connection, sqlFile, (p) => string.Equals(sqlSplit, p.Trim(), StringComparison.InvariantCultureIgnoreCase), callback);
+        }
+        public static void ExecuteSqlScriptFile(this IDbConnection connection, string sqlFile, Func<string, bool> sqlSplit, Action<(int StartLine, int LineCount, string Sql, int Result)> callback = null)
+        {
             using var reader = new StreamReader(sqlFile);
             ExecuteSqlScript(connection, reader, sqlSplit, callback);
         }
-        public static void ExecuteSqlScript(this IDbConnection connection, TextReader textReader, string sqlSplit = "", Action<(int StartLine, int LineCount, string Sql, int Result)> callback = null)
+        public static void ExecuteSqlScript(this IDbConnection connection, TextReader textReader, Func<string, bool> sqlSplit, Action<(int StartLine, int LineCount, string Sql, int Result)> callback = null)
         {
             var lines = new List<string>();
             var seq = CollectionExtensions.NewSequence(1);
@@ -85,14 +89,13 @@ namespace ChangeDB
             while (true)
             {
                 string line = textReader.ReadLine();
-                string trimedLine = line?.Trim();
-                if (trimedLine == null)
+                if (line == null)
                 {
                     ExecuteCurrentStringBuilder();
                     break;
                 }
                 currentLine = seq();
-                if (trimedLine.Equals(sqlSplit ?? string.Empty, StringComparison.InvariantCultureIgnoreCase))
+                if (sqlSplit(line))
                 {
                     ExecuteCurrentStringBuilder();
                 }
@@ -118,6 +121,10 @@ namespace ChangeDB
 
         }
         public static void ExecuteSqlScript(this IDbConnection connection, string sqlScripts, string sqlSplit = "", Action<(int StartLine, int LineCount, string Sql, int Result)> callback = null)
+        {
+            ExecuteSqlScript(connection, sqlSplit, (p) => string.Equals(sqlSplit, p.Trim(), StringComparison.InvariantCultureIgnoreCase), callback);
+        }
+        public static void ExecuteSqlScript(this IDbConnection connection, string sqlScripts, Func<string, bool> sqlSplit, Action<(int StartLine, int LineCount, string Sql, int Result)> callback = null)
         {
             using var reader = new StringReader(sqlScripts ?? string.Empty);
             ExecuteSqlScript(connection, reader, sqlSplit, callback);

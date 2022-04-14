@@ -17,8 +17,11 @@ namespace ChangeDB.ConsoleApp.End2EndTest
         }
 
         [Theory]
-        //[MemberData(nameof(GetMigrationTestCases))]
-        [InlineData("postgres","Migration/Postgres/postgres1.sql","sqlserver")]
+        [MemberData(nameof(GetMigrationTestCases))]
+        //[InlineData("sqlserver","Migration/SqlServer/Northwind.sql","sqlce")]
+        //[InlineData("sqlserver","Migration/SqlServer/Northwind.sql","mysql")]
+        //[InlineData("sqlserver", "Migration/SqlServer/Northwind.sql", "sqlserver")]
+
         public void ShouldMigrateSuccess(string sourceType, string sourceFile, string targetType)
         {
             using var source = CreateDatabaseFromFile(sourceType, sourceFile);

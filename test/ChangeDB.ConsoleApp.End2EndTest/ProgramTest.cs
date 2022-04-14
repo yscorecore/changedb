@@ -3,7 +3,7 @@ using Xunit;
 
 namespace ChangeDB.ConsoleApp.End2EndTest
 {
-    public class ProgramTest: BaseTest
+    public class ProgramTest : BaseTest
     {
         public ProgramTest(TestDatabaseEnvironment testDatabaseEnvironment) : base(testDatabaseEnvironment)
         {

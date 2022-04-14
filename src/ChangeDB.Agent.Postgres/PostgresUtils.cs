@@ -32,6 +32,7 @@ namespace ChangeDB.Agent.Postgres
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
+        [System.Obsolete]
         public static DatabaseDescriptor GetDataBaseDescriptorByEfCore(DbConnection dbConnection, PostgresDataTypeMapper dataTypeMapper, PostgresSqlExpressionTranslator sqlExpressionTranslator)
         {
             var databaseModelFactory = GetModelFactory();

@@ -15,6 +15,7 @@ namespace ChangeDB.Core.Default
     public class DefaultSqlDumperTest
     {
         [Fact]
+        [System.Obsolete]
         public async Task ShouldIncludePostScript()
         {
             var emptyDatabaseTask = Task.FromResult(new DatabaseDescriptor());

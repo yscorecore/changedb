@@ -17,7 +17,7 @@ namespace ChangeDB.Migration
 
         Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext migrationContext);
 
-
+        [Obsolete]
         public async IAsyncEnumerable<DataTable> ReadSourceTable(TableDescriptor sourceTable, MigrationContext migrationContext)
         {
             var source = migrationContext.Source;

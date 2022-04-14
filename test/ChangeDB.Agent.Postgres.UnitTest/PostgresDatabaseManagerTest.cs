@@ -28,25 +28,16 @@ namespace ChangeDB.Agent.Postgres
         }
         [Fact]
         [Obsolete]
-        public async Task ShouldDropCurrentDatabase()
+        public Task ShouldDropCurrentDatabase()
         {
-            //await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
-            //Action action = () =>
-            //{
-            //    _dbConnection.Open();
-            //};
-            //action.Should().Throw<PostgresException>()
-            //    .WithMessage("3D000: database \"*\" does not exist");
-
+            return Task.CompletedTask;
         }
+
         [Fact]
         [Obsolete]
-        public async Task ShouldCreateNewDatabase()
+        public Task ShouldCreateNewDatabase()
         {
-            //await _databaseManager.DropTargetDatabaseIfExists(_migrationContext);
-            //await _databaseManager.CreateTargetDatabase(_migrationContext);
-            //var currentDatabase = _dbConnection.ExecuteScalar<string>("select current_database()");
-            //currentDatabase.Should().NotBeEmpty();
+            return Task.CompletedTask;
         }
     }
 }

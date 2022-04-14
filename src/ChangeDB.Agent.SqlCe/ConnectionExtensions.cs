@@ -42,7 +42,6 @@ namespace ChangeDB.Agent.SqlCe
 
         public static void ClearDatabase(this IDbConnection connection)
         {
-            //System.Diagnostics.Debugger.Launch();
             connection.DropAllForeignConstraints();
             connection.DropAllTables();
         }

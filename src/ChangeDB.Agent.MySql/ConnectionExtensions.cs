@@ -26,6 +26,11 @@ namespace ChangeDB.Agent.MySql
 
         public static void DropDatabaseIfExists(string connectionString)
         {
+
+            using (var connection = new MySqlConnection(connectionString))
+            {
+                MySqlConnection.ClearPool(connection);
+            }
             using var newConnection = CreateNoDatabaseConnection(connectionString);
             var connectionInfo = new MySqlConnectionStringBuilder(connectionString);
             newConnection.ExecuteNonQuery(
