@@ -8,7 +8,7 @@ namespace TestDB
 {
     public interface IProviderSetting
     {
-        bool SupportFastClone { get;  }
+        bool SupportFastClone { get; }
 
         long FastClonedMinimalSqlSize { get; }
     }

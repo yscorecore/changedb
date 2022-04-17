@@ -21,7 +21,8 @@ namespace ChangeDB.Core.Default
             var emptyDatabaseTask = Task.FromResult(new DatabaseDescriptor());
             var mockAgentSetting = Mock.Of<AgentSetting>();
             var mockMetadataProvider = Mock.Of<IMetadataMigrator>(p => p.GetSourceDatabaseDescriptor(It.IsAny<MigrationContext>()) == emptyDatabaseTask);
-            var mockSourceAgent = Mock.Of<IAgent>(p => p.MetadataMigrator == mockMetadataProvider && p.AgentSetting == mockAgentSetting);
+            var mockConnectionProvider = Mock.Of<IConnectionProvider>();
+            var mockSourceAgent = Mock.Of<IAgent>(p => p.MetadataMigrator == mockMetadataProvider && p.AgentSetting == mockAgentSetting && p.ConnectionProvider == mockConnectionProvider);
             var mockAgentFactory = Mock.Of<IAgentFactory>(p => p.CreateAgent(It.IsAny<string>()) == mockSourceAgent);
             var databaseMapper = Mock.Of<IDatabaseMapper>(p => p.MapDatabase(It.IsAny<DatabaseDescriptor>(), It.IsAny<AgentSetting>(), It.IsAny<MigrationSetting>()) == Task.FromResult(new DatabaseDescriptorMapper()));
             var tableDataMapper = Mock.Of<ITableDataMapper>();

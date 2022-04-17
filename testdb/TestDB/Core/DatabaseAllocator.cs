@@ -17,9 +17,9 @@ namespace TestDB
 
         public DatabaseAllocator(string connectionTemplate, IDatabaseServiceProvider serviceProvider, bool cachedDatabase = true)
         {
-            this.templateDatabaseManager = new TemplateDatabaseAllocator( connectionTemplate, serviceProvider);
-            this.cachedDatabaseManager = new CachedDatabaseAllocator( connectionTemplate, serviceProvider);
-            this.defaultDatabaseManager = new DefaultDatabaseAllocator( connectionTemplate, serviceProvider);
+            this.templateDatabaseManager = new TemplateDatabaseAllocator(connectionTemplate, serviceProvider);
+            this.cachedDatabaseManager = new CachedDatabaseAllocator(connectionTemplate, serviceProvider);
+            this.defaultDatabaseManager = new DefaultDatabaseAllocator(connectionTemplate, serviceProvider);
             this.cachedDatabase = cachedDatabase;
             this.serviceProvider = serviceProvider;
         }

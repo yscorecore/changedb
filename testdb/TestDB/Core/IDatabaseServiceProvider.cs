@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TestDB
 {
-    public interface IDatabaseServiceProvider: IConnectionProvider, ISqlSpliter, IProviderSetting,IDatabaseManager
+    public interface IDatabaseServiceProvider : IConnectionProvider, ISqlSpliter, IProviderSetting, IDatabaseManager
     {
     }
 }

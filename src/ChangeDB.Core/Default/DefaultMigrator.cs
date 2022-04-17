@@ -65,37 +65,37 @@ namespace ChangeDB.Default
 
         [Obsolete]
 
-/* 项目“ChangeDB.Core(net6)”的未合并的更改
-在此之前:
-        protected virtual async Task CreateTargetDatabase(MigrationContext migrationContext)
-在此之后:
-        protected virtual async Task DoMigrateDatabase(MigrationContext migrationContext)
-        {
-            var (target, source, migrationSetting) = (migrationContext.Target, migrationContext.Source, migrationContext.Setting);
-            if (migrationContext.Setting.IncludeMeta)
-            {
-                await CreateTargetDatabase(migrationContext);
-            }
+        /* 项目“ChangeDB.Core(net6)”的未合并的更改
+        在此之前:
+                protected virtual async Task CreateTargetDatabase(MigrationContext migrationContext)
+        在此之后:
+                protected virtual async Task DoMigrateDatabase(MigrationContext migrationContext)
+                {
+                    var (target, source, migrationSetting) = (migrationContext.Target, migrationContext.Source, migrationContext.Setting);
+                    if (migrationContext.Setting.IncludeMeta)
+                    {
+                        await CreateTargetDatabase(migrationContext);
+                    }
 
-            if (migrationContext.Setting.IncludeMeta)
-            {
-                await PreMigrationMetadata(target, migrationContext);
-            }
+                    if (migrationContext.Setting.IncludeMeta)
+                    {
+                        await PreMigrationMetadata(target, migrationContext);
+                    }
 
-            if (migrationContext.Setting.IncludeData)
-            {
-                await MigrationData(migrationContext);
-            }
+                    if (migrationContext.Setting.IncludeData)
+                    {
+                        await MigrationData(migrationContext);
+                    }
 
-            if (migrationContext.Setting.IncludeMeta)
-            {
-                await PostMigrationMetadata(target, migrationContext);
-            }
-        }
+                    if (migrationContext.Setting.IncludeMeta)
+                    {
+                        await PostMigrationMetadata(target, migrationContext);
+                    }
+                }
 
-        [Obsolete]
-        protected virtual async Task CreateTargetDatabase(MigrationContext migrationContext)
-*/
+                [Obsolete]
+                protected virtual async Task CreateTargetDatabase(MigrationContext migrationContext)
+        */
         protected virtual async Task DoMigrateDatabase(MigrationContext migrationContext)
         {
             var (target, source, migrationSetting) = (migrationContext.Target, migrationContext.Source, migrationContext.Setting);

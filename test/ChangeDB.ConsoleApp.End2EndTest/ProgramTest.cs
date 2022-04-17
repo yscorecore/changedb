@@ -1,9 +1,10 @@
 ﻿using FluentAssertions;
 using Xunit;
 
+using static ChangeDB.ConsoleApp.End2EndTest.End2EndUtils;
 namespace ChangeDB.ConsoleApp.End2EndTest
 {
-    public class ProgramTest : BaseTest
+    public class ProgramTest
     {
 
 

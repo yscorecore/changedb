@@ -8,8 +8,8 @@ namespace TestDB
 {
     public interface IInfrastructure : IDisposable, IAsyncDisposable
     {
-       
+
     }
 
-   
+
 }

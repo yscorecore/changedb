@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -8,15 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Migration\postgres1.sql" />
-    <None Remove="Migration\SqlServer\Northwind.sql" />
+    <None Remove="testscripts\postgres1.sql" />
+    <None Remove="testscripts\sqlserver\Northwind.sql" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Migration\Postgres\postgres1.sql">
+    <Content Include="testscripts\postgres\postgres1.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Migration\SqlServer\Northwind.sql">
+    <Content Include="testscripts\sqlserver\Northwind.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -58,7 +58,7 @@ namespace TestDB.Postgres
             {
                 connection.ExecuteNonQuery($"drop table if exists {IdentityName(schema, table)}");
             }
-            void DropViewIfExists( string schema, string view)
+            void DropViewIfExists(string schema, string view)
             {
                 connection.ExecuteNonQuery($"DROP VIEW IF EXISTS {IdentityName(schema, view)};");
             }

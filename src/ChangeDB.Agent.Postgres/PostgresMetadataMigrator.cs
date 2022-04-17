@@ -15,6 +15,7 @@ namespace ChangeDB.Agent.Postgres
 
         public static readonly PostgresMetadataMigrator Default = new PostgresMetadataMigrator();
 
+        [Obsolete]
         public Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext)
         {
 

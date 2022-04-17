@@ -122,7 +122,7 @@ namespace ChangeDB
         }
         public static void ExecuteSqlScript(this IDbConnection connection, string sqlScripts, string sqlSplit = "", Action<(int StartLine, int LineCount, string Sql, int Result)> callback = null)
         {
-            ExecuteSqlScript(connection, sqlSplit, (p) => string.Equals(sqlSplit, p.Trim(), StringComparison.InvariantCultureIgnoreCase), callback);
+            ExecuteSqlScript(connection, sqlScripts, (p) => string.Equals(sqlSplit, p.Trim(), StringComparison.InvariantCultureIgnoreCase), callback);
         }
         public static void ExecuteSqlScript(this IDbConnection connection, string sqlScripts, Func<string, bool> sqlSplit, Action<(int StartLine, int LineCount, string Sql, int Result)> callback = null)
         {

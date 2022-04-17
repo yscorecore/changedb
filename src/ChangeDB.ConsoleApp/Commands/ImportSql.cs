@@ -16,13 +16,13 @@ namespace ChangeDB.ConsoleApp.Commands
         [Value(2, MetaName = "target-dbconnection", Required = true, HelpText = "Enter the source database connection strings, you can get help from ChangeDB Readme page")]
         public string TargetConnectionString { get; set; }
 
-        [Value(3, MetaName = "extra-executefile", Required = true, HelpText = "Choose the sql file location, ChangeDB will execute choosen script after the migration.")]
-        public string TargetScriptFile { get; set; }
+        [Value(3, MetaName = "import-file", Required = true, HelpText = "Choose the sql file location, ChangeDB will execute choosen script after the migration.")]
+        public string ScriptFile { get; set; }
 
         [Option("sql-file-split", Required = false, HelpText = "Enter the separator for transformed script, default seperator is \"\"", Default = "")]
         public string SqlSplit { get; set; } = string.Empty;
 
-        [Option('r', "recreate-new", HelpText = "Setiing this option true ChangeDB will recreate new database, default value is FALSE", Default = false)]
+        [Option('r', "recreate-new", HelpText = "Setting this option true ChangeDB will recreate new database, default value is FALSE", Default = false)]
         public bool ReCreateTargetDatabase { get; set; } = false;
 
         protected override void OnRunCommand()
@@ -43,7 +43,7 @@ namespace ChangeDB.ConsoleApp.Commands
                 },
                 SqlScripts = new CustomSqlScript()
                 {
-                    SqlFile = TargetScriptFile,
+                    SqlFile = ScriptFile,
                     SqlSplit = SqlSplit,
                 },
                 ReCreateTargetDatabase = ReCreateTargetDatabase

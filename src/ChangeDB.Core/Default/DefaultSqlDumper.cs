@@ -100,6 +100,16 @@ namespace ChangeDB.Default
             await target.Agent.MetadataMigrator.PostMigrateTargetMetadata(target.Descriptor, migrationContext);
             migrationContext.RaiseStageChanged(StageKind.FinishedPostMeta);
         }
+
+        /* 项目“ChangeDB.Core(net6)”的未合并的更改
+        在此之前:
+                protected virtual async Task DumpData(DumpContext migrationContext)
+        在此之后:
+                [Obsolete]
+                protected virtual async Task DumpData(DumpContext migrationContext)
+        */
+
+        [Obsolete]
         protected virtual async Task DumpData(DumpContext migrationContext)
         {
             migrationContext.EventReporter.RaiseStageChanged(StageKind.StartingTableData);
@@ -223,8 +233,7 @@ namespace ChangeDB.Default
 
 
             await target.Agent.DataMigrator.AfterWriteTargetTable(tableMapper.Target, dumpContext);
-            var targetCount = await target.Agent.DataMigrator.CountSourceTable(tableMapper.Target, dumpContext);
-            dumpContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, sourceCount, targetCount, true);
+            dumpContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, sourceCount, sourceCount, true);
         }
 
 

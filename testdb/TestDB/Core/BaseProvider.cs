@@ -38,7 +38,7 @@ namespace TestDB
                 string line = textReader.ReadLine();
                 if (line == null)
                 {
-                    var sql= ExecuteCurrentStringBuilder();
+                    var sql = ExecuteCurrentStringBuilder();
 
                     if (!string.IsNullOrEmpty(sql))
                     {
@@ -46,7 +46,7 @@ namespace TestDB
                     }
                     break;
                 }
-   
+
                 if (IsSplitLine(line))
                 {
                     yield return ExecuteCurrentStringBuilder();

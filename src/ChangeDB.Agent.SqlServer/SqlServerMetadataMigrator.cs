@@ -10,6 +10,7 @@ namespace ChangeDB.Agent.SqlServer
     {
         public static readonly IMetadataMigrator Default = new SqlServerMetadataMigrator();
 
+        [System.Obsolete]
         public virtual Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext)
         {
             var databaseDescriptor = GetDataBaseDescriptorByEFCore(migrationContext.SourceConnection);
