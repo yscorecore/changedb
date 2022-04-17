@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -36,8 +36,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ChangeDB.ConsoleApp\ChangeDB.ConsoleApp.csproj" />
-    <ProjectReference Include="..\ChangeDB.Test.Database\ChangeDB.Test.Database.csproj" />
-    <ProjectReference Include="..\ChangeDB.Test\ChangeDB.Test.csproj" />
+    <ProjectReference Include="..\..\testdb\TestDB.MySql\TestDB.MySql.csproj" />
+    <ProjectReference Include="..\..\testdb\TestDB.Postgres\TestDB.Postgres.csproj" />
+    <ProjectReference Include="..\..\testdb\TestDB.SqlCe\TestDB.SqlCe.csproj" />
+    <ProjectReference Include="..\..\testdb\TestDB.SqlServer\TestDB.SqlServer.csproj" />
+    <ProjectReference Include="..\..\testdb\TestDB\TestDB.csproj" />
   </ItemGroup>
 
 </Project>

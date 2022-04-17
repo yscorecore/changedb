@@ -5,13 +5,14 @@ using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
+using static TestDB.Databases;
 namespace ChangeDB.ConsoleApp.End2EndTest
 {
     public class MigrationTest : BaseTest
     {
         private readonly ITestOutputHelper testOutput;
 
-        public MigrationTest(ITestOutputHelper testOutput, TestDatabaseEnvironment testDatabaseEnvironment) : base(testDatabaseEnvironment)
+        public MigrationTest(ITestOutputHelper testOutput)
         {
             this.testOutput = testOutput;
         }
@@ -24,7 +25,7 @@ namespace ChangeDB.ConsoleApp.End2EndTest
 
         public void ShouldMigrateSuccess(string sourceType, string sourceFile, string targetType)
         {
-            using var source = CreateDatabaseFromFile(sourceType, sourceFile);
+            using var source = CreateDatabaseFromFile(sourceType, true, sourceFile);
             using var target = RequestDatabase(targetType);
             var (code, output, error) = RunChangeDbMigration(sourceType, source.ConnectionString, targetType, target.ConnectionString);
             if (code != 0)
@@ -40,7 +41,7 @@ namespace ChangeDB.ConsoleApp.End2EndTest
         public static IEnumerable<object[]> GetMigrationTestCases()
         {
             var subDirectories = Directory.GetDirectories("Migration");
-            var supportAgents = TestDatabaseEnvironment.SupportedDatabases;
+            var supportAgents = DatabaseEnvironment.SupportedDatabases;
             foreach (var sourceTypeFoler in subDirectories)
             {
                 var sourceType = Path.GetFileName(sourceTypeFoler);

@@ -4,7 +4,6 @@ using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using ChangeDB.Agent.SqlServer;
 using ChangeDB.Migration;
 using FluentAssertions;
 using Xunit;

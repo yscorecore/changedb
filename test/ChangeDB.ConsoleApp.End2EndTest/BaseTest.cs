@@ -3,42 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TestDB;
 using Xunit;
 
 namespace ChangeDB.ConsoleApp.End2EndTest
 {
-    [Collection(nameof(TestDatabaseEnvironment))]
+    [Collection(nameof(DatabaseEnvironment))]
     public class BaseTest
     {
-        public BaseTest(TestDatabaseEnvironment testDatabaseEnvironment)
-        {
-            TestDatabaseEnvironment = testDatabaseEnvironment;
-        }
-
-        public TestDatabaseEnvironment TestDatabaseEnvironment { get; }
-
-        public ITestDatabase CreateDatabase(string dbType, params string[] initsqls)
-        {
-            var testdatabaseManager = TestDatabaseEnvironment.DatabaseManagers[dbType];
-            return testdatabaseManager.CreateDatabase(initsqls);
-        }
-        public ITestDatabase CreateDatabaseFromFile(string dbType, string fileName)
-        {
-            var testdatabaseManager = TestDatabaseEnvironment.DatabaseManagers[dbType];
-            var testDatabase = testdatabaseManager.CreateDatabase();
-            testDatabase.Connection.ExecuteSqlScriptFile(fileName, testDatabase.ScriptSplit ?? string.Empty);
-            return testDatabase;
-
-
-        }
-
-
-        public ITestDatabase RequestDatabase(string dbType)
-        {
-            var testdatabaseManager = TestDatabaseEnvironment.DatabaseManagers[dbType];
-            return testdatabaseManager.RequestDatabase();
-        }
-
 
         protected static (int, string, string) RunChangeDbApp(string arguments)
         {

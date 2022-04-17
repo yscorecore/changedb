@@ -1,0 +1,6 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+      <PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
+    <ProjectReference Include="..\TestDB\TestDB.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,32 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TestDB;
+using TestDB.MySql;
+using TestDB.Postgres;
+using TestDB.SqlCe;
+using TestDB.SqlServer;
 using Xunit;
 
 namespace ChangeDB.ConsoleApp.End2EndTest
 {
-    [CollectionDefinition(nameof(TestDatabaseEnvironment))]
-    public class TestDatabaseEnvironment : IDisposable, ICollectionFixture<TestDatabaseEnvironment>
+    [CollectionDefinition(nameof(DatabaseEnvironment))]
+    public class DatabaseEnvironment : IDisposable, ICollectionFixture<DatabaseEnvironment>
     {
-        public readonly static string[] SupportedDatabases = new[]
+        internal static readonly string[] SupportedDatabases = new[] { "sqlserver", "sqlce", "postgres", "mysql" };
+        public DatabaseEnvironment()
         {
-            TestDatabases.POSTGRES,
-            TestDatabases.SQLSERVER,
-            TestDatabases.SQLCE,
-            TestDatabases.MYSQL
-        };
-        public TestDatabaseEnvironment()
-        {
-            databases = TestDatabases.SetupEnvironments(SupportedDatabases);
-            DatabaseManagers = TestDatabases.CreateManagersFromEnvironment(false);
+            Databases.SetupDatabase<SqlServerInstance, SqlServerProvider>("sqlserver");
+            Databases.SetupDatabase<SqlCeInstance, SqlCeProvider>("sqlce");
+            Databases.SetupDatabase<PostgresInstance, PostgresProvider>("postgres");
+            Databases.SetupDatabase<MySqlInstance, MySqlProvider>("mysql");
         }
-        private IDisposable[] databases = Array.Empty<IDisposable>();
-        public IDictionary<string, ITestDatabaseManager> DatabaseManagers { get; } = new Dictionary<string, ITestDatabaseManager>(StringComparer.InvariantCultureIgnoreCase);
-
         public void Dispose()
         {
-            Parallel.ForEach(DatabaseManagers.Values, (m) => m.Dispose());
-            Parallel.ForEach(databases, m => m.Dispose());
+            Databases.DisposeAll();
         }
     }
 }
