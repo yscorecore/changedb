@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Threading.Tasks;
 
 namespace TestDB.Core
@@ -48,7 +49,7 @@ namespace TestDB.Core
             return ReturnTestDatabase(readOnly, databaseName, newConnectionString, newConnection);
         }
 
-        private IDatabase ReturnTestDatabase(bool readOnly, string databaseName, string newConnectionString, IDbConnection newConnection)
+        private IDatabase ReturnTestDatabase(bool readOnly, string databaseName, string newConnectionString, DbConnection newConnection)
         {
             if (readOnly)
             {
@@ -78,13 +79,13 @@ namespace TestDB.Core
         {
             private readonly IDatabaseManager databaseManager;
 
-            public DefaultTestDatabase(IDatabaseManager databaseManager, IDbConnection connection, string connectionString, string databaseName)
+            public DefaultTestDatabase(IDatabaseManager databaseManager, DbConnection connection, string connectionString, string databaseName)
                 : this(databaseManager, connection, connectionString, databaseName, connectionString)
             {
 
             }
 
-            public DefaultTestDatabase(IDatabaseManager databaseManager, IDbConnection connection, string connectionString, string databaseName, string originConnectionString)
+            public DefaultTestDatabase(IDatabaseManager databaseManager, DbConnection connection, string connectionString, string databaseName, string originConnectionString)
             {
                 this.databaseManager = databaseManager;
                 Connection = connection;
@@ -92,7 +93,7 @@ namespace TestDB.Core
                 DatabaseName = databaseName;
                 OriginConnectionString = originConnectionString;
             }
-            public IDbConnection Connection { get; set; }
+            public DbConnection Connection { get; set; }
             public string ConnectionString { get; set; }
             public string DatabaseName { get; set; }
             public string OriginConnectionString { get; }

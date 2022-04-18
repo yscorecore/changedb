@@ -75,7 +75,7 @@ namespace TestDB.SqlCe
             File.Copy(fileName, BuildDatabaseFile(newDatabaseName));
         }
 
-        public override IDbConnection CreateConnection(string connectionString)
+        public override DbConnection CreateConnection(string connectionString)
         {
             return new SqlCeConnection(connectionString);
         }

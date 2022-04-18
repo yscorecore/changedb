@@ -7,7 +7,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlServerSqlExpressionTranslator
+    internal class SqlServerSqlExpressionTranslator
     {
         public static readonly SqlServerSqlExpressionTranslator Default = new SqlServerSqlExpressionTranslator();
 
@@ -33,10 +33,31 @@ namespace ChangeDB.Agent.SqlServer
             }
             else
             {
-                var sql = $"select cast({trimmedExpression} as {storeType})";
+                var castType = NormalCastType(storeType);
+                var sql = $"select cast({trimmedExpression} as {castType})";
                 var value = ValueCache.GetOrAdd(sql, (s) => dbConnection.ExecuteScalar(s));
                 return new SqlExpressionDescriptor() { Constant = value };
             }
+        }
+        private string NormalCastType(string storeType)
+        {
+            if (storeType.StartsWith("binary", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "var" + storeType;
+            }
+            else if (storeType.StartsWith("nchar", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "nvarchar" + storeType.Substring(5);
+            }
+            else if (storeType.StartsWith("char", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "var" + storeType;
+            }
+            else
+            {
+                return storeType;
+            }
+
         }
 
         private string TrimBrackets(string sqlExpression)

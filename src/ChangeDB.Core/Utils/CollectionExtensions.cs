@@ -44,6 +44,16 @@ namespace ChangeDB
         {
             return enumerable.ToAsync(item => Task.FromResult(item));
         }
+
+        public static async Task<List<T>> ToSyncList<T>(this IAsyncEnumerable<T> source)
+        {
+            List<T> result = new List<T>();
+            await foreach (var item in source)
+            {
+                result.Add(item);
+            }
+            return result;
+        }
         public static Func<int> NewSequence(int start = 0) => () => start++;
     }
 }

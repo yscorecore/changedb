@@ -6,32 +6,14 @@ using System.Reflection;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using FluentAssertions;
+using TestDB;
 using Xunit;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    [Collection(nameof(DatabaseEnvironment))]
-    public class SqlServerDataTypeMapperTest : IDisposable
+    public class SqlServerDataTypeMapperTest : BaseTest
     {
-        private readonly IMetadataMigrator _metadataMigrator = SqlServerMetadataMigrator.Default;
-        private readonly SqlServerDataTypeMapper _dataTypeMapper = SqlServerDataTypeMapper.Default;
-        private readonly MigrationContext _migrationContext = new MigrationContext { };
-        private readonly DbConnection _dbConnection;
 
-        public SqlServerDataTypeMapperTest(DatabaseEnvironment databaseEnvironment)
-        {
-            _dbConnection = databaseEnvironment.DbConnection;
-            _migrationContext = new MigrationContext
-            {
-                SourceConnection = _dbConnection,
-
-            };
-        }
-        public void Dispose()
-        {
-            _dbConnection.ClearDatabase();
-
-        }
 
         [Theory]
         [InlineData("bit", CommonDataType.Boolean, null, null)]
@@ -85,30 +67,59 @@ namespace ChangeDB.Agent.SqlServer
         [InlineData("datetimeoffset(1)", CommonDataType.DateTimeOffset, 1, null)]
         public async Task ShouldMapToCommonDataType(string storeType, CommonDataType commonDbType, int? arg1, int? arg2)
         {
-            _dbConnection.ExecuteNonQuery($"create table table1(id {storeType});");
-            var databaseDescriptor = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            var columnStoreType = databaseDescriptor.Tables.SelectMany(p => p.Columns).Select(p => p.GetOriginStoreType()).Single();
-            var commonDataType = _dataTypeMapper.ToCommonDatabaseType(columnStoreType);
+            var metadataMigrator = SqlServerMetadataMigrator.Default;
 
-            var method = typeof(DataTypeDescriptor).GetMethod(Enum.GetName(commonDbType) ?? string.Empty,
-                BindingFlags.Static | BindingFlags.Public);
-            var parameterLength = method.GetParameters().Length;
-            var args = new object[parameterLength];
-            if (parameterLength > 0) args[0] = arg1;
-            if (parameterLength > 1) args[1] = arg2;
-            var typeDescriptor = (DataTypeDescriptor)method.Invoke(null, args);
-            commonDataType.Should().BeEquivalentTo(typeDescriptor);
+            using var database = CreateDatabase(false, $"create table t1(c1 {storeType})");
+            var context = new MigrationContext
+            {
+                SourceConnection = database.Connection
+            };
+
+            var databaseDesc = await metadataMigrator.GetSourceDatabaseDescriptor(context);
+            var tableDesc = databaseDesc.Tables.Single();
+            var columnDesc = tableDesc.Columns.Single();
+            columnDesc.DataType.Should().BeEquivalentTo(new DataTypeDescriptor
+            {
+                DbType = commonDbType,
+                Arg1 = arg1,
+                Arg2 = arg2
+            });
         }
 
         [Theory]
         [ClassData(typeof(MapToTargetDataTypeTestData))]
         public async Task ShouldMapToTargetDataType(DataTypeDescriptor dataTypeDescriptor, string targetStoreType)
         {
-            var targetType = _dataTypeMapper.ToDatabaseStoreType(dataTypeDescriptor);
-            _dbConnection.ExecuteNonQuery($"create table table1(id {targetType});");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            var targetTypeInDatabase = databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.GetOriginStoreType()).First();
-            targetTypeInDatabase.Should().Be(targetStoreType);
+            var metadataMigrator = SqlServerMetadataMigrator.Default;
+
+            using var database = CreateDatabase(false);
+            var context = new MigrationContext
+            {
+                SourceConnection = database.Connection,
+                TargetConnection = database.Connection,
+            };
+            var databaseDesc = new DatabaseDescriptor
+            {
+                Tables = new List<TableDescriptor>
+                {
+                     new TableDescriptor
+                     {
+                        Name="t1",
+                        Columns=new List<ColumnDescriptor>
+                        {
+                            new ColumnDescriptor
+                            {
+                                Name="c1",
+                                DataType=dataTypeDescriptor
+                            }
+                        }
+                     }
+                }
+            };
+            await metadataMigrator.MigrateAllTargetMetaData(databaseDesc, context);
+
+            var databaseDescFromDB = await metadataMigrator.GetSourceDatabaseDescriptor(context);
+            databaseDescFromDB.Tables.Single().Columns.Single().GetOriginStoreType().Should().Be(targetStoreType);
         }
 
         class MapToTargetDataTypeTestData : List<object[]>
@@ -147,7 +158,7 @@ namespace ChangeDB.Agent.SqlServer
 
             private void Add(DataTypeDescriptor descriptor, string targetStoreType)
             {
-                this.Add(new Object[] { descriptor, targetStoreType });
+                this.Add(new object[] { descriptor, targetStoreType });
             }
         }
     }

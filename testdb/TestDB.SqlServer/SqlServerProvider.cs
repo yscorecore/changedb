@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 
 namespace TestDB.SqlServer
 {
@@ -25,6 +25,7 @@ namespace TestDB.SqlServer
         {
             return new SqlConnectionStringBuilder(connectionString)
             {
+                TrustServerCertificate = true,
                 InitialCatalog = databaseName
             }.ConnectionString;
         }
@@ -76,7 +77,7 @@ namespace TestDB.SqlServer
 
         }
 
-        public override IDbConnection CreateConnection(string connectionString)
+        public override DbConnection CreateConnection(string connectionString)
         {
             return new SqlConnection(connectionString);
         }
@@ -87,15 +88,24 @@ namespace TestDB.SqlServer
             newConnection.ExecuteNonQuery(
                  $"create database {IdentityName(GetDatabaseName(connectionString))}"
                  );
+            Console.WriteLine($"create database '{connectionString}'");
+
         }
 
         public override void DropTargetDatabaseIfExists(string connectionString)
         {
+            var databaseName = GetDatabaseName(connectionString);
             using (var connection = new SqlConnection(connectionString))
             {
                 SqlConnection.ClearPool(connection);
             }
+            // kill spid
             using var newConnection = CreateNoDatabaseConnection(connectionString);
+            var spids = newConnection.ExecuteReaderAsList<int>($"select spid from sysprocesses WHERE dbid = db_id('{databaseName}')");
+            foreach (var spid in spids)
+            {
+                newConnection.ExecuteNonQuery($"kill {spid}");
+            }
             newConnection.ExecuteNonQuery(
                  $"drop database if exists {IdentityName(GetDatabaseName(connectionString))}"
                  );

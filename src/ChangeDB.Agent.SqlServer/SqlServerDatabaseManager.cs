@@ -8,16 +8,6 @@ namespace ChangeDB.Agent.SqlServer
     {
         public static readonly IDatabaseManager Default = new SqlServerDatabaseManager();
 
-
-
-        public Task CleanDatabase(IDbConnection connection, MigrationSetting migrationSetting)
-        {
-            connection.ClearDatabase();
-            return Task.CompletedTask;
-        }
-
-
-
         public Task CreateDatabase(string connectionString, MigrationSetting migrationSetting)
         {
             ConnectionExtensions.CreateDatabase(connectionString);

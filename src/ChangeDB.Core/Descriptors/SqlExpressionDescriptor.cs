@@ -2,6 +2,10 @@
 {
     public class SqlExpressionDescriptor : ExtensionObject
     {
+        public SqlExpressionDescriptor()
+        {
+
+        }
         public Function? Function { get; set; }
 
         public object Constant { get; set; }

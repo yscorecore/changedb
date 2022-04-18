@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -20,7 +21,7 @@ namespace TestDB
 
         public abstract void CloneDatabase(string connectionString, string newDatabaseName);
 
-        public abstract IDbConnection CreateConnection(string connectionString);
+        public abstract DbConnection CreateConnection(string connectionString);
 
         public abstract void CreateDatabase(string connectionString);
 

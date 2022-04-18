@@ -5,7 +5,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlServerRepr
+    internal class SqlServerRepr
     {
         public static readonly SqlServerRepr Default = new SqlServerRepr();
         public string ReprValue(object value, string storeType)

@@ -42,6 +42,17 @@ namespace ChangeDB.Migration
                 }
             }
         }
+
+        public async IAsyncEnumerable<DataRow> ReadSourceRows(TableDescriptor sourceTable, MigrationContext migrationContext)
+        {
+            await foreach (DataTable table in ReadSourceTable(sourceTable, migrationContext))
+            {
+                foreach (DataRow row in table.Rows)
+                {
+                    yield return row;
+                }
+            }
+        }
     }
 
 

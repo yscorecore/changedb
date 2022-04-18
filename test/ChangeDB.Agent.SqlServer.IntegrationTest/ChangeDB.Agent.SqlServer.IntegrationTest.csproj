@@ -7,6 +7,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\ChangeDB.Agent.SqlServer\ChangeDB.Agent.SqlServer.csproj" />
-        <ProjectReference Include="..\ChangeDB.Test\ChangeDB.Test.csproj" />
+        <ProjectReference Include="..\..\testdb\TestDB.SqlServer\TestDB.SqlServer.csproj" />
     </ItemGroup>
 </Project>

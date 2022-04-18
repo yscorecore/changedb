@@ -78,7 +78,7 @@ namespace TestDB.Postgres
                  $"CREATE DATABASE {IdentityName(newDatabaseName)} WITH TEMPLATE {IdentityName(templateDbName)};");
         }
 
-        public override IDbConnection CreateConnection(string connectionString)
+        public override DbConnection CreateConnection(string connectionString)
         {
             return new NpgsqlConnection(connectionString);
         }

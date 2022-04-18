@@ -8,13 +8,6 @@ namespace ChangeDB.Agent.Postgres
     {
         public static readonly IDatabaseManager Default = new PostgresDatabaseManager();
 
-        public Task CleanDatabase(IDbConnection connection, MigrationSetting migrationSetting)
-        {
-            connection.ClearDatabase();
-            return Task.CompletedTask;
-        }
-
-
 
         public Task CreateDatabase(string connectionString, MigrationSetting migrationSetting)
         {

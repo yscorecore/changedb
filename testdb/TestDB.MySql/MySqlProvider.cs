@@ -69,7 +69,7 @@ namespace TestDB.MySql
 
         }
 
-        public override IDbConnection CreateConnection(string connectionString)
+        public override DbConnection CreateConnection(string connectionString)
         {
             return new MySqlConnection(connectionString);
         }

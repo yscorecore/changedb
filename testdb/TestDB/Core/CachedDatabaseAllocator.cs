@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 
@@ -99,19 +100,20 @@ namespace TestDB.Core
             private readonly ObjectPool<DatabaseInfo> databasePool;
             private readonly DatabaseInfo databaseInfo;
 
-            public CachedDatabase(DatabaseInfo databaseInfo, ObjectPool<DatabaseInfo> databasePool, IDbConnection connection)
+            public CachedDatabase(DatabaseInfo databaseInfo, ObjectPool<DatabaseInfo> databasePool, DbConnection connection)
             {
                 this.databaseInfo = databaseInfo;
                 this.databasePool = databasePool;
                 Connection = connection;
             }
 
-            public IDbConnection Connection { get; }
+            public DbConnection Connection { get; }
             public string ConnectionString => databaseInfo.ConnectionString;
             public string DatabaseName => databaseInfo.DatabaseName;
 
             public void Dispose()
             {
+                Connection.Dispose();
                 databasePool.Return(this.databaseInfo);
             }
 

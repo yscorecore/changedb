@@ -6,22 +6,9 @@ using Xunit;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    [Collection(nameof(DatabaseEnvironment))]
-    public class SqlServerSqlScriptExecutorTest : IDisposable
+    public class SqlServerSqlScriptExecutorTest : BaseTest
     {
-        private readonly DbConnection _dbConnection;
 
-
-
-        public SqlServerSqlScriptExecutorTest(DatabaseEnvironment databaseEnvironment)
-        {
-            _dbConnection = databaseEnvironment.DbConnection;
-
-        }
-        public void Dispose()
-        {
-            _dbConnection.ClearDatabase();
-        }
         [Theory]
         [InlineData("create table lasttable(id int);")]
         [InlineData(@"create table firsttable(id int);
@@ -79,11 +66,10 @@ create table lasttable(id int);
         public void ShouldSplitSqlScript(string content)
         {
             ISqlScriptExecutor sqlScriptExecutor = new SqlServerSqlScriptExecutor();
-
+            using var database = CreateDatabase(false);
             using var tempFile = new TempFile(content);
-            sqlScriptExecutor.ExecuteFile(tempFile.FilePath, _dbConnection);
-
-            var rowCount = _dbConnection.ExecuteScalar<int>("select count(1) from lasttable");
+            sqlScriptExecutor.ExecuteFile(tempFile.FilePath, database.Connection);
+            var rowCount = database.Connection.ExecuteScalar<int>("select count(1) from lasttable");
             rowCount.Should().Be(0);
         }
     }

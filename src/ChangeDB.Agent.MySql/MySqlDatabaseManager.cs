@@ -8,11 +8,6 @@ namespace ChangeDB.Agent.MySql
     {
         public static readonly IDatabaseManager Default = new MySqlDatabaseManager();
 
-        public Task CleanDatabase(IDbConnection connection, MigrationSetting migrationSetting)
-        {
-            connection.ClearDatabase();
-            return Task.CompletedTask;
-        }
 
         public Task CreateDatabase(string connectionString, MigrationSetting migrationSetting)
         {

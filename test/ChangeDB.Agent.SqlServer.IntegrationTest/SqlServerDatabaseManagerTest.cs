@@ -8,34 +8,31 @@ using Xunit;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    [Collection(nameof(DatabaseEnvironment))]
-    public class SqlServerDatabaseManagerTest
+    public class SqlServerDatabaseManagerTest : BaseTest
     {
-        private readonly IDatabaseManager _databaseManager = SqlServerDatabaseManager.Default;
-        private readonly MigrationContext _migrationContext;
-        private readonly DbConnection _dbConnection;
 
-        public SqlServerDatabaseManagerTest(DatabaseEnvironment databaseEnvironment)
+        [Fact]
+        public async Task ShouldDropCurrentDatabase()
         {
-            _dbConnection = databaseEnvironment.NewDatabaseConnection();
-            _migrationContext = new MigrationContext
+            Func<Task> action = async () =>
             {
-                TargetConnection = _dbConnection
+                await using var database = CreateDatabase(false);
+                var databaseManager = SqlServerDatabaseManager.Default;
+                await databaseManager.DropTargetDatabaseIfExists(database.ConnectionString, new MigrationSetting());
+                database.Connection.Open();
             };
-            _dbConnection.CreateDatabase();
-        }
-        [Fact]
-        [Obsolete]
-        public Task ShouldDropCurrentDatabase()
-        {
-            return Task.CompletedTask;
+            await action.Should().ThrowAsync<Exception>()
+                .WithMessage("Cannot open database \"*\" *");
         }
 
         [Fact]
-        [Obsolete]
-        public Task ShouldCreateNewDatabase()
+        public async Task ShouldCreateNewDatabase()
         {
-            return Task.CompletedTask;
+            await using var database = RequestDatabase();
+            var databaseManager = SqlServerDatabaseManager.Default;
+            await databaseManager.CreateDatabase(database.ConnectionString, new MigrationSetting());
+            var currentDatabase = database.Connection.ExecuteScalar<string>("select DB_NAME()");
+            currentDatabase.Should().Be(database.DatabaseName);
         }
     }
 }

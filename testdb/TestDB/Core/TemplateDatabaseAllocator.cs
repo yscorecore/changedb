@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -157,7 +158,7 @@ namespace TestDB.Core
 
         private class TemplateDatabase : IDatabase
         {
-            public IDbConnection Connection { get; init; }
+            public DbConnection Connection { get; init; }
             public string ConnectionString { get; init; }
             public string DatabaseName { get; init; }
             public string OriginConnectionString { get; init; }
@@ -180,7 +181,7 @@ namespace TestDB.Core
                 this.databaseManager = databaseManager;
             }
 
-            public IDbConnection Connection { get; init; }
+            public DbConnection Connection { get; init; }
             public string ConnectionString { get; init; }
             public string DatabaseName { get; init; }
 
