@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ChangeDB
 {
@@ -35,6 +36,30 @@ namespace ChangeDB
                 sb.Replace(key, value);
             }
             return sb;
+        }
+        private static readonly Regex trimDecimalRegex = new(@"(?<int>\d?)\.(?<dec>\d*)$");
+        public static string TrimDecimalZeroTail(this string str)
+        {
+            if (string.IsNullOrEmpty(str)) return str;
+            return trimDecimalRegex.Replace(str,
+                (m) =>
+                {
+                    var intStr = m.Groups["int"].Value;
+                    var decStr = m.Groups["dec"].Value;
+                    var trimedDecStr = decStr.TrimEnd('0');
+                    if (string.IsNullOrEmpty(intStr))
+                    {
+                        if (string.IsNullOrEmpty(decStr))
+                        {
+                            return m.Value;
+                        }
+                        return string.IsNullOrEmpty(trimedDecStr) ? ".0" : $".{trimedDecStr}";
+                    }
+                    else
+                    {
+                        return string.IsNullOrEmpty(trimedDecStr) ? $"{intStr}" : $"{intStr}.{trimedDecStr}";
+                    }
+                });
         }
     }
 }

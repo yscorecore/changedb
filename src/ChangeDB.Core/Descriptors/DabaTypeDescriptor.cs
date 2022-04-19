@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace ChangeDB
 {
     public class DataTypeDescriptor
     {
-
         public CommonDataType DbType { get; set; }
         public int? Arg1 { get; set; }
         public int? Arg2 { get; set; }
@@ -39,6 +39,37 @@ namespace ChangeDB
         public static DataTypeDescriptor DateTimeOffset(int scale) => new() { DbType = CommonDataType.DateTimeOffset, Arg1 = scale };
 
         public static DataTypeDescriptor UnKnow() => new() { DbType = CommonDataType.UnKnow };
+
+        private static readonly Regex parseRegex = new Regex(@"^\s*(?<name>\w+)\s*(\(\s*(?<arg1>\d+)\s*(,\s*(?<arg2>\d+)\s*)?\))?\s*$");
+        public static DataTypeDescriptor Parse(string text)
+        {
+            var match = parseRegex.Match(text);
+            if (!match.Success)
+            {
+                throw new ArgumentException("invalid datatype text");
+            }
+            var name = match.Groups["name"].Value;
+            var args = new List<object>();
+            if (match.Groups["arg1"].Success)
+            {
+                args.Add(int.Parse(match.Groups["arg1"].Value));
+            }
+            if (match.Groups["arg2"].Success)
+            {
+                args.Add(int.Parse(match.Groups["arg2"].Value));
+            }
+            var method = typeof(DataTypeDescriptor).GetMethods(BindingFlags.Static | BindingFlags.Public)
+                .FirstOrDefault(p => p.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+            if (method == null)
+            {
+                throw new ArgumentException($"unknow datatype '{name}'");
+            }
+            if (method.GetParameters().Length != args.Count || !method.GetParameters().All(p => p.ParameterType == typeof(int)))
+            {
+                throw new ArgumentException($"arguments not match");
+            }
+            return (DataTypeDescriptor)method.Invoke(null, args.ToArray());
+        }
     }
 
     public static class DataTypeDescriptorExtensions

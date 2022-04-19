@@ -23,21 +23,10 @@ namespace ChangeDB.Agent.SqlCe
             var dataTypeMapper = SqlCeDataTypeMapper.Default;
             var sqlExpressionTranslator = SqlCeSqlExpressionTranslator.Default;
             var dbConnection = migrationContext.TargetConnection;
-            CreateSchemas();
             CreateTables();
             CreatePrimaryKeys();
             return Task.CompletedTask;
 
-            void CreateSchemas()
-            {
-                foreach (var schema in databaseDescriptor.GetAllSchemas())
-                {
-                    var schemaName = IdentityName(schema);
-                    var sql =
-                        $"IF NOT EXISTS (SELECT  * FROM SYS.SCHEMAS WHERE NAME = N'{schema}') EXEC('CREATE SCHEMA {IdentityName(schema)}')";
-                    migrationContext.CreateTargetObject(sql, ObjectType.Schema, schemaName);
-                }
-            }
             void CreateTables()
             {
                 foreach (var table in databaseDescriptor.Tables)
@@ -51,10 +40,11 @@ namespace ChangeDB.Agent.SqlCe
                 {
                     var columnName = IdentityName(column.Name);
                     var dataType = dataTypeMapper.ToDatabaseStoreType(column.DataType);
+                    var nullable = column.IsNullable ? string.Empty : "NOT NULL";
                     var identityInfo = column.IsIdentity && column.IdentityInfo != null
                         ? $"IDENTITY({column.IdentityInfo.StartValue},{column.IdentityInfo.IncrementBy})"
                         : string.Empty;
-                    return $"{columnName} {dataType} {identityInfo}".TrimEnd();
+                    return $"{columnName} {dataType} {nullable} {identityInfo}".TrimEnd();
                 }
             }
             void CreatePrimaryKeys()
@@ -98,29 +88,12 @@ namespace ChangeDB.Agent.SqlCe
             var dataTypeMapper = SqlCeDataTypeMapper.Default;
             var sqlExpressionTranslator = SqlCeSqlExpressionTranslator.Default;
             var dbConnection = migrationContext.TargetConnection;
-            AlterNotNullColumns();
+
             AddDefaultValues();
             CreateUniques();
             CreateIndexs();
             AddForeignKeys();
-            void AlterNotNullColumns()
-            {
-                foreach (var table in databaseDescriptor.Tables)
-                {
-                    var tableFullName = IdentityName(table.Schema, table.Name);
-                    foreach (var column in table.Columns)
-                    {
-                        var columnName = IdentityName(column.Name);
-                        var isPrimaryKey = table.PrimaryKey?.Columns?.Contains(column.Name) ?? false;
-                        var dataType = dataTypeMapper.ToDatabaseStoreType(column.DataType);
 
-                        if (column.IdentityInfo == null && !column.IsNullable && !isPrimaryKey)
-                        {
-                            dbConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} ALTER COLUMN {columnName} {dataType} NOT NULL");
-                        }
-                    }
-                }
-            }
 
             void CreateUniques()
             {
@@ -165,6 +138,7 @@ namespace ChangeDB.Agent.SqlCe
                     var tableFullName = IdentityName(table.Schema, table.Name);
                     foreach (var column in table.Columns)
                     {
+                        if (column.IsIdentity || column.DefaultValue == null) continue;
                         var isPrimaryKey = table.PrimaryKey?.Columns?.Contains(column.Name) ?? false;
                         var dataType = dataTypeMapper.ToDatabaseStoreType(column.DataType);
                         var defaultValue =

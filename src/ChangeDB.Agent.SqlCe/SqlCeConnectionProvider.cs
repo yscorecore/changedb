@@ -12,16 +12,10 @@ namespace ChangeDB.Agent.SqlCe
     public class SqlCeConnectionProvider : IConnectionProvider
     {
         public static readonly IConnectionProvider Default = new SqlCeConnectionProvider();
-        public string ChangeDatabase(string connectionString, string databaseName)
-        {
-            return new SqlCeConnectionStringBuilder(connectionString)
-            {
-                DataSource = $"{databaseName}"
-            }.ToString();
-        }
 
         public DbConnection CreateConnection(string connectionString)
         {
+            _ = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
             return new SqlCeConnection(connectionString);
         }
     }

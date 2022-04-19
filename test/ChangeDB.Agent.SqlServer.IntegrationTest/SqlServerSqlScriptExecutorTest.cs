@@ -2,6 +2,7 @@
 using System.Data.Common;
 using ChangeDB.Import;
 using FluentAssertions;
+using TestDB;
 using Xunit;
 
 namespace ChangeDB.Agent.SqlServer

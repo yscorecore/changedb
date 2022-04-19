@@ -37,29 +37,23 @@ namespace TestDB.SqlCe
 
         public override void CleanDatabase(string connectionString)
         {
+            var builder = new SqlCeConnectionStringBuilder(connectionString);
+            var fileName = builder.DataSource;
+            if (!File.Exists(fileName)) return;
             using var connection = CreateConnection(connectionString);
             DropAllForeignConstraints();
-            DropAllViews();
+            // sqlce do not support view
             DropAllTables();
-
 
             void DropAllForeignConstraints()
             {
                 var allForeignConstraints = connection.ExecuteReaderAsList<string, string>($"SELECT TABLE_NAME ,CONSTRAINT_NAME from INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc where tc.CONSTRAINT_TYPE ='FOREIGN KEY'");
                 allForeignConstraints.ForEach(p => connection.ExecuteNonQuery($"ALTER TABLE [{p.Item1}] drop constraint [{p.Item2}];"));
             }
-            void DropAllViews()
-            {
-                var allTables = connection.ExecuteReaderAsList<string>($"SELECT table_name from INFORMATION_SCHEMA.TABLES t where t.TABLE_TYPE='VIEW';");
-                allTables.ForEach(p => DropView(p));
-            }
-            void DropView(string view)
-            {
-                connection.ExecuteNonQuery($"drop view {IdentityName(view)}");
-            }
+
             void DropAllTables()
             {
-                var allTables = connection.ExecuteReaderAsList<string>($"SELECT table_name from INFORMATION_SCHEMA.TABLES t where t.TABLE_TYPE='BASE TABLE';");
+                var allTables = connection.ExecuteReaderAsList<string>($"SELECT table_name from INFORMATION_SCHEMA.TABLES t where t.TABLE_TYPE='TABLE';");
                 allTables.ForEach(p => DropTable(p));
             }
             void DropTable(string table)
@@ -77,6 +71,8 @@ namespace TestDB.SqlCe
 
         public override DbConnection CreateConnection(string connectionString)
         {
+            var builder = new SqlCeConnectionStringBuilder(connectionString);
+
             return new SqlCeConnection(connectionString);
         }
 
@@ -89,23 +85,29 @@ namespace TestDB.SqlCe
         public override void DropTargetDatabaseIfExists(string connectionString)
         {
             var builder = new SqlCeConnectionStringBuilder(connectionString);
+
             var fileName = builder.DataSource;
-            if (File.Exists(fileName))
+            lock (fileName)
             {
-                File.Delete(fileName);
+                if (File.Exists(fileName))
+                {
+                    File.Delete(fileName);
+                }
             }
+
         }
 
         public override string MakeReadOnly(string connectionString)
         {
-            if (connectionString.EndsWith(';'))
-            {
-                return $"{connectionString}Mode = Read Only;Temp Path={ Path.GetTempPath()}";
-            }
-            else
-            {
-                return $"{connectionString};Mode = Read Only;Temp Path={ Path.GetTempPath()}";
-            }
+            //if (connectionString.EndsWith(';'))
+            //{
+            //    return $"{connectionString}Mode = Read Only;Temp Path={ Path.GetTempPath()}";
+            //}
+            //else
+            //{
+            //    return $"{connectionString};Mode = Read Only;Temp Path={ Path.GetTempPath()}";
+            //}
+            return connectionString;
         }
 
         protected override bool IsSplitLine(string line)

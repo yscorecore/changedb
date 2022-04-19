@@ -7,9 +7,11 @@ namespace ChangeDB.Agent.SqlServer
 {
     public static class ConnectionExtensions
     {
-       
+
         public static void DropDatabaseIfExists(string connectionString)
         {
+            var databaseName = GetDatabaseName(connectionString);
+
             using (var connection = new SqlConnection(connectionString))
             {
                 SqlConnection.ClearPool(connection);
@@ -37,6 +39,10 @@ namespace ChangeDB.Agent.SqlServer
         {
             var builder = new SqlConnectionStringBuilder(connection) { InitialCatalog = string.Empty };
             return new SqlConnection(builder.ConnectionString);
+        }
+        private static string GetDatabaseName(string connectionString)
+        {
+            return new SqlConnectionStringBuilder(connectionString).InitialCatalog;
         }
 
     }

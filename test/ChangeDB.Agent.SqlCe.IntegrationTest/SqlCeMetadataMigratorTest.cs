@@ -6,20 +6,21 @@ using System.Threading.Tasks;
 using ChangeDB.Descriptors;
 using ChangeDB.Migration;
 using FluentAssertions;
+using TestDB;
 using Xunit;
 
 namespace ChangeDB.Agent.SqlCe
 {
-    [Collection(nameof(DatabaseEnvironment))]
-    public class SqlCeMetadataMigratorTest : IDisposable
+    public class SqlCeMetadataMigratorTest : BaseTest, IDisposable
     {
         private readonly IMetadataMigrator _metadataMigrator = new SqlCeAgent().MetadataMigrator;
         private readonly MigrationContext _migrationContext;
         private readonly DbConnection _dbConnection;
-
-        public SqlCeMetadataMigratorTest(DatabaseEnvironment databaseEnvironment)
+        private readonly IDatabase _database;
+        public SqlCeMetadataMigratorTest()
         {
-            _dbConnection = databaseEnvironment.DbConnection;
+            _database = CreateDatabase(false);
+            _dbConnection = _database.Connection;
             _migrationContext = new MigrationContext
             {
                 TargetConnection = _dbConnection,
@@ -29,7 +30,7 @@ namespace ChangeDB.Agent.SqlCe
 
         public void Dispose()
         {
-            _dbConnection.ClearDatabase();
+            _database.Dispose();
         }
 
         #region GetDescription

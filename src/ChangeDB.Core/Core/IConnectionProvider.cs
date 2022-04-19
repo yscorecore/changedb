@@ -11,8 +11,6 @@ namespace ChangeDB
     public interface IConnectionProvider
     {
         DbConnection CreateConnection(string connectionString);
-        [Obsolete]
-        string ChangeDatabase(string connectionString, string databaseName);
-
     }
+
 }

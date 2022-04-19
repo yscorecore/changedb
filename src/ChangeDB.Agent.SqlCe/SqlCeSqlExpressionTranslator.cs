@@ -77,7 +77,7 @@ namespace ChangeDB.Agent.SqlCe
                     _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
                 };
             }
-            return SqlCeRepr.ReprConstant(sqlExpression?.Constant);
+            return SqlCeRepr.ReprConstant(sqlExpression?.Constant, storeType);
         }
     }
 }

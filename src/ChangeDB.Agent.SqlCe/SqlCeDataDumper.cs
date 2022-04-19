@@ -13,7 +13,8 @@ namespace ChangeDB.Agent.SqlCe
 
         protected override string ReprValue(ColumnDescriptor column, object val)
         {
-            return SqlCeRepr.ReprConstant(val);
+            var dataType = SqlCeDataTypeMapper.Default.ToDatabaseStoreType(column.DataType);
+            return SqlCeRepr.ReprConstant(val, dataType);
         }
     }
 }

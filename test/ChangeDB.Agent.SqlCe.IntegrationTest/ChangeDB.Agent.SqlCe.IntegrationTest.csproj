@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.Compatibility" Version="5.0.2" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ChangeDB.Agent.SqlCe\ChangeDB.Agent.SqlCe.csproj" />
+    <ProjectReference Include="..\..\testdb\TestDB.SqlCe\TestDB.SqlCe.csproj" />
+  </ItemGroup>
+
+
+</Project>

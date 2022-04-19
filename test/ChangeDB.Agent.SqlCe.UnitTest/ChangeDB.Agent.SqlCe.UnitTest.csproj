@@ -1,17 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-  </PropertyGroup>
+    <PropertyGroup>
+        <RootNamespace>ChangeDB.Agent.SqlCe</RootNamespace>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.Compatibility" Version="5.0.2" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\ChangeDB.Agent.SqlCe\ChangeDB.Agent.SqlCe.csproj" />
-    <ProjectReference Include="..\ChangeDB.Test\ChangeDB.Test.csproj" />
-  </ItemGroup>
-
-
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\ChangeDB.Agent.SqlCe\ChangeDB.Agent.SqlCe.csproj" />
+    </ItemGroup>
 </Project>

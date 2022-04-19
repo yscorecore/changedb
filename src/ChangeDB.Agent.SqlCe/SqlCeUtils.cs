@@ -17,7 +17,7 @@ namespace ChangeDB.Agent.SqlCe
 
         public static string IdentityName(string schema, string objectName) => string.IsNullOrEmpty(schema) ? IdentityName(objectName) : $"{IdentityName(schema)}.{IdentityName(objectName)}";
 
-        public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
+        public static string IdentityName(TableDescriptor table) => IdentityName(table.Name);
 
         [Obsolete]
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)

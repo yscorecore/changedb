@@ -8,14 +8,6 @@ namespace ChangeDB.Agent.SqlServer
     {
         public static readonly IConnectionProvider Default = new SqlServerConnectionProvider();
 
-        public string ChangeDatabase(string connectionString, string databaseName)
-        {
-            return new SqlConnectionStringBuilder(connectionString)
-            {
-                InitialCatalog = databaseName
-            }.ToString();
-        }
-
         public DbConnection CreateConnection(string connectionString) => new SqlConnection(connectionString);
     }
 }

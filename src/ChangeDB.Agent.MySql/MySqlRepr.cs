@@ -40,7 +40,7 @@ namespace ChangeDB.Agent.MySql
         public static string ReprString(string input)
         {
             if (input is null) return null;
-            return $"'{Replace(input, ReplaceChars)}'";
+            return $"'{input.Replace(ReplaceChars)}'";
         }
 
         public static string ReprConstant(object constant)
@@ -56,7 +56,7 @@ namespace ChangeDB.Agent.MySql
                 case bool:
                     return Convert.ToBoolean(constant).ToString().ToLowerInvariant();
                 case double or float or long or int or short or char or byte or decimal or bool:
-                    return constant.ToString();
+                    return constant.ToString().TrimDecimalZeroTail();
                 case Guid guid:
                     return $"UUID_TO_BIN('{guid}')";
                 case byte[] bytes:
@@ -64,38 +64,40 @@ namespace ChangeDB.Agent.MySql
                 case TimeSpan timeSpan:
                     return $"'{timeSpan}'";
                 case DateTime dateTime:
-                    return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'"; ;
+                    return $"'{FormatDateTime(dateTime)}'"; ;
                 case DateTimeOffset dateTimeOffset:
-                    return $"'{dateTimeOffset:yyyy-MM-dd HH:mm:ss zzz}'";
+                    return $"'{FormatDateTimeOffset(dateTimeOffset)}'";
                 default:
                     return constant.ToString();
             }
         }
 
-
-        private static string Replace(string str, IDictionary<string, string> dict)
+        private static string FormatDateTime(DateTime dateTime)
         {
-            if (str is null) return default;
-            StringBuilder sb = new StringBuilder(str);
-            return Replace(sb, dict).ToString();
+            if (dateTime.TimeOfDay == TimeSpan.Zero)
+            {
+                return dateTime.ToString("yyyy-MM-dd");
+            }
+            else if (dateTime.Millisecond == 0)
+            {
+                return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
+            }
+            else
+            {
+                return dateTime.ToString("yyyy-MM-dd HH:mm:ss.ffffff").TrimDecimalZeroTail();
+            }
         }
-
-        private static StringBuilder Replace(StringBuilder sb,
-            IDictionary<string, string> dict)
+        private static string FormatDateTimeOffset(DateTimeOffset dateTime)
         {
-            if (dict == null)
+            if (dateTime.Millisecond == 0)
             {
-                return sb;
+                return dateTime.ToString("yyyy-MM-dd HH:mm:ss zzz");
             }
-
-            foreach (var (key, value) in dict)
+            else
             {
-                sb.Replace(key, value);
+                return dateTime.ToString("yyyy-MM-dd HH:mm:ss.ffffff").TrimDecimalZeroTail() + dateTime.ToString(" zzz");
             }
-            return sb;
         }
-
-
     }
 
 }

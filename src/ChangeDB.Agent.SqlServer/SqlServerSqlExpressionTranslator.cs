@@ -98,7 +98,7 @@ namespace ChangeDB.Agent.SqlServer
                     _ => throw new NotSupportedException($"not supported function {sqlExpression.Function.Value}")
                 };
             }
-            return SqlServerRepr.ReprConstant(sqlExpression?.Constant);
+            return SqlServerRepr.ReprConstant(sqlExpression?.Constant, storeType);
         }
     }
 }

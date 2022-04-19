@@ -29,14 +29,9 @@ namespace TestDB
 
         public void Dispose()
         {
-            Parallel.ForEach(
-                new IDisposable[]
-                {
-                    templateDatabaseManager,
-                    cachedDatabaseManager,
-                    defaultDatabaseManager
-                },
-                p => p.Dispose());
+            cachedDatabaseManager.Dispose();
+            templateDatabaseManager.Dispose();
+            defaultDatabaseManager.Dispose();
         }
 
         public async ValueTask DisposeAsync()

@@ -12,12 +12,6 @@ namespace ChangeDB.Agent.Postgres
     public class PostgresConnectionProvider : IConnectionProvider
     {
         public static readonly IConnectionProvider Default = new PostgresConnectionProvider();
-        public string ChangeDatabase(string connectionString, string databaseName)
-        {
-            var builder = new NpgsqlConnectionStringBuilder(connectionString);
-            builder.Database = databaseName;
-            return builder.ToString();
-        }
 
         public DbConnection CreateConnection(string connectionString)
         {

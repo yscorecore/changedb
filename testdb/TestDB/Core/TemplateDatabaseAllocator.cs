@@ -26,7 +26,7 @@ namespace TestDB.Core
 
         public void Dispose()
         {
-            Parallel.ForEach(templateDatabases.Values, (Action<TemplateDatabase>)((p) => { this.serviceProvider.DropTargetDatabaseIfExists(p.OriginConnectionString); }));
+            Parallel.ForEach(templateDatabases.Values, (Action<TemplateDatabase>)((p) => { p.Connection.Close(); this.serviceProvider.DropTargetDatabaseIfExists(p.OriginConnectionString); }));
         }
         public async ValueTask DisposeAsync()
         {
@@ -187,6 +187,7 @@ namespace TestDB.Core
 
             public void Dispose()
             {
+                Connection.Dispose();
                 databaseManager.DropTargetDatabaseIfExists(ConnectionString);
             }
             public async ValueTask DisposeAsync()
