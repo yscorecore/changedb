@@ -6,21 +6,24 @@ using System.Threading.Tasks;
 using ChangeDB.Descriptors;
 using ChangeDB.Migration;
 using FluentAssertions;
+using TestDB;
 using Xunit;
 
-namespace ChangeDB.Agent.MySql.UnitTest
+namespace ChangeDB.Agent.MySql
 {
-    [Collection(nameof(DatabaseEnvironment))]
-    public class MySqlMetadataMigratorTest : IDisposable
+
+    public class MySqlMetadataMigratorTest : BaseTest, IDisposable
     {
         private readonly IMetadataMigrator _metadataMigrator = MySqlMetadataMigrator.Default;
         private readonly MigrationContext _migrationContext;
         private readonly DbConnection _dbConnection;
+        private readonly IDatabase _database;
 
         [Obsolete]
-        public MySqlMetadataMigratorTest(DatabaseEnvironment databaseEnvironment)
+        public MySqlMetadataMigratorTest()
         {
-            _dbConnection = databaseEnvironment.CreateNewDatabase();
+            _database = CreateDatabase(false);
+            _dbConnection = _database.Connection;
             _migrationContext = new MigrationContext
             {
                 TargetConnection = _dbConnection,
@@ -32,7 +35,7 @@ namespace ChangeDB.Agent.MySql.UnitTest
 
         public void Dispose()
         {
-            _dbConnection.ClearDatabase();
+            _database.Dispose();
         }
         #region GetDescription
         [Fact]

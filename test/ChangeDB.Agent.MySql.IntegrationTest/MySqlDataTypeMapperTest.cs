@@ -7,33 +7,34 @@ using System.Reflection;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using FluentAssertions;
+using TestDB;
 using Xunit;
 
-namespace ChangeDB.Agent.MySql.UnitTest
+namespace ChangeDB.Agent.MySql
 {
-    [Collection(nameof(DatabaseEnvironment))]
-    public class MySqlDataTypeMapperTest : IDisposable
+    public class MySqlDataTypeMapperTest : BaseTest, IDisposable
     {
         private readonly MySqlDataTypeMapper _dataTypeMapper = MySqlDataTypeMapper.Default;
         private readonly IMetadataMigrator _metadataMigrator = MySqlMetadataMigrator.Default;
         private readonly MigrationContext _migrationContext;
         private readonly DbConnection _dbConnection;
+        private readonly IDatabase _database;
 
         [Obsolete]
         public MySqlDataTypeMapperTest(DatabaseEnvironment databaseEnvironment)
         {
-            _dbConnection = databaseEnvironment.DbConnection;
+            _database = CreateDatabase(false);
+            _dbConnection = _database.Connection;
             _migrationContext = new MigrationContext
             {
                 TargetConnection = _dbConnection,
                 SourceConnection = _dbConnection,
                 Source = new AgentRunTimeInfo { Agent = new MySqlAgent() },
-                SourceDatabase = new DatabaseInfo() { ConnectionString = databaseEnvironment.NewConnectionString(_dbConnection.Database) }
             };
         }
         public void Dispose()
         {
-            _dbConnection.ClearDatabase();
+            _database.Dispose();
         }
 
         [Theory]

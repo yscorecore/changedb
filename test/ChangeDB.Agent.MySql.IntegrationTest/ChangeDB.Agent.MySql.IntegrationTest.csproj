@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+
+        <RootNamespace>ChangeDB.Agent.MySql</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\ChangeDB.Agent.MySql\ChangeDB.Agent.MySql.csproj" />
+      <ProjectReference Include="..\..\testdb\TestDB.MySql\TestDB.MySql.csproj" />
+    </ItemGroup>
+
+</Project>

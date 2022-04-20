@@ -99,11 +99,10 @@ namespace TestDB.Postgres
             }
             var databaseName = GetDatabaseName(connectionString);
             using var newConnection = CreateNoDatabaseConnection(connectionString);
-
             newConnection.ExecuteNonQuery(@$"
 SELECT pg_terminate_backend(pid)
 FROM pg_stat_activity
-WHERE pid <> pg_backend_pid() and datname = '{}'");
+WHERE pid <> pg_backend_pid() and datname ='{databaseName}'");
             newConnection.ExecuteNonQuery(
                  $"drop database if exists {IdentityName(GetDatabaseName(connectionString))}"
                  );

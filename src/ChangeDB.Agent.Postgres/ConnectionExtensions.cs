@@ -7,7 +7,6 @@ namespace ChangeDB.Agent.Postgres
 {
     internal static class ConnectionExtensions
     {
-
         public static void DropDatabaseIfExists(string connectionString)
         {
             using (var connection = new NpgsqlConnection(connectionString))

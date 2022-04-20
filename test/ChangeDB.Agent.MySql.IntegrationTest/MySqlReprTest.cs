@@ -2,17 +2,12 @@
 using FluentAssertions;
 using Xunit;
 
-namespace ChangeDB.Agent.MySql.UnitTest
+namespace ChangeDB.Agent.MySql
 {
-    [Collection(nameof(DatabaseEnvironment))]
-    public class MySqlReprTest
+    public class MySqlReprTest : BaseTest
     {
-        private readonly DatabaseEnvironment _databaseEnvironment;
         private readonly MySqlRepr _repr = MySqlRepr.Default;
-        public MySqlReprTest(DatabaseEnvironment databaseEnvironment)
-        {
-            _databaseEnvironment = databaseEnvironment;
-        }
+
 
         [Theory]
         [InlineData("abc")]
@@ -23,8 +18,9 @@ namespace ChangeDB.Agent.MySql.UnitTest
 
         public void ShouldReprString(string value)
         {
+            var database = CreateDatabase(true);
             var reprValue = _repr.ReprValue(value, "varchar");
-            var valueFromDatabase = _databaseEnvironment.DbConnection.ExecuteScalar<string>($"select {reprValue}");
+            var valueFromDatabase = database.Connection.ExecuteScalar<string>($"select {reprValue}");
             valueFromDatabase.Should().Be(value);
         }
         //
