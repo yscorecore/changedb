@@ -5,22 +5,18 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using ChangeDB.Dump;
 using ChangeDB.Import;
+using ChangeDB.IntegrationTest;
 using ChangeDB.Migration;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using TestDB;
 using Xunit;
 
-namespace ChangeDB
+namespace ChangeDB.IntegrationTest
 {
-    [Collection(nameof(DatabaseEnvironment))]
-    public class DefaultSqlDumperTest
+    public class DefaultSqlDumperTest : BaseTest
     {
-        private readonly DatabaseEnvironment _databaseEnvironment;
 
-        public DefaultSqlDumperTest(DatabaseEnvironment databaseEnvironment)
-        {
-            this._databaseEnvironment = databaseEnvironment;
-        }
 
         [Theory]
         [InlineData("dumpsql/sqlserver_basic.xml")]
@@ -28,31 +24,29 @@ namespace ChangeDB
         {
             var serviceProvider = BuildServiceProvider();
             var dumper = serviceProvider.GetRequiredService<IDatabaseSqlDumper>();
-            var importer = serviceProvider.GetRequiredService<IDatabaseSqlImporter>();
             var xDocument = XDocument.Load(xmlFile);
             var sourceNode = xDocument.XPathSelectElement("root/source");
             var sourceType = sourceNode.Attribute("type").Value;
-            var sourceConnectionString = _databaseEnvironment.NewConnectionString(sourceType);
-            await InitSourceDatabase(importer, sourceType, sourceConnectionString, sourceNode);
+            using var sourceDatabase = await InitSourceDatabase(sourceType, sourceNode.Value);
+
 
             foreach (var targetNode in xDocument.XPathSelectElements("root/targets/target"))
             {
                 var targetType = targetNode.Attribute("type").Value;
-                var scope = (MigrationScope)Enum.Parse(typeof(MigrationScope), targetNode.Attribute("scope")?.Value ?? "All", true);
-                var optimizeInsertion = bool.Parse(targetNode.Attribute("optimize-insertion")?.Value ?? "true");
-                var tempFile = Path.GetRandomFileName();
-                using (var textwriter = new StreamWriter(tempFile))
+                using var tempFile = new TempFile();
+                using (var textwriter = new StreamWriter(tempFile.FilePath))
                 {
                     var dumpContext = new DumpContext()
                     {
-                        Setting = new MigrationSetting() { MaxTaskCount = 1, MigrationScope = scope, OptimizeInsertion = optimizeInsertion },
-                        SourceDatabase = new DatabaseInfo() { DatabaseType = sourceType, ConnectionString = sourceConnectionString },
+                        Setting = CreateSetting(targetNode),
+                        SourceDatabase = new DatabaseInfo() { DatabaseType = sourceType, ConnectionString = sourceDatabase.ConnectionString },
                         TargetDatabase = new DatabaseInfo() { DatabaseType = targetType },
                         Writer = textwriter,
                     };
                     await dumper.DumpSql(dumpContext);
+                    await textwriter.FlushAsync();
                 }
-                AssertTargetSqlStript(targetNode, tempFile);
+                AssertTargetSqlStript(targetNode, tempFile.FilePath);
             }
         }
 
@@ -62,22 +56,22 @@ namespace ChangeDB
             var allSql = targetNode.Value.Trim().Replace("\r", string.Empty);
             content.Should().Be(allSql, "the dump scripts should be same");
         }
-
-        private async Task InitSourceDatabase(IDatabaseSqlImporter databaseSqlImporter, string agentType,
-            string dbConnectionString, XElement xElement)
+        private MigrationSetting CreateSetting(XElement xElement)
         {
-            await using var dbConnection = _databaseEnvironment.NewConnection(agentType, dbConnectionString);
-            var split = xElement.Attribute("split").Value;
-            var sql = xElement.Value;
-            var tempFile = System.IO.Path.GetRandomFileName();
-            await File.WriteAllTextAsync(tempFile, sql);
-            var importContext = new ImportContext
+            var setting = new MigrationSetting()
             {
-                TargetDatabase = new DatabaseInfo { DatabaseType = agentType, ConnectionString = dbConnectionString },
-                ReCreateTargetDatabase = true,
-                SqlScripts = new CustomSqlScript { SqlFile = tempFile, SqlSplit = split }
+                MaxTaskCount = 1
             };
-            await databaseSqlImporter.Import(importContext);
+            setting.MigrationScope = (MigrationScope)Enum.Parse(typeof(MigrationScope), xElement.Attribute("scope")?.Value ?? "All", true);
+            setting.OptimizeInsertion = bool.Parse(xElement.Attribute("optimize-insertion")?.Value ?? "true");
+            return setting;
+        }
+
+        private async Task<IDatabase> InitSourceDatabase(string agentType, string content)
+        {
+            await using var tempfile = new TempFile(content);
+            await using var database = Databases.CreateDatabaseFromFile(agentType, true, tempfile.FilePath);
+            return database;
         }
 
         private IServiceProvider BuildServiceProvider()

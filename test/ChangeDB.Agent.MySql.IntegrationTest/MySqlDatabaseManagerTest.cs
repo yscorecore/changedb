@@ -14,7 +14,6 @@ namespace ChangeDB.Agent.MySql
         [Fact]
         public async Task ShouldDropCurrentDatabase()
         {
-
             Func<Task> action = async () =>
             {
                 await using var database = CreateDatabase(false);

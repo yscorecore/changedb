@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 using TestDB;
 using Xunit;
 
-namespace ChangeDB.ConsoleApp.End2EndTest
+namespace ChangeDB.IntegrationTest
 {
     [Collection(nameof(DatabaseEnvironment))]
-    public class BaseEnd2EndTest
+    public class BaseTest
     {
         public static IEnumerable<object[]> GetScriptFiles()
         {

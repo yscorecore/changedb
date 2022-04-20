@@ -13,7 +13,9 @@ namespace ChangeDB.Agent.SqlServer
 
         protected override string ReprValue(ColumnDescriptor column, object val)
         {
-            return SqlServerRepr.ReprConstant(val);
+            var dataType = SqlServerDataTypeMapper.Default.ToDatabaseStoreType(column.DataType);
+
+            return SqlServerRepr.ReprConstant(val, dataType);
         }
     }
 }

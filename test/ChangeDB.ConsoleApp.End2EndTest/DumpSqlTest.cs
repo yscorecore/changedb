@@ -13,7 +13,7 @@ using static TestDB.Databases;
 
 namespace ChangeDB.ConsoleApp.End2EndTest
 {
-    public class DumpSqlTest : BaseEnd2EndTest
+    public class DumpSqlTest : BaseTest
     {
         private Action<string> WriteLine { get; }
 

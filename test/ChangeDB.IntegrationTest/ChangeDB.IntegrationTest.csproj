@@ -8,7 +8,11 @@
       <ProjectReference Include="..\..\src\ChangeDB.Agent.Postgres\ChangeDB.Agent.Postgres.csproj" />
       <ProjectReference Include="..\..\src\ChangeDB.Agent.SqlServer\ChangeDB.Agent.SqlServer.csproj" />
       <ProjectReference Include="..\..\src\ChangeDB.Extenstions.DependencyInjection\ChangeDB.Extenstions.DependencyInjection.csproj" />
-      <ProjectReference Include="..\ChangeDB.Test\ChangeDB.Test.csproj" />
+      <ProjectReference Include="..\..\testdb\TestDB.MySql\TestDB.MySql.csproj" />
+      <ProjectReference Include="..\..\testdb\TestDB.Postgres\TestDB.Postgres.csproj" />
+      <ProjectReference Include="..\..\testdb\TestDB.SqlCe\TestDB.SqlCe.csproj" />
+      <ProjectReference Include="..\..\testdb\TestDB.SqlServer\TestDB.SqlServer.csproj" />
+      <ProjectReference Include="..\..\testdb\TestDB\TestDB.csproj" />
     </ItemGroup>
 
     <ItemGroup>

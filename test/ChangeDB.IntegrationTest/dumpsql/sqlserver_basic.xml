@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <root>
-    <source type="sqlserver" split="go">
+    <source type="sqlserver">
         <![CDATA[
     create table abc(id int primary key identity(1,1),val varchar(10));
     GO

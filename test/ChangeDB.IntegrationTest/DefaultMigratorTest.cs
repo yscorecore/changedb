@@ -11,19 +11,13 @@ using ChangeDB.Import;
 using ChangeDB.Migration;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using TestDB;
 using Xunit;
 
 namespace ChangeDB.IntegrationTest
 {
-    [Collection(nameof(DatabaseEnvironment))]
-    public class DefaultMigratorTest
+    public class DefaultMigratorTest : BaseTest
     {
-        private readonly DatabaseEnvironment databaseEnvironment;
-
-        public DefaultMigratorTest(DatabaseEnvironment databaseEnvironment)
-        {
-            this.databaseEnvironment = databaseEnvironment;
-        }
 
         [Theory]
         [InlineData("migrations/sqlserver_default_value.xml")]
@@ -34,111 +28,61 @@ namespace ChangeDB.IntegrationTest
         {
             var serviceProvider = BuildServiceProvider();
             var migrate = serviceProvider.GetRequiredService<IDatabaseMigrate>();
-            var importer = serviceProvider.GetRequiredService<IDatabaseSqlImporter>();
             var xDocument = XDocument.Load(xmlFile);
             var sourceNode = xDocument.XPathSelectElement("root/source");
             var sourceType = sourceNode.Attribute("type").Value;
 
-            var sourceConnectionString = databaseEnvironment.NewConnectionString(sourceType);
-
-            await InitSourceDatabase(importer, sourceType, sourceConnectionString, sourceNode);
-
+            using var sourceDatabase = await InitSourceDatabase(sourceType, sourceNode.Value);
             foreach (var targetNode in xDocument.XPathSelectElements("root/targets/target"))
             {
                 var targetType = targetNode.Attribute("type").Value;
-                var targetConnectionString = databaseEnvironment.NewConnectionString(targetType);
+                using var targetDatabase = Databases.RequestDatabase(targetType);
                 var migrationContext = new MigrationContext()
                 {
-                    Setting = new MigrationSetting() { MaxTaskCount = 1 },
-                    SourceDatabase = new DatabaseInfo() { DatabaseType = sourceType, ConnectionString = sourceConnectionString },
-                    TargetDatabase = new DatabaseInfo() { DatabaseType = targetType, ConnectionString = targetConnectionString },
+                    Setting = CreateSetting(targetNode),
+                    SourceDatabase = new DatabaseInfo() { DatabaseType = sourceType, ConnectionString = sourceDatabase.ConnectionString },
+                    TargetDatabase = new DatabaseInfo() { DatabaseType = targetType, ConnectionString = targetDatabase.ConnectionString },
                 };
                 await migrate.MigrateDatabase(migrationContext);
-                AssertTargetDatabase(targetNode, migrationContext);
+                AssertTargetDatabase(targetNode, targetDatabase);
             }
         }
-        private async Task InitSourceDatabase(IDatabaseSqlImporter databaseSqlImporter, string agentType,
-            string dbConnectionString, XElement xElement)
+        private MigrationSetting CreateSetting(XElement xElement)
         {
-            await using var dbConnection = databaseEnvironment.NewConnection(agentType, dbConnectionString);
-            var split = xElement.Attribute("split").Value;
-            var sql = xElement.Value;
-            var tempFile = System.IO.Path.GetRandomFileName();
-            await File.WriteAllTextAsync(tempFile, sql);
-            var importContext = new ImportContext
+            var setting = new MigrationSetting()
             {
-                TargetDatabase = new DatabaseInfo { DatabaseType = agentType, ConnectionString = dbConnectionString },
-                ReCreateTargetDatabase = true,
-                SqlScripts = new CustomSqlScript { SqlFile = tempFile, SqlSplit = split }
+                MaxTaskCount = 1
             };
-            await databaseSqlImporter.Import(importContext);
+            setting.MigrationScope = (MigrationScope)Enum.Parse(typeof(MigrationScope), xElement.Attribute("scope")?.Value ?? "All", true);
+            setting.OptimizeInsertion = bool.Parse(xElement.Attribute("optimize-insertion")?.Value ?? "true");
+            return setting;
         }
 
-        private void OutputTestData(DbConnection dbConnection, string dbType)
+        private async Task<IDatabase> InitSourceDatabase(string agentType, string content)
         {
-            var allTables = dbConnection.ExecuteReaderAsList<string, String>(
-                "select t.table_schema,t.table_name  from information_schema.tables t  where t.table_type ='BASE TABLE'");
-            //<target type="postgres">
-            var rootElement = new XElement("target");
-            rootElement.Add(new XAttribute("type", dbType));
-
-            foreach (var table in allTables)
-            {
-                var tableFullName = $"\"{table.Item1}\".\"{table.Item2}\"";
-                int totalCount =
-                    dbConnection.ExecuteScalar<int>($"select count(1) from {tableFullName}");
-                var schemas = dbConnection.ExecuteAsSchema(tableFullName);
-                var dataTable = dbConnection.ExecuteReaderAsTable($"select * from {tableFullName}");
-
-                var allDataJson = dataTable.Rows.OfType<DataRow>().Select(p => p.ItemArray.Select(ConvertToJsonText).ToArray()).ToArray();
-                var serializeOptions = new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                };
-                var dataJson = JsonSerializer.Serialize(allDataJson, serializeOptions);
-                var metaDataElement = new XElement("meta",
-                    schemas.Select(p => new XElement("column",
-                        new XAttribute("name", p.Name),
-                        new XAttribute("type", p.Type.FullName)
-                        )).OfType<object>().ToArray()
-                    );
-                var dataElement = new XElement("data", new XCData(dataJson));
-                var tableElement = new XElement("table",
-                    new XAttribute("schema", table.Item1),
-                    new XAttribute("name", table.Item2),
-                    new XAttribute("count", totalCount),
-                    metaDataElement,
-                    dataElement
-
-                );
-                rootElement.Add(tableElement);
-            }
-
-            var text = rootElement.ToString();
-            Console.WriteLine(text);
+            await using var tempfile = new TempFile(content);
+            await using var database = Databases.CreateDatabaseFromFile(agentType, true, tempfile.FilePath);
+            return database;
         }
 
 
 
-        private void AssertTargetDatabase(XElement xElement, MigrationContext migrationContext)
+        private void AssertTargetDatabase(XElement xElement, IDatabase database)
         {
-            var dbConnection = databaseEnvironment.NewConnection(migrationContext.TargetDatabase.DatabaseType,
-                migrationContext.TargetDatabase.ConnectionString);
-
             foreach (var tableElement in xElement.XPathSelectElements("table"))
             {
-                AssertTargetTable(tableElement, dbConnection);
+                AssertTargetTable(tableElement, database);
             }
         }
-        private void AssertTargetTable(XElement tableElement, DbConnection connection)
+        private void AssertTargetTable(XElement tableElement, IDatabase database)
         {
             var schema = tableElement.Attribute("schema")?.Value;
             var name = tableElement.Attribute("name")?.Value;
             var tableFullName = string.IsNullOrEmpty(schema) ? $"\"{name}\"" : $"\"{schema}\".\"{name}\"";
 
-            AssertDataCount(tableElement, tableFullName, connection);
-            AssertMetaData(tableElement, tableFullName, connection);
-            AssertData(tableElement, tableFullName, connection);
+            AssertDataCount(tableElement, tableFullName, database.Connection);
+            AssertMetaData(tableElement, tableFullName, database.Connection);
+            AssertData(tableElement, tableFullName, database.Connection);
 
         }
         private void AssertDataCount(XElement tableElement, string tableName, DbConnection connection)
