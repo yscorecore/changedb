@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 using ChangeDB.Dump;
 using ChangeDB.Migration;
 using FluentAssertions;
+using TestDB;
 using Xunit;
 using static ChangeDB.Agent.Postgres.PostgresCommand;
 
 namespace ChangeDB.Agent.Postgres
 {
 
-    [Collection(nameof(DatabaseEnvironment))]
-    public class PostgresDataDumperTest : IDisposable
+    public class PostgresDataDumperTest : BaseTest, IDisposable
     {
         private readonly IDataDumper _dataDumper = PostgresDataDumper.Default;
 
@@ -27,9 +27,14 @@ namespace ChangeDB.Agent.Postgres
 
         private readonly DatabaseEnvironment _databaseEnvironment;
 
+        private readonly IDatabase database;
+
+
         public PostgresDataDumperTest(DatabaseEnvironment databaseEnvironment)
         {
-            _dbConnection = databaseEnvironment.DbConnection;
+            database = CreateDatabase(false);
+
+            _dbConnection = database.Connection;
 
             _migrationContext = new MigrationContext
             {
@@ -40,7 +45,7 @@ namespace ChangeDB.Agent.Postgres
         }
         public void Dispose()
         {
-            _dbConnection.ClearDatabase();
+            database.Dispose();
         }
 
         // [Theory(Skip = "skip on ci")]
@@ -81,7 +86,7 @@ namespace ChangeDB.Agent.Postgres
             }
 
             // can use psql insert dump file
-            PSql(dumpFile, _dbConnection.Database, port: _databaseEnvironment.DBPort);
+            PSql(dumpFile, _dbConnection.Database, port: 5432);
 
             var importedTableDataDic = _dbConnection.ExecuteReaderAsDataList("select * from ts.table1");
 

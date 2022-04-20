@@ -5,7 +5,7 @@ using Microsoft.Data.SqlClient;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public static class ConnectionExtensions
+    internal static class ConnectionExtensions
     {
 
         public static void DropDatabaseIfExists(string connectionString)

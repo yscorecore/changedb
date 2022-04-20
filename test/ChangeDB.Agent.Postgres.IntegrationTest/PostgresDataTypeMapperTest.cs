@@ -6,21 +6,24 @@ using System.Reflection;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using FluentAssertions;
+using TestDB;
 using Xunit;
 
 namespace ChangeDB.Agent.Postgres
 {
-    [Collection(nameof(DatabaseEnvironment))]
-    public class PostgresDataTypeMapperTest : IDisposable
+    public class PostgresDataTypeMapperTest : BaseTest, IDisposable
     {
         private readonly PostgresDataTypeMapper _dataTypeMapper = PostgresDataTypeMapper.Default;
         private readonly IMetadataMigrator _metadataMigrator = PostgresMetadataMigrator.Default;
         private readonly MigrationContext _migrationContext;
         private readonly DbConnection _dbConnection;
+        private readonly IDatabase database;
 
         public PostgresDataTypeMapperTest(DatabaseEnvironment databaseEnvironment)
         {
-            _dbConnection = databaseEnvironment.DbConnection;
+            database = CreateDatabase(false);
+
+            _dbConnection = database.Connection;
             _migrationContext = new MigrationContext
             {
                 SourceConnection = _dbConnection
@@ -28,7 +31,7 @@ namespace ChangeDB.Agent.Postgres
         }
         public void Dispose()
         {
-            _dbConnection.ClearDatabase();
+            database.Dispose();
         }
 
         [Theory]

@@ -5,22 +5,25 @@ using System.Data.Common;
 using System.Threading.Tasks;
 using ChangeDB.Migration;
 using FluentAssertions;
+using TestDB;
 using Xunit;
 
 namespace ChangeDB.Agent.Postgres
 {
-    [Collection(nameof(DatabaseEnvironment))]
-    public class PostgresDataMigratorTest : System.IDisposable
+    public class PostgresDataMigratorTest : BaseTest, IDisposable
     {
 
         private readonly PostgresDataMigrator _dataMigrator = PostgresDataMigrator.Default;
         private readonly MigrationContext _migrationContext = new MigrationContext();
         private readonly DbConnection _dbConnection;
+        private readonly IDatabase database;
 
 
         public PostgresDataMigratorTest(DatabaseEnvironment databaseEnvironment)
         {
-            _dbConnection = databaseEnvironment.DbConnection;
+            database = CreateDatabase(false);
+
+            _dbConnection = database.Connection;
 
             _migrationContext = new MigrationContext
             {
@@ -31,7 +34,7 @@ namespace ChangeDB.Agent.Postgres
         }
         public void Dispose()
         {
-            _dbConnection.ClearDatabase();
+            database.Dispose();
         }
 
         [Fact]

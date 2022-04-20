@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlServerUtils
+    internal class SqlServerUtils
     {
         public static string IdentityName(string objectName) => $"[{objectName}]";
 

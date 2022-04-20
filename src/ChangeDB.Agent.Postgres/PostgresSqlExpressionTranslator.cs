@@ -7,7 +7,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.Postgres
 {
-    public class PostgresSqlExpressionTranslator
+    internal class PostgresSqlExpressionTranslator
     {
 
         public static readonly PostgresSqlExpressionTranslator Default = new PostgresSqlExpressionTranslator();

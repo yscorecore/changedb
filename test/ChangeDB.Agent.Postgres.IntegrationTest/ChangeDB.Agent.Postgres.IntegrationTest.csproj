@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+
+        <RootNamespace>ChangeDB.Agent.Postgres</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\ChangeDB.Agent.Postgres\ChangeDB.Agent.Postgres.csproj" />
+      <ProjectReference Include="..\..\testdb\TestDB.Postgres\TestDB.Postgres.csproj" />
+    </ItemGroup>
+
+</Project>

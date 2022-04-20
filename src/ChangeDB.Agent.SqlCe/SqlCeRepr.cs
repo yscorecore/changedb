@@ -7,7 +7,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlCe
 {
-    public class SqlCeRepr
+    internal class SqlCeRepr
     {
         public static readonly SqlCeRepr Default = new SqlCeRepr();
         public static string ReprConstant(object constant, string storeType)

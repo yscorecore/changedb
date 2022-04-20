@@ -4,7 +4,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlCe
 {
-    public class SqlCeDataTypeMapper
+    internal class SqlCeDataTypeMapper
     {
         public static SqlCeDataTypeMapper Default = new SqlCeDataTypeMapper();
 

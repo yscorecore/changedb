@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6C7E5914-CD6B-40F1-BFD7-8FB17E3EAE11}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{9D50B35B-1EAA-4620-B0A6-245456051247}"
 EndProject
@@ -12,8 +15,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.Postgres", "src\ChangeDB.Agent.Postgres\ChangeDB.Agent.Postgres.csproj", "{0B3B6138-582E-43D5-86DE-D974A877B256}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.SqlServer", "src\ChangeDB.Agent.SqlServer\ChangeDB.Agent.SqlServer.csproj", "{81EBB755-D3DE-48A3-BB37-BA95C8466660}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.Postgres.UnitTest", "test\ChangeDB.Agent.Postgres.UnitTest\ChangeDB.Agent.Postgres.UnitTest.csproj", "{5C5B1951-49F1-4C10-90BC-5315B82FE504}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.ConsoleApp", "src\ChangeDB.ConsoleApp\ChangeDB.ConsoleApp.csproj", "{02D45DAF-E60D-42C0-BBDF-6B8BEFB65897}"
 EndProject
@@ -63,7 +64,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestDB.SqlServer", "testdb\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.SqlCe.IntegrationTest", "test\ChangeDB.Agent.SqlCe.IntegrationTest\ChangeDB.Agent.SqlCe.IntegrationTest.csproj", "{5F3AC995-DA23-46A8-A0A7-E32BFC5C6FD7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChangeDB.Agent.SqlCe.UnitTest", "test\ChangeDB.Agent.SqlCe.UnitTest\ChangeDB.Agent.SqlCe.UnitTest.csproj", "{D0E88AE4-E9CE-4F3F-9BA9-E050956842E7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.SqlCe.UnitTest", "test\ChangeDB.Agent.SqlCe.UnitTest\ChangeDB.Agent.SqlCe.UnitTest.csproj", "{D0E88AE4-E9CE-4F3F-9BA9-E050956842E7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.Postgres.IntegrationTest", "test\ChangeDB.Agent.Postgres.IntegrationTest\ChangeDB.Agent.Postgres.IntegrationTest.csproj", "{0F4E68D8-E0A1-4883-A68E-BAF9CBD293D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChangeDB.Agent.Postgres.UnitTest", "test\ChangeDB.Agent.Postgres.UnitTest\ChangeDB.Agent.Postgres.UnitTest.csproj", "{9A246D8C-DCA9-4FFA-AB83-3B658DE82F24}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -83,10 +88,6 @@ Global
 		{81EBB755-D3DE-48A3-BB37-BA95C8466660}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{81EBB755-D3DE-48A3-BB37-BA95C8466660}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81EBB755-D3DE-48A3-BB37-BA95C8466660}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5C5B1951-49F1-4C10-90BC-5315B82FE504}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5C5B1951-49F1-4C10-90BC-5315B82FE504}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5C5B1951-49F1-4C10-90BC-5315B82FE504}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5C5B1951-49F1-4C10-90BC-5315B82FE504}.Release|Any CPU.Build.0 = Release|Any CPU
 		{02D45DAF-E60D-42C0-BBDF-6B8BEFB65897}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{02D45DAF-E60D-42C0-BBDF-6B8BEFB65897}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02D45DAF-E60D-42C0-BBDF-6B8BEFB65897}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -159,6 +160,14 @@ Global
 		{D0E88AE4-E9CE-4F3F-9BA9-E050956842E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0E88AE4-E9CE-4F3F-9BA9-E050956842E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0E88AE4-E9CE-4F3F-9BA9-E050956842E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F4E68D8-E0A1-4883-A68E-BAF9CBD293D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F4E68D8-E0A1-4883-A68E-BAF9CBD293D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F4E68D8-E0A1-4883-A68E-BAF9CBD293D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F4E68D8-E0A1-4883-A68E-BAF9CBD293D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A246D8C-DCA9-4FFA-AB83-3B658DE82F24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A246D8C-DCA9-4FFA-AB83-3B658DE82F24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A246D8C-DCA9-4FFA-AB83-3B658DE82F24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A246D8C-DCA9-4FFA-AB83-3B658DE82F24}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -167,7 +176,6 @@ Global
 		{D498748A-7138-447B-80E3-E1BAE3CCFA59} = {6C7E5914-CD6B-40F1-BFD7-8FB17E3EAE11}
 		{0B3B6138-582E-43D5-86DE-D974A877B256} = {6C7E5914-CD6B-40F1-BFD7-8FB17E3EAE11}
 		{81EBB755-D3DE-48A3-BB37-BA95C8466660} = {6C7E5914-CD6B-40F1-BFD7-8FB17E3EAE11}
-		{5C5B1951-49F1-4C10-90BC-5315B82FE504} = {9D50B35B-1EAA-4620-B0A6-245456051247}
 		{02D45DAF-E60D-42C0-BBDF-6B8BEFB65897} = {6C7E5914-CD6B-40F1-BFD7-8FB17E3EAE11}
 		{BF7658AC-2CCC-45B2-942D-50508535EA66} = {6C7E5914-CD6B-40F1-BFD7-8FB17E3EAE11}
 		{5228F1DA-7B2D-43C6-8BDC-C57F67846600} = {7C2E7B66-E684-48B6-BA0C-2BCED0DE69CF}
@@ -190,6 +198,8 @@ Global
 		{1ABC4A05-7C91-4A35-9E88-C04C7ED6988A} = {5909CDE9-ADA9-4344-B454-226E5C8A4C12}
 		{5F3AC995-DA23-46A8-A0A7-E32BFC5C6FD7} = {4FA4511C-AAA5-4248-ACB4-9F328470BE8F}
 		{D0E88AE4-E9CE-4F3F-9BA9-E050956842E7} = {7C2E7B66-E684-48B6-BA0C-2BCED0DE69CF}
+		{0F4E68D8-E0A1-4883-A68E-BAF9CBD293D6} = {4FA4511C-AAA5-4248-ACB4-9F328470BE8F}
+		{9A246D8C-DCA9-4FFA-AB83-3B658DE82F24} = {7C2E7B66-E684-48B6-BA0C-2BCED0DE69CF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB11BB21-3F5D-42D6-8737-F19C0666F1F8}

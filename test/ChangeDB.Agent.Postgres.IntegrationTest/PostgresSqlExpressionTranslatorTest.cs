@@ -4,22 +4,28 @@ using System.Data.Common;
 using ChangeDB.Descriptors;
 using ChangeDB.Migration;
 using FluentAssertions;
+using TestDB;
 using Xunit;
 
 namespace ChangeDB.Agent.Postgres
 {
-    [Collection(nameof(DatabaseEnvironment))]
-    public class PostgresSqlExpressionTranslatorTest
+    public class PostgresSqlExpressionTranslatorTest : BaseTest, IDisposable
     {
         private readonly PostgresSqlExpressionTranslator sqlTranslator = PostgresSqlExpressionTranslator.Default;
+        private readonly IDatabase database;
         private readonly DbConnection _dbConnection;
 
 
-        public PostgresSqlExpressionTranslatorTest(DatabaseEnvironment databaseEnvironment)
+        public PostgresSqlExpressionTranslatorTest()
         {
-            _dbConnection = databaseEnvironment.DbConnection;
-
+            database = CreateDatabase(false);
+            _dbConnection = database.Connection;
         }
+        public void Dispose()
+        {
+            database.Dispose();
+        }
+
         [Theory]
 
 
@@ -43,6 +49,8 @@ namespace ChangeDB.Agent.Postgres
             Action executeExpression = () => _dbConnection.ExecuteScalar($"select {targetSqlExpression}");
             executeExpression.Should().NotThrow();
         }
+
+
 
         class MapFromCommonSqlExpression : List<object[]>
         {

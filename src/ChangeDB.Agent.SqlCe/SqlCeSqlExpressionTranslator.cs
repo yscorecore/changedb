@@ -7,7 +7,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlCe
 {
-    public class SqlCeSqlExpressionTranslator
+    internal class SqlCeSqlExpressionTranslator
     {
         public static readonly SqlCeSqlExpressionTranslator Default = new SqlCeSqlExpressionTranslator();
 
