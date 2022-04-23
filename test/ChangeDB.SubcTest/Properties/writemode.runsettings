@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- File name extension must be .runsettings -->
+<RunSettings>
+    <RunConfiguration>
+        <EnvironmentVariables>
+            <CHANGEDB_WRITE_MODE>true</CHANGEDB_WRITE_MODE>
+            <TESTCASES_FOLDER>./testcases</TESTCASES_FOLDER>
+        </EnvironmentVariables>
+    </RunConfiguration>
+</RunSettings>

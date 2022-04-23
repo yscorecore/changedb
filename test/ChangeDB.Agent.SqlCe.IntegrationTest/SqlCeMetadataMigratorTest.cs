@@ -182,16 +182,16 @@ namespace ChangeDB.Agent.SqlCe
                 "create table table2(id int, id1 int);",
                 "ALTER TABLE table2 add constraint table2_id1_fkey foreign key(id1) references table1(id);");
             var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
-            databaseDesc.Tables.Single(p => p.Name == "table2").ForeignKeys.Should()
-                .ContainSingle().And.BeEquivalentTo(new ForeignKeyDescriptor
-                {
-                    Name = "table2_id1_fkey",
-                    OnDelete = ReferentialAction.NoAction,
-                    PrincipalTable = "table1",
-                    PrincipalSchema = null,
-                    ColumnNames = new List<string> { "id1" },
-                    PrincipalNames = new List<string> { "id" }
-                });
+            var foreignKey = databaseDesc.Tables.Single(p => p.Name == "table2").ForeignKeys.Single();
+            foreignKey.Should().BeEquivalentTo(new ForeignKeyDescriptor
+            {
+                Name = "table2_id1_fkey",
+                OnDelete = ReferentialAction.NoAction,
+                PrincipalTable = "table1",
+                PrincipalSchema = null,
+                ColumnNames = new List<string> { "id1" },
+                PrincipalNames = new List<string> { "id" }
+            });
         }
 
         [Fact]

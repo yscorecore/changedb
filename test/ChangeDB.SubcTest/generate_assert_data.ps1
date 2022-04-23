@@ -1,0 +1,1 @@
+﻿ dotnet test -s .\Properties\writemode.runsettings

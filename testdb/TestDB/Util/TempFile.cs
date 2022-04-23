@@ -29,5 +29,10 @@ namespace TestDB
         {
             await Task.Run(Dispose);
         }
+
+        public StreamWriter GetStreamWriter()
+        {
+            return new StreamWriter(this.FilePath);
+        }
     }
 }

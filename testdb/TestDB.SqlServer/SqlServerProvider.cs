@@ -99,16 +99,34 @@ namespace TestDB.SqlServer
             {
                 SqlConnection.ClearPool(connection);
             }
-            // kill spid
             using var newConnection = CreateNoDatabaseConnection(connectionString);
-            var spids = newConnection.ExecuteReaderAsList<int>($"select spid from sysprocesses WHERE dbid = db_id('{databaseName}')");
-            foreach (var spid in spids)
-            {
-                newConnection.ExecuteNonQuery($"kill {spid}");
-            }
+
+            var killActiveConnectionSql = BuildKillConnectionSql();
+            newConnection.ExecuteNonQuery(killActiveConnectionSql);
             newConnection.ExecuteNonQuery(
                  $"drop database if exists {IdentityName(GetDatabaseName(connectionString))}"
                  );
+
+            string BuildKillConnectionSql()
+            {
+                return $@"
+declare @sql as varchar(20), @spid as int
+select @spid = min(spid) 
+from sysprocesses  
+where dbid = db_id('{databaseName}') and spid != @@spid and status = 'running'
+
+while (@spid is not null)
+begin
+    print 'Killing process ' + cast(@spid as varchar) + ' ...'
+    set @sql = 'kill ' + cast(@spid as varchar)
+    exec (@sql)
+
+    select @spid = min(spid) 
+    from sysprocesses  
+    where dbid = db_id('{databaseName}') and spid != @@spid and status = 'running'
+end ";
+
+            }
         }
 
         public override string MakeReadOnly(string connectionString)

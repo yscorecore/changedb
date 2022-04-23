@@ -88,7 +88,14 @@ namespace TestDB.MySql
             {
                 MySqlConnection.ClearPool(connection);
             }
+            var databaseName = GetDatabaseName(connectionString);
             using var newConnection = CreateNoDatabaseConnection(connectionString);
+            // active connection ids
+            var actionConnectionIds = newConnection.ExecuteReaderAsList<int>($"select id from information_schema.processlist where db='{databaseName}'");
+            foreach (var id in actionConnectionIds)
+            {
+                newConnection.ExecuteNonQuery($"kill {id}");
+            }
             newConnection.ExecuteNonQuery(
                  $"DROP DATABASE IF EXISTS {IdentityName(GetDatabaseName(connectionString))}"
                  );

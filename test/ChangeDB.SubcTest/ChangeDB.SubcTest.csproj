@@ -3,6 +3,13 @@
     <PropertyGroup>
         <RootNamespace>ChangeDB</RootNamespace>
     </PropertyGroup>
+    <ItemGroup>
+      <None Remove="testcases\**\*.*" />
+      <Content Include="testcases\**\*.*">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\ChangeDB.Agent.Postgres\ChangeDB.Agent.Postgres.csproj" />
@@ -15,25 +22,14 @@
       <ProjectReference Include="..\..\testdb\TestDB\TestDB.csproj" />
     </ItemGroup>
 
+
     <ItemGroup>
-      <None Update="migrations\sqlserver_basic.xml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="migrations\sqlserver_datatype.xml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="migrations\sqlserver_foreignkey.xml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="migrations\sqlserver_northwind.xml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="migrations\sqlserver_default_value.xml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="dumpsql\sqlserver_basic.xml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+      <Folder Include="testcases\databases\postgres\" />
+      <Folder Include="testcases\databases\mysql\" />
+      <Folder Include="testcases\databases\sqlce\" />
     </ItemGroup>
+
+
+
 
 </Project>

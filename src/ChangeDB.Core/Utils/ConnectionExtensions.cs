@@ -157,6 +157,11 @@ namespace ChangeDB
             using var reader = ExecuteReader(connection, sql);
             return reader.LoadData().ToList();
         }
+        public static List<object[]> ExecuteReaderAsDataArrayList(this IDbConnection connection, string sql)
+        {
+            using var reader = ExecuteReader(connection, sql);
+            return reader.LoadDataArray().ToList();
+        }
         public static List<Tuple<T1, T2>> ExecuteReaderAsList<T1, T2>(this IDbConnection connection, string sql)
         {
             var table = ExecuteReaderAsTable(connection, sql);
@@ -239,7 +244,7 @@ namespace ChangeDB
             //This is our datatable filled with data
             return table;
         }
-        private static IEnumerable<Dictionary<string, object>> LoadData(this IDataReader reader)
+        public static IEnumerable<Dictionary<string, object>> LoadData(this IDataReader reader)
         {
             using var schema = reader.GetSchemaTable();
             if (schema != null)
@@ -251,11 +256,27 @@ namespace ChangeDB
                 }
             }
         }
-        private static T ToValue<T>(this object val)
+        public static IEnumerable<object[]> LoadDataArray(this IDataReader reader)
+        {
+            using var schema = reader.GetSchemaTable();
+            if (schema != null)
+            {
+                var allColumns = schema.Rows.OfType<DataRow>().Select(p => p.FieldValue<string>("ColumnName")).ToList();
+                while (reader.Read())
+                {
+                    yield return allColumns.Select(p => reader[p].ToValue<object>()).ToArray();
+                }
+            }
+        }
+        public static T ToValue<T>(this object val)
         {
             if (val == null || val == DBNull.Value)
             {
                 return default(T);
+            }
+            if (val is T tval)
+            {
+                return tval;
             }
             else
             {
@@ -264,7 +285,7 @@ namespace ChangeDB
             }
         }
 
-        private static T FieldValue<T>(this DataRow row, int index) => row[index].ToValue<T>();
-        private static T FieldValue<T>(this DataRow row, string columnName) => row[columnName].ToValue<T>();
+        public static T FieldValue<T>(this DataRow row, int index) => row[index].ToValue<T>();
+        public static T FieldValue<T>(this DataRow row, string columnName) => row[columnName].ToValue<T>();
     }
 }

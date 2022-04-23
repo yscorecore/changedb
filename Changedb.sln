@@ -67,7 +67,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.Postgres.Uni
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.MySql.IntegrationTest", "test\ChangeDB.Agent.MySql.IntegrationTest\ChangeDB.Agent.MySql.IntegrationTest.csproj", "{05E0C334-B9F6-4496-8725-899BC5394322}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChangeDB.Agent.MySql.UnitTest", "test\ChangeDB.Agent.MySql.UnitTest\ChangeDB.Agent.MySql.UnitTest.csproj", "{51DAC443-6A8B-4400-A372-9616A153B523}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChangeDB.Agent.MySql.UnitTest", "test\ChangeDB.Agent.MySql.UnitTest\ChangeDB.Agent.MySql.UnitTest.csproj", "{51DAC443-6A8B-4400-A372-9616A153B523}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "subc", "subc", "{541BF71F-7E84-4E1C-8D4A-CF708525625C}"
 EndProject
