@@ -22,7 +22,7 @@ namespace ChangeDB
         [MemberData(nameof(AllTestCases))]
         public async Task ShouldMigrationSuccess(string testcase, string sourceType, string databaseName, string targetType)
         {
-            var caseFolder = Path.Combine("testcases", "migration", testcase);
+            var caseFolder = Path.Combine(GetTestCasesFolder(), "migration", testcase);
 
 
             using var sourceDatabase = Databases.CreateDatabaseFromFile(sourceType, true, GetDatabaseFile(sourceType, databaseName));
@@ -43,7 +43,7 @@ namespace ChangeDB
 
         public static IEnumerable<object[]> AllTestCases()
         {
-            var rootFolder = Path.Combine("testcases", "migration");
+            var rootFolder = Path.Combine(GetTestCasesFolder(), "migration");
             foreach (var testcasePath in Directory.GetDirectories(rootFolder))
             {
                 var testcaseName = Path.GetFileName(testcasePath);

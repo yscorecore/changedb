@@ -4,7 +4,7 @@
     <RunConfiguration>
         <EnvironmentVariables>
             <CHANGEDB_WRITE_MODE>true</CHANGEDB_WRITE_MODE>
-            <TESTCASES_FOLDER>./testcases</TESTCASES_FOLDER>
+            <CHANGEDB_TESTCASES_FOLDER>../../../testcases</CHANGEDB_TESTCASES_FOLDER>
         </EnvironmentVariables>
     </RunConfiguration>
 </RunSettings>

@@ -76,11 +76,14 @@ namespace ChangeDB
 
         }
 
-
+        public static string GetTestCasesFolder()
+        {
+            return Environment.GetEnvironmentVariable("CHANGEDB_TESTCASES_FOLDER") ?? "testcases";
+        }
 
         public static string GetDatabaseFile(string databaseType, string databaseName)
         {
-            return Path.Combine("testcases", "databases", databaseType, $"{databaseName}.sql");
+            return Path.Combine(GetTestCasesFolder(), "databases", databaseType, $"{databaseName}.sql");
 
         }
     }

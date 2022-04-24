@@ -1,1 +1,19 @@
-﻿{}
+{
+  "dbo.abc": {
+    "columns": {
+      "id": "System.Int32",
+      "val": "System.Int32"
+    },
+    "rowCount": 2,
+    "rows": [
+      [
+        1,
+        1
+      ],
+      [
+        2,
+        2
+      ]
+    ]
+  }
+}

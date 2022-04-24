@@ -1,1 +1,53 @@
-﻿{}
+{
+  "tables": [
+    {
+      "name": "abc",
+      "schema": "dbo",
+      "columns": [
+        {
+          "name": "id",
+          "dataType": {
+            "dbType": "Int"
+          },
+          "isNullable": false,
+          "isStored": false,
+          "isIdentity": true,
+          "identityInfo": {
+            "startValue": 1,
+            "incrementBy": 1,
+            "isCyclic": false,
+            "currentValue": 2,
+            "values": {
+              "Npgsql::IdentityType": "ALWAYS"
+            }
+          },
+          "values": {
+            "changedb::OriginStoreType": "integer"
+          }
+        },
+        {
+          "name": "val",
+          "dataType": {
+            "dbType": "Int"
+          },
+          "isNullable": true,
+          "isStored": false,
+          "isIdentity": false,
+          "values": {
+            "changedb::OriginStoreType": "integer"
+          }
+        }
+      ],
+      "primaryKey": {
+        "name": "PK__abc__3213E83F5E860EF9",
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": [],
+      "foreignKeys": [],
+      "uniques": []
+    }
+  ],
+  "sequences": []
+}

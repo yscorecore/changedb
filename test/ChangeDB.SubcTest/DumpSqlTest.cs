@@ -24,7 +24,7 @@ namespace ChangeDB
         [MemberData(nameof(AllTestCases))]
         public async Task ShouldDumpSuccess(string testcase, string sourceType, string databaseName, string targetType)
         {
-            var caseFolder = Path.Combine("testcases", "dumpsql", testcase);
+            var caseFolder = Path.Combine(GetTestCasesFolder(), "dumpsql", testcase);
             var dumper = ServiceProvider.GetRequiredService<IDatabaseSqlDumper>();
             using var sourceDatabase = Databases.CreateDatabaseFromFile(sourceType, true, GetDatabaseFile(sourceType, databaseName));
             using var tempFile = new TempFile();
@@ -61,7 +61,7 @@ namespace ChangeDB
         }
         public static IEnumerable<object[]> AllTestCases()
         {
-            var rootFolder = Path.Combine("testcases", "dumpsql");
+            var rootFolder = Path.Combine(GetTestCasesFolder(), "dumpsql");
 
             foreach (var testcasePath in Directory.GetDirectories(rootFolder))
             {

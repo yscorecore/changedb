@@ -1,1 +1,1 @@
-﻿ dotnet test -s .\Properties\writemode.runsettings
+﻿ dotnet test -s .\generate_assert_data.runsettings
