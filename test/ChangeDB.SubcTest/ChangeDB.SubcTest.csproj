@@ -24,12 +24,102 @@
 
 
     <ItemGroup>
-      <Folder Include="testcases\databases\postgres\" />
-      <Folder Include="testcases\databases\mysql\" />
-      <Folder Include="testcases\databases\sqlce\" />
+        <None Include="generate_assert_data.runsettings">
+            <DependentUpon>generate_assert_data.ps1</DependentUpon>
+        </None>
     </ItemGroup>
-
-
+    <UsingTask TaskName="GenerateDefaultTestCase" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildBinPath)\Microsoft.Build.Tasks.Core.dll">
+        <ParameterGroup>
+            <TestCasesPath ParameterType="System.String" Required="true" />
+        </ParameterGroup>
+        <Task>
+            <Using Namespace="System" />
+            <Using Namespace="System.IO" />
+            <Using Namespace="System.Linq" />
+            <Using Namespace="System.Collections.Generic" />    
+            <Code Type="Fragment" Language="C#">
+                <![CDATA[
+        IEnumerable<(string DbType, string DbName)> GetSourceDatabases()
+        {
+            var testcaseFolder = TestCasesPath;
+            var databaseFolder = Path.Combine(testcaseFolder, "databases");
+            foreach (var databaseFile in Directory.GetFiles(databaseFolder, "*.sql", SearchOption.AllDirectories))
+            {
+                var databaseName = Path.GetFileNameWithoutExtension(databaseFile);
+                var databaseType = Path.GetFileName(Path.GetDirectoryName(databaseFile));
+                yield return (databaseType, databaseName);
+            }
+        }
+        IEnumerable<string> GetDatabaseTypes()
+        {
+            return GetSourceDatabases().Select(p => p.DbType).Distinct();
+        }
+        void LogMessage(string text)
+        {
+            Log.LogMessage(MessageImportance.High, text);
+        }
+        void TouchFile(string folder, string fileName, string defaultContent = "")
+        {
+            var filePath = Path.Combine(folder, fileName);
+            if (!File.Exists(filePath))
+            {
+                if (!Directory.Exists(folder))
+                {
+                    Directory.CreateDirectory(folder);
+                    LogMessage($"Directory {folder} created.");
+                }
+                File.WriteAllText(filePath, defaultContent ?? string.Empty);
+                LogMessage($"File {filePath} created.");
+            }
+        }
+        void GenerateDumpSql()
+        {
+            var dumpsqlFolder = Path.Combine(TestCasesPath, "dumpsql");
+            var supportDatabaseTypes = GetDatabaseTypes();
+            foreach (var caseFolder in Directory.GetDirectories(dumpsqlFolder))
+            {
+                TouchFile(caseFolder, "settings.json", "{}");
+                foreach (var item in GetSourceDatabases())
+                {
+                    foreach (var targetType in supportDatabaseTypes)
+                    {
+                        var databaseCaseFolder = Path.Combine(caseFolder, $"{item.DbType}_{item.DbName}_{targetType}");
+                        TouchFile(databaseCaseFolder, "dump.sql");
+                    }
+                }
+            }
+        }
+        void GenerateMigration()
+        {
+            var migrationFolder = Path.Combine(TestCasesPath, "migration");
+            foreach (var caseFolder in Directory.GetDirectories(migrationFolder))
+            {
+                TouchFile(caseFolder, "settings.json", "{}");
+                foreach (var item in GetSourceDatabases())
+                {
+                    foreach (var targetType in GetDatabaseTypes())
+                    {
+                        var databaseCaseFolder = Path.Combine(caseFolder, $"{item.DbType}_{item.DbName}_{targetType}");
+                        TouchFile(databaseCaseFolder, "data.json", "{}");
+                        TouchFile(databaseCaseFolder, "schema.json", "{}");
+                    }
+                }
+            }
+        }
+        void GenerateAll()
+        {
+            GenerateDumpSql();
+            GenerateMigration();
+        }
+        GenerateAll();
+            ]]>
+            </Code>
+        </Task>
+    </UsingTask>
+   
+    <Target Name="generate_default_case">
+        <GenerateDefaultTestCase TestCasesPath="$(ProjectDir)/testcases" />
+    </Target>
 
 
 </Project>

@@ -24,7 +24,6 @@ namespace ChangeDB
         {
             var caseFolder = Path.Combine(GetTestCasesFolder(), "migration", testcase);
 
-
             using var sourceDatabase = Databases.CreateDatabaseFromFile(sourceType, true, GetDatabaseFile(sourceType, databaseName));
             using var targetDatabase = Databases.RequestDatabase(targetType);
             var migrationContext = new MigrationContext()
