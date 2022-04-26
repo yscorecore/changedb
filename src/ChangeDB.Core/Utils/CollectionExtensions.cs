@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 
 namespace ChangeDB
@@ -55,5 +56,22 @@ namespace ChangeDB
             return result;
         }
         public static Func<int> NewSequence(int start = 0) => () => start++;
+
+
+        public static async IAsyncEnumerable<TItem> ToItems<TSource, TItem>(this IAsyncEnumerable<TSource> sources, Func<TSource, IEnumerable<TItem>> selector)
+        {
+            _ = selector ?? throw new ArgumentNullException(nameof(selector));
+            await foreach (var source in sources)
+            {
+                foreach (var item in selector(source))
+                {
+                    yield return item;
+                }
+            }
+        }
+        public static IAsyncEnumerable<TItem> ToItems<TItem>(this IAsyncEnumerable<IEnumerable<TItem>> sources)
+        {
+            return sources.ToItems(p => p);
+        }
     }
 }

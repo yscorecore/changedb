@@ -21,7 +21,7 @@ namespace ChangeDB.Agent.Postgres
 
         private readonly IMetadataMigrator _metadataMigrator = PostgresMetadataMigrator.Default;
 
-        private readonly MigrationContext _migrationContext;
+        private readonly AgentContext _agentContext;
 
         private readonly DbConnection _dbConnection;
 
@@ -36,10 +36,11 @@ namespace ChangeDB.Agent.Postgres
 
             _dbConnection = database.Connection;
 
-            _migrationContext = new MigrationContext
+            _agentContext = new AgentContext
             {
-                TargetConnection = _dbConnection,
-                SourceConnection = _dbConnection
+                Agent = new PostgresAgent(),
+                Connection = database.Connection,
+                ConnectionString = database.ConnectionString
             };
             this._databaseEnvironment = databaseEnvironment;
         }
@@ -63,7 +64,7 @@ namespace ChangeDB.Agent.Postgres
                 "INSERT INTO ts.table1(id,nm) VALUES(3,'name3');"
              );
 
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             var tableDesc = databaseDesc.Tables.Single(p => p.Name == "table1");
 
             var tableData = _dbConnection.ExecuteReaderAsTable("select * from ts.table1");
@@ -106,7 +107,7 @@ namespace ChangeDB.Agent.Postgres
                  "INSERT INTO ts.table1(id,nm) VALUES(3,'name3');"
               );
 
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             var tableDesc = databaseDesc.Tables.Single(p => p.Name == "table1");
 
             var tableData = _dbConnection.ExecuteReaderAsTable("select * from ts.table1");
@@ -141,7 +142,7 @@ namespace ChangeDB.Agent.Postgres
                  "INSERT INTO ts.table1(id,nm) VALUES(3,'name3');"
               );
 
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             var tableDesc = databaseDesc.Tables.Single(p => p.Name == "table1");
 
             var tableData1 = _dbConnection.ExecuteReaderAsTable("select * from ts.table1 limit 1");

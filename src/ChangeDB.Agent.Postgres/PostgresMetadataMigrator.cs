@@ -16,19 +16,19 @@ namespace ChangeDB.Agent.Postgres
         public static readonly PostgresMetadataMigrator Default = new PostgresMetadataMigrator();
 
         [Obsolete]
-        public Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext)
+        public Task<DatabaseDescriptor> GetDatabaseDescriptor(AgentContext agentContext)
         {
 
-            var databaseDescriptor = PostgresUtils.GetDataBaseDescriptorByEfCore(migrationContext.SourceConnection,
+            var databaseDescriptor = PostgresUtils.GetDataBaseDescriptorByEfCore(agentContext.Connection,
                  PostgresDataTypeMapper.Default,
                  PostgresSqlExpressionTranslator.Default);
             return Task.FromResult(databaseDescriptor);
         }
-        public Task PreMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
+        public Task PreMigrateMetadata(DatabaseDescriptor databaseDescriptor, AgentContext agentContext)
         {
             var dataTypeMapper = PostgresDataTypeMapper.Default;
             var sqlExpression = PostgresSqlExpressionTranslator.Default;
-            var dbConnection = migrationContext.TargetConnection;
+            var dbConnection = agentContext.Connection;
             CreateSchemas();
             CreateTables();
             CreatePrimaryKeys();
@@ -42,7 +42,7 @@ namespace ChangeDB.Agent.Postgres
                 {
                     var schemaName = PostgresUtils.IdentityName(schema);
                     var sql = $"CREATE SCHEMA IF NOT EXISTS {schemaName}";
-                    migrationContext.CreateTargetObject(sql, ObjectType.Schema, schemaName);
+                    agentContext.CreateTargetObject(sql, ObjectType.Schema, schemaName);
                 }
             }
             void CreateTables()
@@ -52,7 +52,7 @@ namespace ChangeDB.Agent.Postgres
                     var tableFullName = PostgresUtils.IdentityName(table.Schema, table.Name);
                     var columnDefines = string.Join(", ", table.Columns.Select(p => $"{BuildColumnBasicDesc(p)}"));
                     var sql = $"CREATE TABLE {tableFullName} ({columnDefines});";
-                    migrationContext.CreateTargetObject(sql, ObjectType.Table, tableFullName);
+                    agentContext.CreateTargetObject(sql, ObjectType.Table, tableFullName);
                 }
                 string BuildColumnBasicDesc(ColumnDescriptor column)
                 {
@@ -149,7 +149,7 @@ namespace ChangeDB.Agent.Postgres
                         var uniquename = PostgresUtils.IdentityName(unique.Name);
                         var uniqueColumns = string.Join(",", unique.Columns.Select(p => PostgresUtils.IdentityName(p)));
                         var sql = $"ALTER TABLE {tableFullName} ADD CONSTRAINT {uniquename} unique ({uniqueColumns})";
-                        migrationContext.CreateTargetObject(sql, ObjectType.Unique, uniquename, tableFullName);
+                        agentContext.CreateTargetObject(sql, ObjectType.Unique, uniquename, tableFullName);
                     }
                 }
             }
@@ -165,22 +165,22 @@ namespace ChangeDB.Agent.Postgres
                         if (index.IsUnique)
                         {
                             var sql = $"CREATE UNIQUE INDEX {indexName} ON {tableFullName}({indexColumns})";
-                            migrationContext.CreateTargetObject(sql, ObjectType.UniqueIndex, indexName, tableFullName);
+                            agentContext.CreateTargetObject(sql, ObjectType.UniqueIndex, indexName, tableFullName);
                         }
                         else
                         {
                             var sql = $"CREATE INDEX {indexName} ON {tableFullName}({indexColumns})";
-                            migrationContext.CreateTargetObject(sql, ObjectType.Index, indexName, tableFullName);
+                            agentContext.CreateTargetObject(sql, ObjectType.Index, indexName, tableFullName);
                         }
                     }
                 }
             }
         }
-        public Task PostMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
+        public Task PostMigrateMetadata(DatabaseDescriptor databaseDescriptor, AgentContext agentContext)
         {
             var dataTypeMapper = PostgresDataTypeMapper.Default;
             var sqlExpression = PostgresSqlExpressionTranslator.Default;
-            var dbConnection = migrationContext.TargetConnection;
+            var dbConnection = agentContext.Connection;
             AlterNotnullColumns();
             AddDefaultValues();
             AddForeignKeys();
@@ -229,7 +229,7 @@ namespace ChangeDB.Agent.Postgres
                         var principalTable = PostgresUtils.IdentityName(foreignKey.PrincipalSchema, foreignKey.PrincipalTable);
                         var sql =
                             $"ALTER TABLE {tableName} ADD CONSTRAINT {foreignKeyName} FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})";
-                        migrationContext.CreateTargetObject(sql, ObjectType.ForeignKey, foreignKeyName, tableName);
+                        agentContext.CreateTargetObject(sql, ObjectType.ForeignKey, foreignKeyName, tableName);
                     }
                 }
             }

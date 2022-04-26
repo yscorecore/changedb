@@ -19,12 +19,13 @@ namespace ChangeDB.Agent.SqlCe
             var metadataMigrator = SqlCeMetadataMigrator.Default;
             var defaultValue = string.IsNullOrEmpty(sqlExpression) ? string.Empty : $"default {sqlExpression}";
             using var database = CreateDatabase(false, $"create table t1(c1 {storeType} {defaultValue})");
-            var context = new MigrationContext
+            var context = new AgentContext
             {
-                SourceConnection = database.Connection
+                Connection = database.Connection,
+                ConnectionString = database.ConnectionString
             };
 
-            var databaseDesc = await metadataMigrator.GetSourceDatabaseDescriptor(context);
+            var databaseDesc = await metadataMigrator.GetDatabaseDescriptor(context);
             var tableDesc = databaseDesc.Tables.Single();
             var columnDesc = tableDesc.Columns.Single();
             columnDesc.DefaultValue.Should().BeEquivalentTo(sqlExpressionDescriptor);
@@ -36,10 +37,10 @@ namespace ChangeDB.Agent.SqlCe
             var metadataMigrator = SqlCeMetadataMigrator.Default;
 
             using var database = CreateDatabase(false);
-            var context = new MigrationContext
+            var context = new AgentContext
             {
-                SourceConnection = database.Connection,
-                TargetConnection = database.Connection,
+                Connection = database.Connection,
+                ConnectionString = database.ConnectionString
             };
             var databaseDesc = new DatabaseDescriptor
             {
@@ -60,8 +61,8 @@ namespace ChangeDB.Agent.SqlCe
                      }
                 }
             };
-            await metadataMigrator.MigrateAllTargetMetaData(databaseDesc, context);
-            var databaseDescFromDB = await metadataMigrator.GetSourceDatabaseDescriptor(context);
+            await metadataMigrator.MigrateAllMetaData(databaseDesc, context);
+            var databaseDescFromDB = await metadataMigrator.GetDatabaseDescriptor(context);
             var tableDesc = databaseDescFromDB.Tables.Single();
             var columnDesc = tableDesc.Columns.Single();
             columnDesc.GetOriginDefaultValue().Should().Be(sqlExpression);
@@ -83,10 +84,10 @@ namespace ChangeDB.Agent.SqlCe
             var metadataMigrator = SqlCeMetadataMigrator.Default;
 
             using var database = CreateDatabase(false);
-            var context = new MigrationContext
+            var context = new AgentContext
             {
-                SourceConnection = database.Connection,
-                TargetConnection = database.Connection,
+                Connection = database.Connection,
+                ConnectionString = database.ConnectionString
             };
             var databaseDesc = new DatabaseDescriptor
             {
@@ -112,7 +113,7 @@ namespace ChangeDB.Agent.SqlCe
                      }
                 }
             };
-            await metadataMigrator.MigrateAllTargetMetaData(databaseDesc, context);
+            await metadataMigrator.MigrateAllMetaData(databaseDesc, context);
             database.Connection.ExecuteNonQuery("insert into t1(id) values(1)");
             var generatedValue = database.Connection.ExecuteScalar("select c1 from t1 where id =1");
             generatedValue.Should().BeEquivalentTo(constant);

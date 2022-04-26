@@ -27,6 +27,15 @@ namespace ChangeDB.Migration
         public bool OptimizeInsertion { get; set; } = true;
     }
 
+    public enum InsertionKind
+    {
+        Default,
+        SingleRow,
+        BatchRow,
+        BlockCopy
+    }
+
+
     [Flags]
     public enum MigrationScope
     {

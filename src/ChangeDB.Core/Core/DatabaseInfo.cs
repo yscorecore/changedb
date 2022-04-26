@@ -1,4 +1,6 @@
-﻿namespace ChangeDB.Migration
+﻿using System;
+
+namespace ChangeDB
 {
     public class DatabaseInfo
     {

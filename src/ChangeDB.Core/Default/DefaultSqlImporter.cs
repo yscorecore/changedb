@@ -19,18 +19,15 @@ namespace ChangeDB.Default
             var targetAgent = AgentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
             await using var targetConnection = targetAgent.ConnectionProvider.CreateConnection(context.TargetDatabase.ConnectionString);
 
-            var migrationContext = new MigrationContext()
+            var migrationContext = new AgentContext()
             {
-                TargetConnection = targetConnection,
-                Target = new AgentRunTimeInfo()
-                {
-                    Agent = targetAgent,
-                }
+                Connection = targetConnection,
+
             };
-            migrationContext.EventReporter.ObjectCreated += (s, e) =>
-            {
-                context.ReportObjectCreated(e);
-            };
+            //migrationContext.EventReporter.ObjectCreated += (s, e) =>
+            //{
+            //    context.ReportObjectCreated(e);
+            //};
             if (context.ReCreateTargetDatabase)
             {
                 await CreateTargetDatabase(targetAgent, context.TargetDatabase.ConnectionString);

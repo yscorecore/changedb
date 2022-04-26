@@ -14,7 +14,7 @@ namespace ChangeDB.Agent.SqlServer
     public class SqlServerMetadataMigratorTest : BaseTest, IDisposable
     {
         private readonly IMetadataMigrator _metadataMigrator = SqlServerMetadataMigrator.Default;
-        private readonly MigrationContext _migrationContext;
+        private readonly AgentContext _agentContext;
         private readonly DbConnection _dbConnection;
         private readonly IDatabase _database;
 
@@ -22,10 +22,12 @@ namespace ChangeDB.Agent.SqlServer
         {
             _database = CreateDatabase(false);
             _dbConnection = _database.Connection;
-            _migrationContext = new MigrationContext
+            var agent = new SqlServerAgent();
+            _agentContext = new AgentContext
             {
-                TargetConnection = _dbConnection,
-                SourceConnection = _dbConnection
+                Connection = _dbConnection,
+                ConnectionString = _database.ConnectionString,
+                Agent = agent,
             };
         }
 
@@ -39,7 +41,7 @@ namespace ChangeDB.Agent.SqlServer
         public async Task ShouldReturnEmptyDescriptorWhenGetDatabaseDescriptionAndGivenEmptyDatabase()
         {
 
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Should().BeEquivalentTo(new DatabaseDescriptor
             {
                 Tables = new List<TableDescriptor>(),
@@ -53,7 +55,7 @@ namespace ChangeDB.Agent.SqlServer
             _dbConnection.ExecuteNonQuery(
                "create schema ts",
                "create table ts.table1(id int ,nm varchar(64));");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Should().HaveCount(1);
             databaseDesc.Tables.First().Should().Match<TableDescriptor>(p => p.Schema == "ts" && p.Name == "table1");
         }
@@ -65,7 +67,7 @@ namespace ChangeDB.Agent.SqlServer
             _dbConnection.ExecuteNonQuery(
                "create schema ts",
                "create table ts.table1(id int, nm int NOT NULL);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             var columns = databaseDesc.Tables.Single().Columns;
             columns.First().IsNullable.Should().BeTrue();
             columns.Last().IsNullable.Should().BeFalse();
@@ -78,7 +80,7 @@ namespace ChangeDB.Agent.SqlServer
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64));");
 
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Should().HaveCount(1);
             databaseDesc.Tables.First().PrimaryKey.Should()
                 .Match<PrimaryKeyDescriptor>(p => p.Name != null)
@@ -91,7 +93,7 @@ namespace ChangeDB.Agent.SqlServer
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm varchar(64),primary key(id,nm));");
 
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Should().HaveCount(1);
             databaseDesc.Tables.First().PrimaryKey.Should()
                 .Match<PrimaryKeyDescriptor>(p => p.Name != null)
@@ -105,7 +107,7 @@ namespace ChangeDB.Agent.SqlServer
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm varchar(64));",
                 "create index nm_index ON table1 (nm);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Single().Indexes.Should()
                 .BeEquivalentTo(new List<IndexDescriptor>
                 {
@@ -123,7 +125,7 @@ namespace ChangeDB.Agent.SqlServer
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm varchar(64));",
                 "create index id_nm_index ON table1 (id,nm);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.First().Indexes.Should()
                 .ContainSingle().And
                 .ContainEquivalentOf(
@@ -140,7 +142,7 @@ namespace ChangeDB.Agent.SqlServer
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm varchar(64));",
                 "create unique index nm_index ON table1 (nm);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.First().Indexes.Should()
                 .ContainSingle().And
                 .ContainEquivalentOf(
@@ -157,7 +159,7 @@ namespace ChangeDB.Agent.SqlServer
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64));",
                 "create index nm_index ON table1 (nm);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.First().Indexes.Should()
                 .ContainSingle().And
                 .ContainEquivalentOf(
@@ -176,7 +178,7 @@ namespace ChangeDB.Agent.SqlServer
                 "create table table1(id int primary key,nm varchar(64));",
                 "create table table2(id int, id1 int);",
                 "ALTER TABLE table2 add constraint table2_id1_fkey foreign key(id1) references table1(id);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             var foreignKey = databaseDesc.Tables.Single(p => p.Name == "table2").ForeignKeys.Single();
             foreignKey.Should().BeEquivalentTo(new ForeignKeyDescriptor
             {
@@ -196,7 +198,7 @@ namespace ChangeDB.Agent.SqlServer
                 "create table table1(id int,nm int,primary key(id,nm));",
                 "create table table2(id2 int, nm2 int);",
                 "ALTER TABLE table2 add constraint table2_id2_nm2_fkey foreign key(id2, nm2) references table1(id, nm);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table2").Single().ForeignKeys.Should()
                 .ContainSingle().And.ContainEquivalentOf(new ForeignKeyDescriptor
                 {
@@ -215,7 +217,7 @@ namespace ChangeDB.Agent.SqlServer
 
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64) unique);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Single().Uniques.Should()
                 .ContainSingle().Which.Columns.Should().BeEquivalentTo(new List<string> { "nm" });
         }
@@ -225,7 +227,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm int,unique(id,nm));");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Single().Uniques.Should()
                 .ContainSingle().Which.Columns.Should().BeEquivalentTo(new List<string> { "id", "nm" });
         }
@@ -234,7 +236,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             _dbConnection.ExecuteNonQuery(
                    "create table table1(id int identity(2,5));");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -262,7 +264,7 @@ namespace ChangeDB.Agent.SqlServer
                 "create table table1(id int identity(2,5),val int);",
                 "insert into table1(val) VALUES(123)"
             );
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -296,7 +298,7 @@ namespace ChangeDB.Agent.SqlServer
                    "insert into table1(val) VALUES(123)",
                    "insert into table1(val) VALUES(123)"
                    );
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -328,7 +330,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             _dbConnection.ExecuteNonQuery(
                    "create table table1(abc uniqueidentifier default newid());");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -345,7 +347,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             _dbConnection.ExecuteNonQuery(
                    "create table table1(id datetime default getdate());");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -362,7 +364,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int NOT NULL default 0,nm varchar(10) default 'abc', val money default 0);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -398,8 +400,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -419,8 +421,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             var exceptedDatabaseDesc = databaseDesc.DeepCloneAndSet(p => p.Tables.ForEach(t => t.Schema = "dbo"));
             actualDatabaseDesc.Should().BeEquivalentTo(exceptedDatabaseDesc);
         }
@@ -445,8 +447,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -470,8 +472,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Tables.Single().PrimaryKey.Name.Should().StartWith("PK__table1");
         }
 
@@ -497,8 +499,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -526,8 +528,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -553,8 +555,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -581,8 +583,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -607,8 +609,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -630,8 +632,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -677,8 +679,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -727,8 +729,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -755,8 +757,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -786,8 +788,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -816,8 +818,8 @@ namespace ChangeDB.Agent.SqlServer
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 

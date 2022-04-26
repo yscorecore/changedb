@@ -11,17 +11,17 @@ namespace ChangeDB.Agent.SqlServer
         public static readonly IMetadataMigrator Default = new SqlServerMetadataMigrator();
 
         [System.Obsolete]
-        public virtual Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext)
+        public virtual Task<DatabaseDescriptor> GetDatabaseDescriptor(AgentContext agentContext)
         {
-            var databaseDescriptor = GetDataBaseDescriptorByEFCore(migrationContext.SourceConnection);
+            var databaseDescriptor = GetDataBaseDescriptorByEFCore(agentContext.Connection);
             return Task.FromResult(databaseDescriptor);
         }
 
-        public virtual Task PreMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
+        public virtual Task PreMigrateMetadata(DatabaseDescriptor databaseDescriptor, AgentContext agentContext)
         {
             var dataTypeMapper = SqlServerDataTypeMapper.Default;
             var sqlExpressionTranslator = SqlServerSqlExpressionTranslator.Default;
-            var dbConnection = migrationContext.TargetConnection;
+            var dbConnection = agentContext.Connection;
             CreateSchemas();
             CreateTables();
             CreatePrimaryKeys();
@@ -34,7 +34,7 @@ namespace ChangeDB.Agent.SqlServer
                     var schemaName = IdentityName(schema);
                     var sql =
                         $"IF NOT EXISTS (SELECT  * FROM SYS.SCHEMAS WHERE NAME = N'{schema}') EXEC('CREATE SCHEMA {IdentityName(schema)}')";
-                    migrationContext.CreateTargetObject(sql, ObjectType.Schema, schemaName);
+                    agentContext.CreateTargetObject(sql, ObjectType.Schema, schemaName);
                 }
             }
             void CreateTables()
@@ -44,7 +44,7 @@ namespace ChangeDB.Agent.SqlServer
                     var tableFullName = IdentityName(table.Schema, table.Name);
                     var columnDefines = string.Join(", ", table.Columns.Select(p => $"{BuildColumnBasicDesc(p)}"));
                     var sql = $"CREATE TABLE {tableFullName} ({columnDefines});";
-                    migrationContext.CreateTargetObject(sql, ObjectType.Table, tableFullName);
+                    agentContext.CreateTargetObject(sql, ObjectType.Table, tableFullName);
                 }
                 string BuildColumnBasicDesc(ColumnDescriptor column)
                 {
@@ -95,11 +95,11 @@ namespace ChangeDB.Agent.SqlServer
 
         }
 
-        public virtual Task PostMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
+        public virtual Task PostMigrateMetadata(DatabaseDescriptor databaseDescriptor, AgentContext agentContext)
         {
             var dataTypeMapper = SqlServerDataTypeMapper.Default;
             var sqlExpressionTranslator = SqlServerSqlExpressionTranslator.Default;
-            var dbConnection = migrationContext.TargetConnection;
+            var dbConnection = agentContext.Connection;
             AlterNotNullColumns();
             AddDefaultValues();
             CreateUniques();
@@ -149,12 +149,12 @@ namespace ChangeDB.Agent.SqlServer
                         if (index.IsUnique)
                         {
                             var sql = $"CREATE UNIQUE INDEX {indexName} ON {tableFullName}({indexColumns});";
-                            migrationContext.CreateTargetObject(sql, ObjectType.UniqueIndex, indexName, tableFullName);
+                            agentContext.CreateTargetObject(sql, ObjectType.UniqueIndex, indexName, tableFullName);
                         }
                         else
                         {
                             var sql = $"CREATE INDEX {indexName} ON {tableFullName}({indexColumns});";
-                            migrationContext.CreateTargetObject(sql, ObjectType.Index, indexName, tableFullName);
+                            agentContext.CreateTargetObject(sql, ObjectType.Index, indexName, tableFullName);
                         }
                     }
                 }
@@ -196,7 +196,7 @@ namespace ChangeDB.Agent.SqlServer
                         var sql =
                             $"ALTER TABLE {tableFullName} ADD CONSTRAINT {foreignKeyName}" +
                             $" FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})";
-                        migrationContext.CreateTargetObject(sql, ObjectType.ForeignKey, foreignKeyName, tableFullName);
+                        agentContext.CreateTargetObject(sql, ObjectType.ForeignKey, foreignKeyName, tableFullName);
 
                     }
                 }

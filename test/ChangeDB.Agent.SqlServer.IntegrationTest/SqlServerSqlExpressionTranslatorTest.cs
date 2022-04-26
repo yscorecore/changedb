@@ -19,12 +19,13 @@ namespace ChangeDB.Agent.SqlServer
             var metadataMigrator = SqlServerMetadataMigrator.Default;
             var defaultValue = string.IsNullOrEmpty(sqlExpression) ? string.Empty : $"default {sqlExpression}";
             using var database = CreateDatabase(false, $"create table t1(c1 {storeType} {defaultValue})");
-            var context = new MigrationContext
+            var context = new AgentContext
             {
-                SourceConnection = database.Connection
+                ConnectionString = database.ConnectionString,
+                Connection = database.Connection,
             };
 
-            var databaseDesc = await metadataMigrator.GetSourceDatabaseDescriptor(context);
+            var databaseDesc = await metadataMigrator.GetDatabaseDescriptor(context);
             var tableDesc = databaseDesc.Tables.Single();
             var columnDesc = tableDesc.Columns.Single();
             columnDesc.DefaultValue.Should().BeEquivalentTo(sqlExpressionDescriptor);
@@ -36,10 +37,10 @@ namespace ChangeDB.Agent.SqlServer
             var metadataMigrator = SqlServerMetadataMigrator.Default;
 
             using var database = CreateDatabase(false);
-            var context = new MigrationContext
+            var context = new AgentContext
             {
-                SourceConnection = database.Connection,
-                TargetConnection = database.Connection,
+                ConnectionString = database.ConnectionString,
+                Connection = database.Connection,
             };
             var databaseDesc = new DatabaseDescriptor
             {
@@ -60,9 +61,9 @@ namespace ChangeDB.Agent.SqlServer
                      }
                 }
             };
-            await metadataMigrator.MigrateAllTargetMetaData(databaseDesc, context);
+            await metadataMigrator.MigrateAllMetaData(databaseDesc, context);
 
-            var databaseDescFromDB = await metadataMigrator.GetSourceDatabaseDescriptor(context);
+            var databaseDescFromDB = await metadataMigrator.GetDatabaseDescriptor(context);
             var tableDesc = databaseDescFromDB.Tables.Single();
             var columnDesc = tableDesc.Columns.Single();
             columnDesc.GetOriginDefaultValue().Should().Be(sqlExpression);

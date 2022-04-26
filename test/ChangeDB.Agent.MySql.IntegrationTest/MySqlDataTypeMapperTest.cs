@@ -16,7 +16,7 @@ namespace ChangeDB.Agent.MySql
     {
         private readonly MySqlDataTypeMapper _dataTypeMapper = MySqlDataTypeMapper.Default;
         private readonly IMetadataMigrator _metadataMigrator = MySqlMetadataMigrator.Default;
-        private readonly MigrationContext _migrationContext;
+        private readonly AgentContext _agentContext;
         private readonly DbConnection _dbConnection;
         private readonly IDatabase _database;
 
@@ -25,11 +25,11 @@ namespace ChangeDB.Agent.MySql
         {
             _database = CreateDatabase(false);
             _dbConnection = _database.Connection;
-            _migrationContext = new MigrationContext
+            _agentContext = new AgentContext
             {
-                TargetConnection = _dbConnection,
-                SourceConnection = _dbConnection,
-                Source = new AgentRunTimeInfo { Agent = new MySqlAgent() },
+                Agent = new MySqlAgent(),
+                Connection = _database.Connection,
+                ConnectionString = _database.ConnectionString,
             };
         }
         public void Dispose()
@@ -105,7 +105,7 @@ namespace ChangeDB.Agent.MySql
         public async Task ShouldMapToCommonDataType(string storeType, CommonDataType commonDbType, int? arg1, int? arg2)
         {
             _dbConnection.ExecuteNonQuery($"create table table1(id {storeType});");
-            var databaseDescriptor = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDescriptor = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             var columnStoreType = databaseDescriptor.Tables.SelectMany(p => p.Columns).Select(p => p.GetOriginStoreType()).Single();
             var commonDataType = _dataTypeMapper.ToCommonDatabaseType(columnStoreType);
             var method = typeof(DataTypeDescriptor).GetMethod(Enum.GetName(commonDbType) ?? string.Empty,
@@ -124,7 +124,7 @@ namespace ChangeDB.Agent.MySql
         {
             var targetType = _dataTypeMapper.ToDatabaseStoreType(dataTypeDescriptor);
             _dbConnection.ExecuteNonQuery($"create table table1(id {targetType});");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             var targetTypeInDatabase = databaseDesc.Tables.SelectMany(p => p.Columns).Select(p => p.GetOriginStoreType()).First();
             targetTypeInDatabase.Should().Be(targetStoreType);
         }

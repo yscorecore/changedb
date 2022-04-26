@@ -31,99 +31,89 @@ namespace ChangeDB.Default
         {
             var sourceAgent = AgentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
             var targetAgent = AgentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
-            await using var sourceConnection = sourceAgent.ConnectionProvider.CreateConnection(context.SourceDatabase.ConnectionString);
-            var createNew = context.Setting.DropTargetDatabaseIfExists;
-            await using var targetConnection = new SqlScriptDbConnection(context.Writer);
-            context.SourceConnection = sourceConnection;
-            context.TargetConnection = targetConnection;
-            context.Source = new AgentRunTimeInfo
+
+            await using var sourceAgentContext = new AgentContext
             {
                 Agent = sourceAgent,
-                Descriptor = null,
-            };
-            context.Target = new AgentRunTimeInfo
-            {
-                Agent = targetAgent,
-                Descriptor = null,
+                Connection = sourceAgent.ConnectionProvider.CreateConnection(context.SourceDatabase.ConnectionString),
+                ConnectionString = context.SourceDatabase.ConnectionString,
+                EventReporter = null
             };
 
-            var sourceDatabaseDescriptor = await sourceAgent.MetadataMigrator.GetSourceDatabaseDescriptor(context);
+            await using var targetAgentContext = new AgentContext
+            {
+                Agent = targetAgent,
+                Connection = new SqlScriptDbConnection(context.Writer),
+                ConnectionString = string.Empty,
+                EventReporter = null
+            };
+
+
+            var sourceDatabaseDescriptor = await sourceAgent.MetadataMigrator.GetDatabaseDescriptor(sourceAgentContext);
 
             var databaseDescriptorMapper =
                 await _databaseMapper.MapDatabase(sourceDatabaseDescriptor, targetAgent.AgentSetting, context.Setting);
 
-            context.DatabaseMapper = databaseDescriptorMapper;
-            context.Source.Descriptor = databaseDescriptorMapper.Source;
-            context.Target.Descriptor = databaseDescriptorMapper.Target;
 
 
-            await DoDumpDatabase(context);
+            await DoDumpDatabase(context.Setting, databaseDescriptorMapper, sourceAgentContext, targetAgentContext);
             await ApplyCustomScripts(context);
             // flush to file
             await context.Writer.FlushAsync();
         }
 
         [Obsolete]
-        protected virtual async Task DoDumpDatabase(DumpContext dumpContext)
+        protected virtual async Task DoDumpDatabase(MigrationSetting setting, DatabaseDescriptorMapper mapper, AgentContext sourceContext, AgentContext targetContext)
         {
-            var (target, source, migrationSetting) = (dumpContext.Target, dumpContext.Source, dumpContext.Setting);
 
-
-            if (dumpContext.Setting.IncludeMeta)
+            if (setting.IncludeMeta)
             {
-                await PreDumpMetadata(target, dumpContext);
+                await PreDumpMetadata(mapper.Target, targetContext);
             }
 
-            if (dumpContext.Setting.IncludeData)
+            if (setting.IncludeData)
             {
-                await DumpData(dumpContext);
+                await DumpData(setting, mapper, sourceContext, targetContext);
             }
 
-            if (dumpContext.Setting.IncludeMeta)
+            if (setting.IncludeMeta)
             {
-                await PostDumpMetadata(target, dumpContext);
+                await PostDumpMetadata(mapper.Target, targetContext);
             }
         }
 
-        [Obsolete]
-        protected virtual async Task PreDumpMetadata(AgentRunTimeInfo target, DumpContext migrationContext)
+
+        protected virtual async Task PreDumpMetadata(DatabaseDescriptor target, AgentContext agentContext)
         {
-            migrationContext.RaiseStageChanged(StageKind.StartingPreMeta);
-            await target.Agent.MetadataMigrator.PreMigrateTargetMetadata(target.Descriptor, migrationContext);
-            migrationContext.RaiseStageChanged(StageKind.FinishedPreMeta);
+            agentContext.RaiseStageChanged(StageKind.StartingPreMeta);
+            await agentContext.Agent.MetadataMigrator.PreMigrateMetadata(target, agentContext);
+            agentContext.RaiseStageChanged(StageKind.FinishedPreMeta);
         }
 
-        [Obsolete]
-        protected virtual async Task PostDumpMetadata(AgentRunTimeInfo target, DumpContext migrationContext)
+        protected virtual async Task PostDumpMetadata(DatabaseDescriptor target, AgentContext agentContext)
         {
-            migrationContext.RaiseStageChanged(StageKind.StartingPostMeta);
-            await target.Agent.MetadataMigrator.PostMigrateTargetMetadata(target.Descriptor, migrationContext);
-            migrationContext.RaiseStageChanged(StageKind.FinishedPostMeta);
+            agentContext.RaiseStageChanged(StageKind.StartingPostMeta);
+            await agentContext.Agent.MetadataMigrator.PostMigrateMetadata(target, agentContext);
+            agentContext.RaiseStageChanged(StageKind.FinishedPostMeta);
         }
 
-        /* 项目“ChangeDB.Core(net6)”的未合并的更改
-        在此之前:
-                protected virtual async Task DumpData(DumpContext migrationContext)
-        在此之后:
-                [Obsolete]
-                protected virtual async Task DumpData(DumpContext migrationContext)
-        */
+
 
         [Obsolete]
-        protected virtual async Task DumpData(DumpContext migrationContext)
+        protected virtual async Task DumpData(MigrationSetting migrationSetting, DatabaseDescriptorMapper mapper, AgentContext sourceContext, AgentContext targetContext)
         {
-            migrationContext.EventReporter.RaiseStageChanged(StageKind.StartingTableData);
+            targetContext.RaiseStageChanged(StageKind.StartingTableData);
             if (NeedOrderByDependency())
             {
-                await MigrateTableInSingleTask(OrderByDependency(migrationContext.DatabaseMapper.TableMappers));
+                await MigrateTableInSingleTask(OrderByDependency(mapper.TableMappers));
             }
             else
             {
-                await MigrateTableInSingleTask(migrationContext.DatabaseMapper.TableMappers);
+                await MigrateTableInSingleTask(mapper.TableMappers);
             }
-            migrationContext.EventReporter.RaiseStageChanged(StageKind.FinishedTableData);
+            targetContext.RaiseStageChanged(StageKind.FinishedTableData);
 
-            bool NeedOrderByDependency() => migrationContext.Setting.MigrationScope == MigrationScope.Data;
+            bool NeedOrderByDependency() => migrationSetting.MigrationScope == MigrationScope.Data;
 
 
             async Task MigrateTableInSingleTask(IEnumerable<TableDescriptorMapper> tables)
@@ -131,7 +121,7 @@ namespace ChangeDB.Default
                 // single task
                 foreach (var tableMapper in tables)
                 {
-                    await DumpTable(migrationContext, tableMapper);
+                    await DumpTable(migrationSetting, tableMapper, sourceContext, targetContext);
                 }
             }
 
@@ -147,7 +137,7 @@ namespace ChangeDB.Default
                     {
                         // dependency loop, A->B, B->C, C->A, in this case can't handle
                         // TOTO REPORT WARNing
-                        migrationContext.RaiseWarning($"Cyclic dependence in tables [{BuildTableNames(cloneTables)}]");
+                        targetContext.RaiseWarning($"Cyclic dependence in tables [{BuildTableNames(cloneTables)}]");
                         AddResults(cloneTables.ToArray());
                         break;
                     }
@@ -219,21 +209,20 @@ namespace ChangeDB.Default
         }
 
         [Obsolete]
-        protected virtual async Task DumpTable(DumpContext dumpContext, TableDescriptorMapper tableMapper)
+        protected virtual async Task DumpTable(MigrationSetting migrationSetting, TableDescriptorMapper tableMapper, AgentContext sourceContext, AgentContext targetContext)
         {
-            var (source, target) = (dumpContext.Source, dumpContext.Target);
-            var targetTableFullName = dumpContext.Target.Agent.AgentSetting.IdentityName(tableMapper.Target.Schema, tableMapper.Target.Name);
+            var targetTableFullName = targetContext.Agent.AgentSetting.IdentityName(tableMapper.Target.Schema, tableMapper.Target.Name);
 
-            await target.Agent.DataMigrator.BeforeWriteTargetTable(tableMapper.Source, dumpContext);
-            var sourceCount = await source.Agent.DataMigrator.CountSourceTable(tableMapper.Source, dumpContext);
+            await targetContext.Agent.DataMigrator.BeforeWriteTargetTable(tableMapper.Target, targetContext);
+            
+            var sourceCount = await sourceContext.Agent.DataMigrator.CountSourceTable(tableMapper.Source, sourceContext);
+            var sourceDataTables = sourceContext.Agent.DataMigrator.ReadSourceTable(tableMapper.Source, sourceContext,migrationSetting);
+            var targetDataTables = ConvertToTargetDataTable(sourceDataTables, tableMapper, migrationSetting);
+            await targetContext.Agent.DataDumper.WriteTables(targetDataTables, tableMapper.Target, null);
 
-            var sourceDataTables = source.Agent.DataMigrator.ReadSourceTable(tableMapper.Source, dumpContext);
-            var targetDataTables = ConvertToTargetDataTable(sourceDataTables, tableMapper, dumpContext.Setting);
-            await target.Agent.DataDumper.WriteTables(targetDataTables, tableMapper.Target, dumpContext);
 
-
-            await target.Agent.DataMigrator.AfterWriteTargetTable(tableMapper.Target, dumpContext);
-            dumpContext.EventReporter.RaiseTableDataMigrated(targetTableFullName, sourceCount, sourceCount, true);
+            await targetContext.Agent.DataMigrator.AfterWriteTargetTable(tableMapper.Target, targetContext);
+            targetContext.RaiseTableDataMigrated(targetTableFullName, sourceCount, sourceCount, true);
         }
 
 

@@ -15,7 +15,7 @@ namespace ChangeDB.Agent.MySql
     public class MySqlMetadataMigratorTest : BaseTest, IDisposable
     {
         private readonly IMetadataMigrator _metadataMigrator = MySqlMetadataMigrator.Default;
-        private readonly MigrationContext _migrationContext;
+        private readonly AgentContext _agentContext;
         private readonly DbConnection _dbConnection;
         private readonly IDatabase _database;
 
@@ -24,12 +24,11 @@ namespace ChangeDB.Agent.MySql
         {
             _database = CreateDatabase(false);
             _dbConnection = _database.Connection;
-            _migrationContext = new MigrationContext
+            _agentContext = new AgentContext
             {
-                TargetConnection = _dbConnection,
-                SourceConnection = _dbConnection,
-                Source = new AgentRunTimeInfo { Agent = new MySqlAgent() },
-                SourceDatabase = new DatabaseInfo() { ConnectionString = _dbConnection.ConnectionString }
+                Agent = new MySqlAgent(),
+                Connection = _database.Connection,
+                ConnectionString = _database.ConnectionString,
             };
         }
 
@@ -42,7 +41,7 @@ namespace ChangeDB.Agent.MySql
         public async Task ShouldReturnEmptyDescriptorWhenGetDatabaseDescriptionAndGivenEmptyDatabase()
         {
 
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Should().BeEquivalentTo(new DatabaseDescriptor
             {
                 Tables = new List<TableDescriptor>(),
@@ -55,7 +54,7 @@ namespace ChangeDB.Agent.MySql
         {
             _dbConnection.ExecuteNonQuery(
                "create table table1(id int ,nm varchar(64));");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Should().HaveCount(1);
             databaseDesc.Tables.First().Should().Match<TableDescriptor>(p => p.Schema == null && p.Name == "table1");
         }
@@ -65,7 +64,7 @@ namespace ChangeDB.Agent.MySql
         {
             _dbConnection.ExecuteNonQuery(
                "create table table1(id int, nm int NOT NULL);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Should().HaveCount(1);
             databaseDesc.Tables.Should().ContainSingle()
                 .And.ContainEquivalentOf(
@@ -87,7 +86,7 @@ namespace ChangeDB.Agent.MySql
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64));");
 
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Should().HaveCount(1);
             databaseDesc.Tables.First().PrimaryKey.Should()
                 .Match<PrimaryKeyDescriptor>(p => p.Name != null)
@@ -100,7 +99,7 @@ namespace ChangeDB.Agent.MySql
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm varchar(64),primary key(id,nm));");
 
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Should().HaveCount(1);
             databaseDesc.Tables.First().PrimaryKey.Should()
                 .Match<PrimaryKeyDescriptor>(p => p.Name != null)
@@ -114,7 +113,7 @@ namespace ChangeDB.Agent.MySql
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm varchar(64));",
                 "create index nm_index ON table1 (nm);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.First().Indexes.Should()
                 .ContainSingle().And
                 .ContainEquivalentOf(
@@ -131,7 +130,7 @@ namespace ChangeDB.Agent.MySql
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm varchar(64));",
                 "create index id_nm_index ON table1 (id,nm);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.First().Indexes.Should()
                 .ContainSingle().And
                 .ContainEquivalentOf(
@@ -148,7 +147,7 @@ namespace ChangeDB.Agent.MySql
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64));",
                 "create index nm_index ON table1 (nm);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.First().Indexes.Should()
                 .ContainSingle().And
                 .ContainEquivalentOf(
@@ -167,7 +166,7 @@ namespace ChangeDB.Agent.MySql
                 "create table table1(id int primary key,nm varchar(64));",
                 "create table table2(id int, id1 int);",
                 "ALTER TABLE table2 add constraint table2_id1_fkey foreign key(id1) references table1(id);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Single(p => p.Name == "table2").ForeignKeys.Should().HaveCount(1);
             databaseDesc.Tables.SelectMany(p => p.ForeignKeys).First().Should().BeEquivalentTo(new ForeignKeyDescriptor
             {
@@ -187,7 +186,7 @@ namespace ChangeDB.Agent.MySql
                 "create table table1(id int,nm int,primary key(id,nm));",
                 "create table table2(id2 int, nm2 int);",
                 "ALTER TABLE table2 add constraint table2_id2_nm2_fkey foreign key(id2, nm2) references table1(id, nm);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table2").Single().ForeignKeys.Should()
                 .ContainSingle().And.ContainEquivalentOf(new ForeignKeyDescriptor
                 {
@@ -205,7 +204,7 @@ namespace ChangeDB.Agent.MySql
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key,nm varchar(64) unique);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Single().Uniques.Should()
                 .ContainSingle().Which.Columns.Should().BeEquivalentTo(new List<string> { "nm" });
         }
@@ -215,7 +214,7 @@ namespace ChangeDB.Agent.MySql
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int,nm int,unique(id,nm));");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Single().Uniques.Should()
                 .ContainSingle().Which.Columns.Should().BeEquivalentTo(new List<string> { "id", "nm" });
         }
@@ -224,7 +223,7 @@ namespace ChangeDB.Agent.MySql
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int primary key AUTO_INCREMENT);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -257,7 +256,7 @@ namespace ChangeDB.Agent.MySql
                 "create table table1(id int primary key AUTO_INCREMENT,val int);",
                 "insert into table1(val) VALUES(234)"
             );
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -296,7 +295,7 @@ namespace ChangeDB.Agent.MySql
                    "insert into table1(val) VALUES(123)",
                    "insert into table1(val) VALUES(123)"
                    );
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -333,7 +332,7 @@ namespace ChangeDB.Agent.MySql
         {
             _dbConnection.ExecuteNonQuery(
                    "create table table1(abc binary(16) default (UUID_TO_BIN(UUID())));");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -350,7 +349,7 @@ namespace ChangeDB.Agent.MySql
         {
             _dbConnection.ExecuteNonQuery(
                    "create table table1(id datetime default now());");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -367,7 +366,7 @@ namespace ChangeDB.Agent.MySql
         {
             _dbConnection.ExecuteNonQuery(
                 "create table table1(id int NOT NULL default 0,nm varchar(10) default 'abc', val decimal default 1);");
-            var databaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            var databaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             databaseDesc.Tables.Where(p => p.Name == "table1").Single().Should()
                 .BeEquivalentTo(new TableDescriptor
                 {
@@ -402,8 +401,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -423,8 +422,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -446,8 +445,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -469,8 +468,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Tables.Single().PrimaryKey.Name.Should().Be("PRIMARY");
         }
 
@@ -495,8 +494,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -523,8 +522,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -550,8 +549,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -578,8 +577,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -602,8 +601,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -649,8 +648,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -699,8 +698,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 
@@ -727,8 +726,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             // var expectedDatabaseDesc = databaseDesc.DeepClone();
             // expectedDatabaseDesc.Tables.SelectMany(p => p.Columns)
             //     .Where(p => !p.DefaultValueSql.StartsWith('(')).Each(c => c.DefaultValueSql = $"({c.DefaultValueSql})");
@@ -762,8 +761,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
         [Fact]
@@ -796,8 +795,8 @@ namespace ChangeDB.Agent.MySql
                     }
                 }
             };
-            await _metadataMigrator.MigrateAllTargetMetaData(databaseDesc, _migrationContext);
-            var actualDatabaseDesc = await _metadataMigrator.GetSourceDatabaseDescriptor(_migrationContext);
+            await _metadataMigrator.MigrateAllMetaData(databaseDesc, _agentContext);
+            var actualDatabaseDesc = await _metadataMigrator.GetDatabaseDescriptor(_agentContext);
             actualDatabaseDesc.Should().BeEquivalentTo(databaseDesc);
         }
 

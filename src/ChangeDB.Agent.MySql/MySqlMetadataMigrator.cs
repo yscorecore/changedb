@@ -11,16 +11,16 @@ namespace ChangeDB.Agent.MySql
         public static readonly IMetadataMigrator Default = new MySqlMetadataMigrator();
 
         [System.Obsolete]
-        public Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext)
+        public Task<DatabaseDescriptor> GetDatabaseDescriptor(AgentContext agentContext)
         {
             // mysql get descriptor need a new connection
             using var newSourceConnection =
-                migrationContext.Source.Agent.ConnectionProvider.CreateConnection(migrationContext.SourceDatabase.ConnectionString);
+                agentContext.Agent.ConnectionProvider.CreateConnection(agentContext.ConnectionString);
             var databaseDescriptor = GetDataBaseDescriptorByEFCore(newSourceConnection, MySqlDataTypeMapper.Default, MySqlExpressionTranslator.Default);
             return Task.FromResult(databaseDescriptor);
         }
 
-        public Task PreMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
+        public Task PreMigrateMetadata(DatabaseDescriptor databaseDescriptor, AgentContext agentContext)
         {
             var datatypeMapper = MySqlDataTypeMapper.Default;
             var sqlExpressionTranslator = MySqlExpressionTranslator.Default;
@@ -38,7 +38,7 @@ namespace ChangeDB.Agent.MySql
                     AppendUniqueConstraintLines(table, lines);
                     var columnDefines = string.Join(", ", lines);
                     var sql = $"CREATE TABLE {tableFullName} ({columnDefines});";
-                    migrationContext.CreateTargetObject(sql, ObjectType.Table, tableFullName);
+                    agentContext.CreateTargetObject(sql, ObjectType.Table, tableFullName);
                 }
                 string BuildColumnBasicDesc(ColumnDescriptor column)
                 {
@@ -91,16 +91,16 @@ namespace ChangeDB.Agent.MySql
                         var indexName = IdentityName(index.Name);
                         var indexColumns = string.Join(",", index.Columns.Select(p => IdentityName(p)));
                         var sql = $"CREATE INDEX {indexName} ON {tableFullName}({indexColumns})";
-                        migrationContext.CreateTargetObject(sql, ObjectType.Index, indexName, tableFullName);
+                        agentContext.CreateTargetObject(sql, ObjectType.Index, indexName, tableFullName);
                     }
                 }
             }
         }
-        public Task PostMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)
+        public Task PostMigrateMetadata(DatabaseDescriptor databaseDescriptor, AgentContext agentContext)
         {
             var datatypeMapper = MySqlDataTypeMapper.Default;
             var sqlExpressionTranslator = MySqlExpressionTranslator.Default;
-            var dbConnection = migrationContext.TargetConnection;
+            var dbConnection = agentContext.Connection;
             AddDefaultValues();
             AddForeignKeys();
 
@@ -137,7 +137,7 @@ namespace ChangeDB.Agent.MySql
                         var sql =
                             $"ALTER TABLE {tableName} ADD CONSTRAINT {foreignKeyName}" +
                             $"FOREIGN KEY ({foreignColumns}) REFERENCES {principalTable}({principalColumns})";
-                        migrationContext.CreateTargetObject(sql, ObjectType.ForeignKey, foreignKeyName, tableName);
+                        agentContext.CreateTargetObject(sql, ObjectType.ForeignKey, foreignKeyName, tableName);
                     }
                 }
             }

@@ -50,7 +50,7 @@ namespace ChangeDB.Agent.MySql
             {
                 Name = "table1",
                 Schema = null,
-            }, _migrationContext);
+            }, TODO);
             rows.Should().Be(3);
         }
 
@@ -64,7 +64,7 @@ namespace ChangeDB.Agent.MySql
                 "INSERT INTO table1(id,nm) VALUES(3,'name3');"
             );
             var table = await _dataMigrator.ReadSourceTable(new TableDescriptor { Name = "table1", Schema = null, },
-                new PageInfo { Limit = 1, Offset = 1 }, _migrationContext);
+                new PageInfo { Limit = 1, Offset = 1 }, TODO);
             table.Rows.Count.Should().Be(1);
             table.Rows[0]["id"].Should().Be(2);
             table.Rows[0]["nm"].Should().Be("name2");
@@ -79,7 +79,7 @@ namespace ChangeDB.Agent.MySql
                 "INSERT INTO table1(id,nm) VALUES(3,'name3');"
             );
             var table = await _dataMigrator.ReadSourceTable(new TableDescriptor { Name = "table1", Schema = null, },
-                new PageInfo { Limit = 1, Offset = 1 }, _migrationContext);
+                new PageInfo { Limit = 1, Offset = 1 }, TODO);
             table.Rows.Count.Should().Be(1);
             table.Rows[0]["id"].Should().Be(2);
             table.Rows[0]["nm"].Should().Be("name2");
@@ -155,9 +155,9 @@ namespace ChangeDB.Agent.MySql
         private async Task WriteTargetTable(DataTable data, TableDescriptor tableDescriptor,
             MigrationContext migrationContext)
         {
-            await _dataMigrator.BeforeWriteTargetTable(tableDescriptor, _migrationContext);
+            await _dataMigrator.BeforeWriteTargetTable(tableDescriptor, TODO);
             await _dataMigrator.WriteTargetTable(data, tableDescriptor, _migrationContext);
-            await _dataMigrator.AfterWriteTargetTable(tableDescriptor, _migrationContext);
+            await _dataMigrator.AfterWriteTargetTable(tableDescriptor, TODO);
         }
 
     }

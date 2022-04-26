@@ -8,7 +8,7 @@ using static ChangeDB.Agent.SqlServer.SqlServerUtils;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlServerDataMigrator : IDataMigrator
+    public class SqlServerDataMigrator : BaseDataMigrator, IDataMigrator
     {
         public static readonly IDataMigrator Default = new SqlServerDataMigrator();
         private static readonly HashSet<CommonDataType> canNotOrderByTypes = new HashSet<CommonDataType>()
@@ -18,9 +18,7 @@ namespace ChangeDB.Agent.SqlServer
             CommonDataType.NText
         };
         private static string BuildColumnNames(IEnumerable<string> names) => string.Join(", ", names.Select(p => $"[{p}]"));
-        private static string BuildColumnNames(TableDescriptor table) =>
-            BuildColumnNames(table.Columns.Select(p => p.Name));
-        private string BuildParameterValueNames(TableDescriptor table) => string.Join(", ", table.Columns.Select(p => $"@{p.Name}"));
+
         private static string BuildOrderByColumnNames(TableDescriptor table)
         {
             if (table.PrimaryKey?.Columns?.Count > 0)
@@ -33,103 +31,68 @@ namespace ChangeDB.Agent.SqlServer
             return BuildColumnNames(names);
         }
 
-        public Task<long> CountSourceTable(TableDescriptor table, MigrationContext migrationContext)
+        public override Task<long> CountSourceTable(TableDescriptor table, AgentContext agentContext)
         {
             var sql = $"select count_big(1) from {IdentityName(table)}";
-            var val = migrationContext.SourceConnection.ExecuteScalar<long>(sql);
+            var val = agentContext.Connection.ExecuteScalar<long>(sql);
             return Task.FromResult(val);
         }
 
-        public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, MigrationContext migrationContext)
+        public override Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, AgentContext agentContext)
         {
             var sql =
                 $"select * from {IdentityName(table)} order by {BuildOrderByColumnNames(table)} offset {pageInfo.Offset} row fetch next {pageInfo.Limit} row only";
-            return Task.FromResult(migrationContext.SourceConnection.ExecuteReaderAsTable(sql));
+            return Task.FromResult(agentContext.Connection.ExecuteReaderAsTable(sql));
         }
 
-        public async Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
+        public override Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
-            if (table.Columns.Count == 0)
-            {
-                return;
-            }
-
-            if (!migrationContext.Setting.OptimizeInsertion)
-            {
-                await InsertTable(data, table, migrationContext);
-            }
-            else
-            {
-                await BulkInsertTable(data, table, migrationContext);
-            }
-        }
-
-        private Task InsertTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
-        {
-            var insertSql = $"INSERT INTO {IdentityName(table)}({BuildColumnNames(table)}) VALUES ({BuildParameterValueNames(table)});";
-            foreach (DataRow row in data.Rows)
-            {
-                var rowData = GetRowData(row, table);
-                migrationContext.TargetConnection.ExecuteNonQuery(insertSql, rowData);
-            }
-            return Task.CompletedTask;
-        }
-
-        private Task BulkInsertTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
-        {
-            migrationContext.TargetConnection.TryOpen();
-            var options = SqlBulkCopyOptions.Default | SqlBulkCopyOptions.KeepIdentity | SqlBulkCopyOptions.KeepNulls;
-            using var bulkCopy = new SqlBulkCopy(migrationContext.TargetConnection as SqlConnection, options, null)
-            {
-                DestinationTableName = IdentityName(table),
-                BatchSize = data.Rows.Count,
-            };
-            bulkCopy.WriteToServer(data);
-            return Task.CompletedTask;
-        }
-
-
-
-
-
-        private IDictionary<string, object> GetRowData(DataRow row, TableDescriptor tableDescriptor)
-        {
-            var dic = new Dictionary<string, object>();
-            foreach (var column in tableDescriptor.Columns)
-            {
-                dic[$"@{column.Name}"] = row[column.Name];
-            }
-            return dic;
-        }
-
-
-        public Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
-        {
-            var tableFullName = SqlServerUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
+            var tableFullName = IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
             {
-                migrationContext.TargetConnection.ExecuteNonQuery($"SET IDENTITY_INSERT {tableFullName} ON");
+                agentContext.Connection.ExecuteNonQuery($"SET IDENTITY_INSERT {tableFullName} ON");
 
             }
 
             return Task.CompletedTask;
         }
 
-        public Task AfterWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
+        public override Task AfterWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
             {
-                var tableFullName = SqlServerUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
-                migrationContext.TargetConnection.ExecuteNonQuery($"SET IDENTITY_INSERT {tableFullName} OFF");
+                var tableFullName = IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
+                agentContext.Connection.ExecuteNonQuery($"SET IDENTITY_INSERT {tableFullName} OFF");
 
                 tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)
                     .Each((column) =>
                     {
-                        migrationContext.TargetConnection.ExecuteNonQuery($"DBCC CHECKIDENT ('{tableFullName}', RESEED, {column.IdentityInfo.CurrentValue})");
+                        agentContext.Connection.ExecuteNonQuery($"DBCC CHECKIDENT ('{tableFullName}', RESEED, {column.IdentityInfo.CurrentValue})");
                     });
             }
 
             return Task.CompletedTask;
+        }
+
+        protected override Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)
+        {
+            return WriteTargetTableInBlockCopyMode(datas, table, agentContext);
+        }
+
+        protected override async Task WriteTargetTableInBlockCopyMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)
+        {
+            agentContext.Connection.TryOpen();
+            var options = SqlBulkCopyOptions.Default | SqlBulkCopyOptions.KeepIdentity | SqlBulkCopyOptions.KeepNulls;
+            await foreach (var datatable in datas)
+            {
+                if (datatable.Rows.Count == 0) continue;
+                using var bulkCopy = new SqlBulkCopy(agentContext.Connection as SqlConnection, options, null)
+                {
+                    DestinationTableName = IdentityName(table),
+                    BatchSize = datatable.Rows.Count,
+                };
+                bulkCopy.WriteToServer(datatable);
+            }
         }
     }
 }

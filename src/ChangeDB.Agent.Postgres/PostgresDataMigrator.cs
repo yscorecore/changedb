@@ -14,37 +14,37 @@ namespace ChangeDB.Agent.Postgres
     {
         public static readonly PostgresDataMigrator Default = new PostgresDataMigrator();
 
-        public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, MigrationContext migrationContext)
+        public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, AgentContext agentContext)
         {
             var sql = $"select * from {IdentityName(table)} limit {pageInfo.Limit} offset {pageInfo.Offset}";
-            return Task.FromResult(migrationContext.SourceConnection.ExecuteReaderAsTable(sql));
+            return Task.FromResult(agentContext.Connection.ExecuteReaderAsTable(sql));
         }
 
-        public Task<long> CountSourceTable(TableDescriptor table, MigrationContext migrationContext)
+        public Task<long> CountSourceTable(TableDescriptor table, AgentContext agentContext)
         {
             var sql = $"select count(1) from {IdentityName(table)}";
-            var totalCount = migrationContext.SourceConnection.ExecuteScalar<long>(sql);
+            var totalCount = agentContext.Connection.ExecuteScalar<long>(sql);
             return Task.FromResult(totalCount);
         }
 
-        public async Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
+        public async Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext agentContext)
         {
             if (table.Columns.Count == 0 || data.Rows.Count == 0)
             {
                 return;
             }
 
-            if (!migrationContext.Setting.OptimizeInsertion)
+            if (!agentContext.Setting.OptimizeInsertion)
             {
-                await InsertTable(data, table, migrationContext);
+                await InsertTable(data, table, agentContext);
             }
             else
             {
-                await BulkInsertTable(data, table, migrationContext);
+                await BulkInsertTable(data, table, agentContext);
             }
         }
 
-        private Task InsertTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
+        private Task InsertTable(DataTable data, TableDescriptor table, MigrationContext agentContext)
         {
             var overIdentity = OverIdentityType(table);
             var insertSql = string.IsNullOrEmpty(overIdentity) ? $"INSERT INTO {IdentityName(table)}({BuildColumnNames(table)}) VALUES ({BuildParameterValueNames(table)});"
@@ -53,7 +53,7 @@ namespace ChangeDB.Agent.Postgres
             foreach (DataRow row in data.Rows)
             {
                 var rowData = GetRowData(row, table);
-                migrationContext.TargetConnection.ExecuteNonQuery(insertSql, rowData);
+                agentContext.TargetConnection.ExecuteNonQuery(insertSql, rowData);
             }
 
             return Task.CompletedTask;
@@ -80,10 +80,10 @@ namespace ChangeDB.Agent.Postgres
             }
         }
 
-        private Task BulkInsertTable(DataTable data, TableDescriptor table, MigrationContext migrationContext)
+        private Task BulkInsertTable(DataTable data, TableDescriptor table, MigrationContext agentContext)
         {
             var dataTypeMapper = PostgresDataTypeMapper.Default;
-            var conn = migrationContext.TargetConnection as NpgsqlConnection;
+            var conn = agentContext.TargetConnection as NpgsqlConnection;
             conn.TryOpen();
             using var writer = conn.BeginBinaryImport($"COPY {IdentityName(table)}({BuildColumnNames(table)}) FROM STDIN BINARY");
 
@@ -150,21 +150,22 @@ namespace ChangeDB.Agent.Postgres
             return dic;
         }
 
-        public Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
+        public Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             return Task.CompletedTask;
         }
 
-        public Task AfterWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
+        public Task AfterWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             var tableFullName = IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
             tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)
                 .Each((column) =>
                 {
-                    migrationContext.TargetConnection.ExecuteNonQuery($"SELECT SETVAL(PG_GET_SERIAL_SEQUENCE('{tableFullName}', '{column.Name}'), {column.IdentityInfo.CurrentValue})");
+                    agentContext.Connection.ExecuteNonQuery($"SELECT SETVAL(PG_GET_SERIAL_SEQUENCE('{tableFullName}', '{column.Name}'), {column.IdentityInfo.CurrentValue})");
                 });
             return Task.CompletedTask;
         }
 
+       
     }
 }

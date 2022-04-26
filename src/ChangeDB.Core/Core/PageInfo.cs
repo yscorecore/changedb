@@ -1,4 +1,4 @@
-﻿namespace ChangeDB.Migration
+﻿namespace ChangeDB
 {
     public struct PageInfo
     {

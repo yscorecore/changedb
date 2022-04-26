@@ -67,7 +67,7 @@ namespace ChangeDB
         private async Task AssertTargetResult(string targetType, IDatabase database, string targetCaseFolder)
         {
             var agent = ServiceProvider.GetService<IAgentFactory>().CreateAgent(targetType);
-            var databaseDesc = await GetTargetDatabaseDesc(agent, database.Connection);
+            var databaseDesc = await GetTargetDatabaseDesc(agent, database);
             var databaseData = await GetTargetDatabaseData(agent, databaseDesc, database.Connection);
             var dataFile = Path.Combine(targetCaseFolder, "data.json");
             var schemaFile = Path.Combine(targetCaseFolder, "schema.json");
@@ -88,14 +88,15 @@ namespace ChangeDB
             );
             ShouldBeDataFile(databaseData, dataFile);
         }
-        private Task<DatabaseDescriptor> GetTargetDatabaseDesc(IAgent agent, DbConnection dbConnection)
+        private Task<DatabaseDescriptor> GetTargetDatabaseDesc(IAgent agent, IDatabase database)
         {
-            var context = new MigrationContext
+            var context = new AgentContext
             {
-                Setting = new MigrationSetting(),
-                SourceConnection = dbConnection
+                Agent = agent,
+                Connection = database.Connection,
+                ConnectionString = database.ConnectionString
             };
-            return agent.MetadataMigrator.GetSourceDatabaseDescriptor(context);
+            return agent.MetadataMigrator.GetDatabaseDescriptor(context);
         }
         private Task<Dictionary<string, TableInfo>> GetTargetDatabaseData(IAgent agent, DatabaseDescriptor databaseDesc, DbConnection dbConnection)
         {

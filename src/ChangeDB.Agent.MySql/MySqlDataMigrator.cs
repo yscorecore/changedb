@@ -15,14 +15,14 @@ namespace ChangeDB.Agent.MySql
             BuildColumnNames(table.Columns.Select(p => p.Name));
         private string BuildParameterValueNames(TableDescriptor table) => string.Join(", ", table.Columns.Select(p => $"@{p.Name}"));
 
-        public Task<long> CountSourceTable(TableDescriptor table, MigrationContext migrationContext)
+        public Task<long> CountSourceTable(TableDescriptor table, AgentContext agentContext)
         {
             var sql = $"select count(1) from {IdentityName(table)}";
             var val = migrationContext.SourceConnection.ExecuteScalar<long>(sql);
             return Task.FromResult(val);
         }
 
-        public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, MigrationContext migrationContext)
+        public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, AgentContext agentContext)
         {
             var sql =
                 $"select * from {IdentityName(table)} limit {pageInfo.Limit} offset {pageInfo.Offset}";
@@ -50,12 +50,12 @@ namespace ChangeDB.Agent.MySql
         }
 
 
-        public Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
+        public Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             return Task.CompletedTask;
         }
 
-        public Task AfterWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
+        public Task AfterWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             var identityColumn = tableDescriptor.Columns.FirstOrDefault(p => p.IsIdentity && p.IdentityInfo?.CurrentValue != null);
             if (identityColumn != null)

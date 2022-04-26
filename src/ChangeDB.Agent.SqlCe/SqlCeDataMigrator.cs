@@ -22,14 +22,14 @@ namespace ChangeDB.Agent.SqlCe
             return BuildColumnNames(table);
         }
 
-        public Task<long> CountSourceTable(TableDescriptor table, MigrationContext migrationContext)
+        public Task<long> CountSourceTable(TableDescriptor table, AgentContext agentContext)
         {
             var sql = $"select count(1) from {IdentityName(table)}";
             var val = migrationContext.SourceConnection.ExecuteScalar<long>(sql);
             return Task.FromResult(val);
         }
 
-        public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, MigrationContext migrationContext)
+        public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, AgentContext agentContext)
         {
             var sql =
                 $"select * from {IdentityName(table)} order by {BuildPrimaryKeyColumnNames(table)} offset {pageInfo.Offset} row fetch next {pageInfo.Limit} row only";
@@ -62,7 +62,7 @@ namespace ChangeDB.Agent.SqlCe
         }
 
 
-        public Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
+        public Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             var tableFullName = SqlCeUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
@@ -74,7 +74,7 @@ namespace ChangeDB.Agent.SqlCe
             return Task.CompletedTask;
         }
 
-        public Task AfterWriteTargetTable(TableDescriptor tableDescriptor, MigrationContext migrationContext)
+        public Task AfterWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
             {

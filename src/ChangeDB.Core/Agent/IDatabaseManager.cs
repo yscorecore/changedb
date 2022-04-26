@@ -1,7 +1,8 @@
 ﻿using System.Data;
 using System.Threading.Tasks;
+using ChangeDB.Migration;
 
-namespace ChangeDB.Migration
+namespace ChangeDB
 {
     public interface IDatabaseManager
     {

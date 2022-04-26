@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ChangeDB.Migration
+namespace ChangeDB
 {
 
     public class ChangeDBException : ApplicationException

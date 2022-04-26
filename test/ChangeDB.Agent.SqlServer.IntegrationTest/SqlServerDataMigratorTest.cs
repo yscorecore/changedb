@@ -28,7 +28,7 @@ namespace ChangeDB.Agent.SqlServer
             {
                 Name = "table1",
                 Schema = "ts",
-            }, new MigrationContext { SourceConnection = database.Connection });
+            }, TODO);
             rows.Should().Be(3);
         }
 
@@ -55,13 +55,12 @@ namespace ChangeDB.Agent.SqlServer
                     new ColumnDescriptor{Name="nm", DataType=DataTypeDescriptor.Varchar(64)}
                  }
             };
-            var context = new MigrationContext
+            var context = new AgentContext
             {
-                SourceConnection = database.Connection,
-                Setting = new MigrationSetting(),
-                Source = new AgentRunTimeInfo { Agent = new SqlServerAgent() }
+                Connection = database.Connection,
+                ConnectionString = database.ConnectionString
             };
-            var allRows = await _dataMigrator.ReadSourceRows(tableDesc, context).ToSyncList();
+            var allRows = await _dataMigrator.ReadSourceRows(tableDesc, context,new MigrationSetting()).ToSyncList();
             var allData = allRows.Select(p => new { Id = p.Field<int>("id"), Name = p.Field<string>("nm") }).ToList();
             allData.Should().BeEquivalentTo(new[]
             {
@@ -80,11 +79,10 @@ namespace ChangeDB.Agent.SqlServer
                 "create schema ts",
                 "create table ts.table1(id int primary key,nm varchar(64));"
             );
-            var context = new MigrationContext
+                       var context = new AgentContext
             {
-                TargetConnection = database.Connection,
-                Setting = new MigrationSetting(),
-                Source = new AgentRunTimeInfo { Agent = new SqlServerAgent() }
+                Connection = database.Connection,
+                ConnectionString = database.ConnectionString
             };
 
             var table = new DataTable();
@@ -118,13 +116,11 @@ namespace ChangeDB.Agent.SqlServer
                 "create schema ts;",
                 "create table ts.table1(id int identity(1,1) primary key ,nm varchar(64));"
             );
-            var context = new MigrationContext
+            var context = new AgentContext
             {
-                TargetConnection = database.Connection,
-                Setting = new MigrationSetting(),
-                Source = new AgentRunTimeInfo { Agent = new SqlServerAgent() }
+                Connection = database.Connection,
+                ConnectionString = database.ConnectionString
             };
-
 
             var table = new DataTable();
             table.Columns.Add("id", typeof(int));
@@ -157,12 +153,13 @@ namespace ChangeDB.Agent.SqlServer
             data.Should().BeEquivalentTo(new List<Tuple<int, string>> { new(1, "name1"), new(6, "name6") });
         }
 
-        private async Task WriteTargetTable(IDataMigrator dataMigrator, DataTable data, TableDescriptor tableDescriptor,
-            MigrationContext migrationContext)
+        private Task WriteTargetTable(IDataMigrator dataMigrator, DataTable data, TableDescriptor tableDescriptor,
+            AgentContext agentContext)
         {
-            await dataMigrator.BeforeWriteTargetTable(tableDescriptor, migrationContext);
-            await dataMigrator.WriteTargetTable(data, tableDescriptor, migrationContext);
-            await dataMigrator.AfterWriteTargetTable(tableDescriptor, migrationContext);
+            throw new NotImplementedException();
+            //await dataMigrator.BeforeWriteTargetTable(tableDescriptor, agentContext);
+            //await dataMigrator.WriteTargetTable(data, tableDescriptor, agentContext);
+            //await dataMigrator.AfterWriteTargetTable(tableDescriptor, agentContext);
         }
     }
 }
