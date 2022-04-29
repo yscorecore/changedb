@@ -14,7 +14,7 @@ namespace ChangeDB.Agent.Postgres
     {
 
         private readonly PostgresDataMigrator _dataMigrator = PostgresDataMigrator.Default;
-        private readonly MigrationContext _migrationContext = new MigrationContext();
+        private readonly AgentContext _agentContext = new AgentContext();
         private readonly DbConnection _dbConnection;
         private readonly IDatabase database;
 
@@ -25,10 +25,9 @@ namespace ChangeDB.Agent.Postgres
 
             _dbConnection = database.Connection;
 
-            _migrationContext = new MigrationContext
+            _agentContext = new AgentContext
             {
-                TargetConnection = _dbConnection,
-                SourceConnection = _dbConnection
+                Connection = _dbConnection,
             };
 
         }
@@ -52,7 +51,7 @@ namespace ChangeDB.Agent.Postgres
             {
                 Name = "table1",
                 Schema = "ts",
-            }, TODO);
+            }, _agentContext);
             rows.Should().Be(3);
         }
 
@@ -67,7 +66,7 @@ namespace ChangeDB.Agent.Postgres
                 "INSERT INTO ts.table1(id,nm) VALUES(3,'name3');"
             );
             var table = await _dataMigrator.ReadSourceTable(new TableDescriptor { Name = "table1", Schema = "ts", },
-                new PageInfo { Limit = 1, Offset = 1 }, TODO);
+                new PageInfo { Limit = 1, Offset = 1 }, _agentContext);
             table.Rows.Count.Should().Be(1);
             table.Rows[0]["id"].Should().Be(2);
             table.Rows[0]["nm"].Should().Be("name2");
@@ -96,7 +95,7 @@ namespace ChangeDB.Agent.Postgres
                     new ColumnDescriptor{Name = "nm",DataType = DataTypeDescriptor.Varchar(64)}
                 }
             };
-            await WriteTargetTable(table, tableDescriptor, _migrationContext);
+            await WriteTargetTable(table, tableDescriptor, _agentContext);
             var data = _dbConnection.ExecuteReaderAsList<int, string>("select * from ts.table1");
             data.Should().BeEquivalentTo(new List<Tuple<int, string>> { new Tuple<int, string>(4, "name4") });
         }
@@ -137,7 +136,7 @@ namespace ChangeDB.Agent.Postgres
                     new ColumnDescriptor{Name = "nm",DataType =DataTypeDescriptor.Varchar(64)}
                 }
             };
-            await WriteTargetTable(table, tableDescriptor, _migrationContext);
+            await WriteTargetTable(table, tableDescriptor, _agentContext);
             _dbConnection.ExecuteNonQuery("insert into ts.table1(nm) values('name6')");
             var data = _dbConnection.ExecuteReaderAsList<int, string>("select * from ts.table1");
             data.Should().BeEquivalentTo(new List<Tuple<int, string>> { new(1, "name1"), new(6, "name6") });
@@ -179,18 +178,18 @@ namespace ChangeDB.Agent.Postgres
                     new ColumnDescriptor{Name = "nm",DataType =DataTypeDescriptor.Varchar(64)}
                 }
             };
-            await WriteTargetTable(table, tableDescriptor, _migrationContext);
+            await WriteTargetTable(table, tableDescriptor, _agentContext);
             _dbConnection.ExecuteNonQuery("insert into ts.table1(nm) values('name6')");
             var data = _dbConnection.ExecuteReaderAsList<int, string>("select * from ts.table1");
             data.Should().BeEquivalentTo(new List<Tuple<int, string>> { new(1, "name1"), new(6, "name6") });
         }
 
         private async Task WriteTargetTable(DataTable data, TableDescriptor tableDescriptor,
-            MigrationContext migrationContext)
+            AgentContext agentContext)
         {
-            await _dataMigrator.BeforeWriteTargetTable(tableDescriptor, TODO);
-            await _dataMigrator.WriteTargetTable(data, tableDescriptor, _migrationContext);
-            await _dataMigrator.AfterWriteTargetTable(tableDescriptor, TODO);
+            await _dataMigrator.BeforeWriteTargetTable(tableDescriptor, agentContext);
+            await _dataMigrator.WriteTargetTable(data, tableDescriptor, agentContext);
+            await _dataMigrator.AfterWriteTargetTable(tableDescriptor, agentContext);
         }
 
     }

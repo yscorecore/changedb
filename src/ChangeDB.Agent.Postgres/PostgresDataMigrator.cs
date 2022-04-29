@@ -10,53 +10,30 @@ using static ChangeDB.Agent.Postgres.PostgresUtils;
 
 namespace ChangeDB.Agent.Postgres
 {
-    public class PostgresDataMigrator : IDataMigrator
+    public class PostgresDataMigrator : BaseDataMigrator, IDataMigrator
     {
         public static readonly PostgresDataMigrator Default = new PostgresDataMigrator();
 
-        public Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, AgentContext agentContext)
+        public override Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, AgentContext agentContext)
         {
             var sql = $"select * from {IdentityName(table)} limit {pageInfo.Limit} offset {pageInfo.Offset}";
             return Task.FromResult(agentContext.Connection.ExecuteReaderAsTable(sql));
         }
 
-        public Task<long> CountSourceTable(TableDescriptor table, AgentContext agentContext)
+        public override Task<long> CountSourceTable(TableDescriptor table, AgentContext agentContext)
         {
             var sql = $"select count(1) from {IdentityName(table)}";
             var totalCount = agentContext.Connection.ExecuteScalar<long>(sql);
             return Task.FromResult(totalCount);
         }
 
-        public async Task WriteTargetTable(DataTable data, TableDescriptor table, MigrationContext agentContext)
+        protected override string BuildInsertRowSqlSegment(TableDescriptor table, AgentContext agentContext)
         {
-            if (table.Columns.Count == 0 || data.Rows.Count == 0)
-            {
-                return;
-            }
-
-            if (!agentContext.Setting.OptimizeInsertion)
-            {
-                await InsertTable(data, table, agentContext);
-            }
-            else
-            {
-                await BulkInsertTable(data, table, agentContext);
-            }
-        }
-
-        private Task InsertTable(DataTable data, TableDescriptor table, MigrationContext agentContext)
-        {
+            var sqlSegment = base.BuildInsertRowSqlSegment(table, agentContext);
             var overIdentity = OverIdentityType(table);
-            var insertSql = string.IsNullOrEmpty(overIdentity) ? $"INSERT INTO {IdentityName(table)}({BuildColumnNames(table)}) VALUES ({BuildParameterValueNames(table)});"
-                    : $"INSERT INTO {IdentityName(table)}({BuildColumnNames(table)}) {overIdentity} VALUES ({BuildParameterValueNames(table)});";
-
-            foreach (DataRow row in data.Rows)
-            {
-                var rowData = GetRowData(row, table);
-                agentContext.TargetConnection.ExecuteNonQuery(insertSql, rowData);
-            }
-
-            return Task.CompletedTask;
+            return string.IsNullOrEmpty(overIdentity) ? sqlSegment
+                    : $"{sqlSegment} {overIdentity}";
+      
 
             string OverIdentityType(TableDescriptor tableDescriptor)
             {
@@ -78,42 +55,7 @@ namespace ChangeDB.Agent.Postgres
                     _ => string.Empty
                 };
             }
-        }
 
-        private Task BulkInsertTable(DataTable data, TableDescriptor table, MigrationContext agentContext)
-        {
-            var dataTypeMapper = PostgresDataTypeMapper.Default;
-            var conn = agentContext.TargetConnection as NpgsqlConnection;
-            conn.TryOpen();
-            using var writer = conn.BeginBinaryImport($"COPY {IdentityName(table)}({BuildColumnNames(table)}) FROM STDIN BINARY");
-
-            var typeMapper = (from column in table.Columns
-                              let normalizeStoreType = NormalizeStoreType(dataTypeMapper.ToDatabaseStoreType(column.DataType))
-                              where NpgsqlTypeMapper.ContainsKey(normalizeStoreType)
-                              select new { column.Name, NpgSqlType = NpgsqlTypeMapper[normalizeStoreType] })
-                .ToDictionary(p => p.Name, p => p.NpgSqlType);
-
-
-            foreach (DataRow row in data.Rows)
-            {
-                writer.StartRow();
-
-                foreach (var column in table.Columns)
-                {
-                    var val = row[column.Name];
-                    if (typeMapper.TryGetValue(column.Name, out var npgsqlDbType))
-                    {
-                        writer.Write(val, npgsqlDbType);
-                    }
-                    else
-                    {
-                        writer.Write(val);
-                    }
-                }
-            }
-
-            writer.Complete();
-            return Task.CompletedTask;
 
         }
 
@@ -139,23 +81,13 @@ namespace ChangeDB.Agent.Postgres
             ["TIMESTAMP WITH TIME ZONE"] = NpgsqlDbType.TimestampTz,
         };
 
-        private string BuildColumnNames(TableDescriptor table) => string.Join(", ", table.Columns.Select(p => $"{IdentityName(p.Name)}"));
 
-        private string BuildParameterValueNames(TableDescriptor table) => string.Join(", ", table.Columns.Select(p => $"@{p.Name}"));
-
-        private IDictionary<string, object> GetRowData(DataRow row, TableDescriptor tableDescriptor)
-        {
-            var dic = new Dictionary<string, object>();
-            tableDescriptor.Columns.Each(column => { dic[$"@{column.Name}"] = row[column.Name]; });
-            return dic;
-        }
-
-        public Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
+        public override Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             return Task.CompletedTask;
         }
 
-        public Task AfterWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
+        public override Task AfterWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             var tableFullName = IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
             tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)
@@ -166,6 +98,47 @@ namespace ChangeDB.Agent.Postgres
             return Task.CompletedTask;
         }
 
-       
+      
+      
+
+        protected override Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)
+        {
+            return WriteTargetTableInBlockCopyMode(datas,table, agentContext);
+        }
+
+        protected override async Task WriteTargetTableInBlockCopyMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)
+        {
+            var dataTypeMapper = PostgresDataTypeMapper.Default;
+            var conn = agentContext.Connection as NpgsqlConnection;
+            conn.TryOpen();
+            using var writer = conn.BeginBinaryImport($"COPY {IdentityName(table)}({BuildColumnNames(table,agentContext)}) FROM STDIN BINARY");
+
+            var typeMapper = (from column in table.Columns
+                              let normalizeStoreType = NormalizeStoreType(dataTypeMapper.ToDatabaseStoreType(column.DataType))
+                              where NpgsqlTypeMapper.ContainsKey(normalizeStoreType)
+                              select new { column.Name, NpgSqlType = NpgsqlTypeMapper[normalizeStoreType] })
+                .ToDictionary(p => p.Name, p => p.NpgSqlType);
+
+
+            await foreach (DataRow row in datas.ToItems(p=>p.Rows.OfType<DataRow>()))
+            {
+                writer.StartRow();
+
+                foreach (var column in table.Columns)
+                {
+                    var val = row[column.Name];
+                    if (typeMapper.TryGetValue(column.Name, out var npgsqlDbType))
+                    {
+                        writer.Write(val, npgsqlDbType);
+                    }
+                    else
+                    {
+                        writer.Write(val);
+                    }
+                }
+            }
+
+            writer.Complete();
+        }
     }
 }

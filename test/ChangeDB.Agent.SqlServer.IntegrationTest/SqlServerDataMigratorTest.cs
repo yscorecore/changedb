@@ -24,11 +24,12 @@ namespace ChangeDB.Agent.SqlServer
                 "insert into ts.table1(id,nm) VALUES(2,'name2');",
                 "insert into ts.table1(id,nm) VALUES(3,'name3');"
             );
+            var agentContext = new AgentContext {  Connection= database.Connection};
             var rows = await _dataMigrator.CountSourceTable(new TableDescriptor
             {
                 Name = "table1",
                 Schema = "ts",
-            }, TODO);
+            }, agentContext);
             rows.Should().Be(3);
         }
 
@@ -60,7 +61,7 @@ namespace ChangeDB.Agent.SqlServer
                 Connection = database.Connection,
                 ConnectionString = database.ConnectionString
             };
-            var allRows = await _dataMigrator.ReadSourceRows(tableDesc, context,new MigrationSetting()).ToSyncList();
+            var allRows = await _dataMigrator.ReadSourceTable(tableDesc, context, new MigrationSetting()).ToItems(p => p.Rows.OfType<DataRow>()).ToSyncList();
             var allData = allRows.Select(p => new { Id = p.Field<int>("id"), Name = p.Field<string>("nm") }).ToList();
             allData.Should().BeEquivalentTo(new[]
             {
@@ -79,7 +80,7 @@ namespace ChangeDB.Agent.SqlServer
                 "create schema ts",
                 "create table ts.table1(id int primary key,nm varchar(64));"
             );
-                       var context = new AgentContext
+            var context = new AgentContext
             {
                 Connection = database.Connection,
                 ConnectionString = database.ConnectionString

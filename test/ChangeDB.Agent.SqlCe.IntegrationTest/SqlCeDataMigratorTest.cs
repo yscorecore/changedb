@@ -26,7 +26,7 @@ namespace ChangeDB.Agent.SqlCe
             var rows = await _dataMigrator.CountSourceTable(new TableDescriptor
             {
                 Name = "table1",
-            }, TODO);
+            }, new AgentContext { Connection = database.Connection });
             rows.Should().Be(3);
         }
 
@@ -50,12 +50,12 @@ namespace ChangeDB.Agent.SqlCe
                     new ColumnDescriptor{Name="nm", DataType=DataTypeDescriptor.Varchar(64)}
                  }
             };
-                       var context = new AgentContext
+            var context = new AgentContext
             {
                 Connection = database.Connection,
                 ConnectionString = database.ConnectionString
             };
-            var allRows = await _dataMigrator.ReadSourceRows(tableDesc, context,new MigrationSetting()).ToSyncList();
+            var allRows = await _dataMigrator.ReadSourceTable(tableDesc, context, new MigrationSetting()).ToItems(p => p.Rows.OfType<DataRow>()).ToSyncList();
             var allData = allRows.Select(p => new { Id = p.Field<int>("id"), Name = p.Field<string>("nm") }).ToList();
             allData.Should().BeEquivalentTo(new[]
             {
@@ -109,7 +109,7 @@ namespace ChangeDB.Agent.SqlCe
             await using var database = CreateDatabase(false,
                 "create table table1(id int identity(1,1) primary key ,nm nvarchar(64));"
             );
-                      var context = new AgentContext
+            var context = new AgentContext
             {
                 Connection = database.Connection,
                 ConnectionString = database.ConnectionString

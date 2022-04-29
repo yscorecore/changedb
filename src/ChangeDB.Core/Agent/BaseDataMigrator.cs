@@ -21,7 +21,7 @@ namespace ChangeDB
             return Task.FromResult(totalCount);
         }
         public abstract Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, AgentContext agentContext);
-        public virtual Task WriteTargetTable(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext, InsertionKind insertionKind)
+        public virtual Task WriteTargetTable(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext, InsertionKind insertionKind = InsertionKind.Default)
         {
             return insertionKind switch
             {
@@ -97,6 +97,8 @@ namespace ChangeDB
             }
         }
         protected abstract Task WriteTargetTableInBlockCopyMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext);
-        protected static string BuildColumnNames(TableDescriptor table, AgentContext agentContext) => string.Join(", ", table.Columns.Select(p => $"{agentContext.Agent.AgentSetting.IdentityName(null, p.Name)}"));
+        protected static string BuildColumnNames(TableDescriptor table, AgentContext agentContext) => BuildColumnNames(table.Columns.Select(p => p.Name), agentContext);
+
+        protected static string BuildColumnNames(IEnumerable<string> names, AgentContext agentContext) => string.Join(", ", names.Select(p => $"{agentContext.Agent.AgentSetting.IdentityName(null, p)}"));
     }
 }

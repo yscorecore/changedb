@@ -21,6 +21,13 @@ namespace ChangeDB.Migration
     public static class DataMigratorExtensions
     {
 
+        public static Task WriteTargetTable(this IDataMigrator dataMigrator, DataTable datas, TableDescriptor table, AgentContext agentContext, InsertionKind insertionKind = InsertionKind.Default)
+        {
+            var list = new List<DataTable> { datas };
+            var asyncList = list.ToAsync();
+            return dataMigrator.WriteTargetTable(asyncList, table, agentContext, insertionKind);
+        }
+
         public static async IAsyncEnumerable<DataTable> ReadSourceTable(this IDataMigrator dataMigrator, TableDescriptor sourceTable, AgentContext agentContext, MigrationSetting setting)
         {
 
@@ -45,16 +52,7 @@ namespace ChangeDB.Migration
             }
         }
 
-        public static async IAsyncEnumerable<DataRow> ReadSourceRows(this IDataMigrator dataMigrator, TableDescriptor sourceTable, AgentContext agentContext, MigrationSetting setting)
-        {
-            await foreach (DataTable table in dataMigrator.ReadSourceTable(sourceTable, agentContext, setting))
-            {
-                foreach (DataRow row in table.Rows)
-                {
-                    yield return row;
-                }
-            }
-        }
+
     }
 
 }
