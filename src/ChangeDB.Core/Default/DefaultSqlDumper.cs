@@ -214,9 +214,9 @@ namespace ChangeDB.Default
             var targetTableFullName = targetContext.Agent.AgentSetting.IdentityName(tableMapper.Target.Schema, tableMapper.Target.Name);
 
             await targetContext.Agent.DataMigrator.BeforeWriteTargetTable(tableMapper.Target, targetContext);
-            
+
             var sourceCount = await sourceContext.Agent.DataMigrator.CountSourceTable(tableMapper.Source, sourceContext);
-            var sourceDataTables = sourceContext.Agent.DataMigrator.ReadSourceTable(tableMapper.Source, sourceContext,migrationSetting);
+            var sourceDataTables = sourceContext.Agent.DataMigrator.ReadSourceTable(tableMapper.Source, sourceContext, migrationSetting);
             var targetDataTables = ConvertToTargetDataTable(sourceDataTables, tableMapper, migrationSetting);
             await targetContext.Agent.DataDumper.WriteTables(targetDataTables, tableMapper.Target, null);
 

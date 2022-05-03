@@ -5,15 +5,8 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlCe
 {
-    public class SqlCeAgent : IAgent
+    public class SqlCeAgent : BaseAgent
     {
-        public IDataMigrator DataMigrator => SqlCeDataMigrator.Default;
-        public IMetadataMigrator MetadataMigrator => SqlCeMetadataMigrator.Default;
-        public IDatabaseManager DatabaseManger => SqlCeDatabaseManager.Default;
-        public AgentSetting AgentSetting => new AgentSetting { DefaultSchema = null, ObjectNameMaxLength = 128, IdentityName = SqlCeUtils.IdentityName, DatabaseType = "sqlce" };
-        public IDataDumper DataDumper => SqlCeDataDumper.Default;
-
-        public IConnectionProvider ConnectionProvider => SqlCeConnectionProvider.Default;
-
+        public override AgentSetting AgentSetting => new AgentSetting { DefaultSchema = null, ObjectNameMaxLength = 128, IdentityName = SqlCeUtils.IdentityName, DatabaseType = "sqlce" };
     }
 }

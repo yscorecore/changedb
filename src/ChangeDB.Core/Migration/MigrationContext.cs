@@ -12,9 +12,9 @@ namespace ChangeDB.Migration
         public MigrationSetting Setting { get; init; } = new MigrationSetting();
         public EventReporter EventReporter { get; set; } = new EventReporter();
 
-       
 
-      
+
+
 
         public DbConnection TargetConnection { get; set; }
         public DbConnection SourceConnection { get; set; }

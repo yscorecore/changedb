@@ -24,7 +24,7 @@ namespace ChangeDB.Agent.SqlServer
                 "insert into ts.table1(id,nm) VALUES(2,'name2');",
                 "insert into ts.table1(id,nm) VALUES(3,'name3');"
             );
-            var agentContext = new AgentContext {  Connection= database.Connection};
+            var agentContext = new AgentContext { Connection = database.Connection };
             var rows = await _dataMigrator.CountSourceTable(new TableDescriptor
             {
                 Name = "table1",

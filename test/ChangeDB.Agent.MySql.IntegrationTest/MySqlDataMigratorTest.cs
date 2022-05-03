@@ -14,7 +14,7 @@ namespace ChangeDB.Agent.MySql
     {
 
         private readonly IDataMigrator _dataMigrator = MySqlDataMigrator.Default;
-        private readonly AgentContext _agentContext ;
+        private readonly AgentContext _agentContext;
         private readonly DbConnection _dbConnection;
         private readonly IDatabase _database;
 

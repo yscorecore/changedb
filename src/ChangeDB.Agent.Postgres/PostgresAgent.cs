@@ -6,15 +6,9 @@ using Npgsql;
 
 namespace ChangeDB.Agent.Postgres
 {
-    public class PostgresAgent : IAgent
+    public class PostgresAgent : BaseAgent
     {
-        public IDataMigrator DataMigrator => PostgresDataMigrator.Default;
-        public IMetadataMigrator MetadataMigrator => PostgresMetadataMigrator.Default;
-        public IDatabaseManager DatabaseManger => PostgresDatabaseManager.Default;
-        public AgentSetting AgentSetting => new AgentSetting { ObjectNameMaxLength = 63, DefaultSchema = "public", SupportSchema = true, IdentityName = PostgresUtils.IdentityName, DatabaseType = "postgres" };
-        public IDataDumper DataDumper => PostgresDataDumper.Default;
-
-        public IConnectionProvider ConnectionProvider => PostgresConnectionProvider.Default;
+        public override AgentSetting AgentSetting => new AgentSetting { ObjectNameMaxLength = 63, DefaultSchema = "public", SupportSchema = true, IdentityName = PostgresUtils.IdentityName, DatabaseType = "postgres" };
 
     }
 }

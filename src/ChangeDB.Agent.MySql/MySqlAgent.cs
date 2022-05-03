@@ -5,20 +5,10 @@ using MySqlConnector;
 
 namespace ChangeDB.Agent.MySql
 {
-    public class MySqlAgent : IAgent
+    public class MySqlAgent : BaseAgent
     {
-
-        public IDataMigrator DataMigrator => MySqlDataMigrator.Default;
-
-        public IMetadataMigrator MetadataMigrator => MySqlMetadataMigrator.Default;
-
-        public IDatabaseManager DatabaseManger => MySqlDatabaseManager.Default;
-
-        public AgentSetting AgentSetting => new AgentSetting
+        public override AgentSetting AgentSetting => new AgentSetting
         { SupportSchema = false, DefaultSchema = null, ObjectNameMaxLength = 64, DatabaseType = "mysql", IdentityName = MySqlUtils.IdentityName };
 
-        public IDataDumper DataDumper => MySqlDataDumper.Default;
-
-        public IConnectionProvider ConnectionProvider => MysqlConnectionProvider.Default;
     }
 }

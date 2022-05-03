@@ -10,7 +10,7 @@ namespace ChangeDB.Agent.MySql
     public class MySqlDataMigrator : BaseDataMigrator, IDataMigrator
     {
         public static readonly IDataMigrator Default = new MySqlDataMigrator();
-              
+
         public override Task<long> CountSourceTable(TableDescriptor table, AgentContext agentContext)
         {
             var sql = $"select count(1) from {IdentityName(table)}";

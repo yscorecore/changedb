@@ -18,7 +18,7 @@ namespace ChangeDB.Agent.SqlServer
 
         public Task DropTargetDatabaseIfExists(string connectionString, MigrationSetting migrationSetting)
         {
-           DropDatabaseIfExists(connectionString);
+            DropDatabaseIfExists(connectionString);
             return Task.CompletedTask;
         }
 

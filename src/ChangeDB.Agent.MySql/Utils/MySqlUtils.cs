@@ -12,7 +12,7 @@ using Pomelo.EntityFrameworkCore.MySql.Design.Internal;
 
 namespace ChangeDB.Agent.MySql
 {
-    public static class MySqlUtils
+    internal static class MySqlUtils
     {
         private static readonly string[] NumberTypes = new[]
              {"bit", "int", "tinyint", "smallint", "int", "bigint", "decimal", "double", "float"};

@@ -7,7 +7,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.MySql
 {
-    public class MySqlExpressionTranslator
+    internal class MySqlExpressionTranslator
     {
 
         public static readonly MySqlExpressionTranslator Default = new MySqlExpressionTranslator();

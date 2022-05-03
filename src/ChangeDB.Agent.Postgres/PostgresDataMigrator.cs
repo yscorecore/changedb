@@ -33,7 +33,7 @@ namespace ChangeDB.Agent.Postgres
             var overIdentity = OverIdentityType(table);
             return string.IsNullOrEmpty(overIdentity) ? sqlSegment
                     : $"{sqlSegment} {overIdentity}";
-      
+
 
             string OverIdentityType(TableDescriptor tableDescriptor)
             {
@@ -98,12 +98,12 @@ namespace ChangeDB.Agent.Postgres
             return Task.CompletedTask;
         }
 
-      
-      
+
+
 
         protected override Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)
         {
-            return WriteTargetTableInBlockCopyMode(datas,table, agentContext);
+            return WriteTargetTableInBlockCopyMode(datas, table, agentContext);
         }
 
         protected override async Task WriteTargetTableInBlockCopyMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)
@@ -111,7 +111,7 @@ namespace ChangeDB.Agent.Postgres
             var dataTypeMapper = PostgresDataTypeMapper.Default;
             var conn = agentContext.Connection as NpgsqlConnection;
             conn.TryOpen();
-            using var writer = conn.BeginBinaryImport($"COPY {IdentityName(table)}({BuildColumnNames(table,agentContext)}) FROM STDIN BINARY");
+            using var writer = conn.BeginBinaryImport($"COPY {IdentityName(table)}({BuildColumnNames(table, agentContext)}) FROM STDIN BINARY");
 
             var typeMapper = (from column in table.Columns
                               let normalizeStoreType = NormalizeStoreType(dataTypeMapper.ToDatabaseStoreType(column.DataType))
@@ -120,7 +120,7 @@ namespace ChangeDB.Agent.Postgres
                 .ToDictionary(p => p.Name, p => p.NpgSqlType);
 
 
-            await foreach (DataRow row in datas.ToItems(p=>p.Rows.OfType<DataRow>()))
+            await foreach (DataRow row in datas.ToItems(p => p.Rows.OfType<DataRow>()))
             {
                 writer.StartRow();
 

@@ -9,7 +9,7 @@ namespace ChangeDB.Agent.SqlCe
     public class SqlCeDataMigrator : BaseDataMigrator, IDataMigrator
     {
         public static readonly IDataMigrator Default = new SqlCeDataMigrator();
-       
+
         public override Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, AgentContext agentContext)
         {
             string BuildPrimaryKeyColumnNames(TableDescriptor table)
@@ -26,7 +26,7 @@ namespace ChangeDB.Agent.SqlCe
             return Task.FromResult(agentContext.Connection.ExecuteReaderAsTable(sql));
         }
 
-       
+
         public override Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             var tableFullName = SqlCeUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
@@ -58,7 +58,7 @@ namespace ChangeDB.Agent.SqlCe
             return Task.CompletedTask;
         }
 
-        
+
 
         protected override Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)
         {

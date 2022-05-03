@@ -19,7 +19,7 @@ namespace ChangeDB.Agent.SqlCe
 
         public Task DropTargetDatabaseIfExists(string connectionString, MigrationSetting migrationSetting)
         {
-           DropDatabaseIfExists(connectionString);
+            DropDatabaseIfExists(connectionString);
             return Task.CompletedTask;
         }
 

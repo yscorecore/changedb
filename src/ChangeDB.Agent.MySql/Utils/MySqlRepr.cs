@@ -7,7 +7,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.MySql
 {
-    public class MySqlRepr
+    internal class MySqlRepr
     {
         public static readonly MySqlRepr Default = new MySqlRepr();
 

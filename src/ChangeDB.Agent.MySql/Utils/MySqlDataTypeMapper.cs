@@ -3,7 +3,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.MySql
 {
-    public class MySqlDataTypeMapper
+    internal class MySqlDataTypeMapper
     {
         public static readonly MySqlDataTypeMapper Default = new MySqlDataTypeMapper();
         public DataTypeDescriptor ToCommonDatabaseType(string storeType)
