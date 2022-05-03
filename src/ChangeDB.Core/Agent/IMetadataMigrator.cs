@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace ChangeDB.Migration
+namespace ChangeDB
 {
     public interface IMetadataMigrator
     {

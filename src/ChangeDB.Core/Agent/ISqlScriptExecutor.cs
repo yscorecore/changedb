@@ -4,7 +4,7 @@ using System.Data;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace ChangeDB.Import
+namespace ChangeDB
 {
     public interface ISqlScriptExecutor
     {

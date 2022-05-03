@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
+using ChangeDB.Import;
 using ChangeDB.Migration;
 
 namespace ChangeDB.Agent
@@ -22,6 +23,8 @@ namespace ChangeDB.Agent
         public virtual IDatabaseManager DatabaseManger => GetService<IDatabaseManager>();
         public abstract AgentSetting AgentSetting { get; }
         public virtual IDataDumper DataDumper => GetService<IDataDumper>();
+        public virtual ISqlScriptExecutor SqlExecutor => GetService<ISqlScriptExecutor>();
+
 
         private T GetService<T>()
         {

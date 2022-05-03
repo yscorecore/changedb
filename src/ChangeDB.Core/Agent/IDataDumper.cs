@@ -3,7 +3,7 @@ using System.Data;
 using System.Threading.Tasks;
 using ChangeDB.Dump;
 
-namespace ChangeDB.Migration
+namespace ChangeDB
 {
     public interface IDataDumper
     {
