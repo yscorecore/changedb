@@ -7,7 +7,7 @@ using static ChangeDB.Agent.MySql.MySqlUtils;
 
 namespace ChangeDB.Agent.MySql
 {
-    public class MySqlDataMigrator : BaseDataMigrator, IDataMigrator
+    public class MySqlDataMigrator : BaseDataMigrator
     {
         public static readonly IDataMigrator Default = new MySqlDataMigrator();
 
@@ -41,9 +41,9 @@ namespace ChangeDB.Agent.MySql
             return Task.CompletedTask;
         }
 
-        protected override Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)
+        protected override Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> data, TableDescriptor table, AgentContext agentContext)
         {
-            return WriteTargetTableInBatchLineMode(datas, table, agentContext);
+            return WriteTargetTableInBatchLineMode(data, table, agentContext);
         }
 
         protected override Task WriteTargetTableInBlockCopyMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)

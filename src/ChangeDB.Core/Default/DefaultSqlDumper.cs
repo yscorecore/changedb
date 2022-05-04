@@ -55,14 +55,13 @@ namespace ChangeDB.Default
                 await _databaseMapper.MapDatabase(sourceDatabaseDescriptor, targetAgent.AgentSetting, context.Setting);
 
 
-
+            await ApplyPreScripts(context);
             await DoDumpDatabase(context.Setting, databaseDescriptorMapper, sourceAgentContext, targetAgentContext);
-            await ApplyCustomScripts(context);
+            await ApplyPostScripts(context);
             // flush to file
             await context.Writer.FlushAsync();
         }
 
-        [Obsolete]
         protected virtual async Task DoDumpDatabase(MigrationSetting setting, DatabaseDescriptorMapper mapper, AgentContext sourceContext, AgentContext targetContext)
         {
 
@@ -181,21 +180,24 @@ namespace ChangeDB.Default
             }
         }
 
-
-        protected virtual Task ApplyCustomScripts(DumpContext dumpContext)
+        protected virtual Task ApplyPreScripts(DumpContext dumpContext)
+        {
+            var migrationSetting = dumpContext.Setting;
+            if (!string.IsNullOrEmpty(migrationSetting.PreScript?.SqlFile))
+            {
+                using var reader = new StreamReader(migrationSetting.PreScript.SqlFile);
+                dumpContext.Writer.AppendReader(reader); 
+            }
+            return Task.CompletedTask;
+        }
+        
+        protected virtual Task ApplyPostScripts(DumpContext dumpContext)
         {
             var migrationSetting = dumpContext.Setting;
             if (!string.IsNullOrEmpty(migrationSetting.PostScript?.SqlFile))
             {
-                if (File.Exists(migrationSetting.PostScript.SqlFile))
-                {
                     using var reader = new StreamReader(migrationSetting.PostScript.SqlFile);
-                    dumpContext.Writer.AppendReader(reader);
-                }
-                else
-                {
-                    throw new ChangeDBException($"script file '{migrationSetting.PostScript.SqlFile}' not found.");
-                }
+                    dumpContext.Writer.AppendReader(reader); 
             }
             return Task.CompletedTask;
         }

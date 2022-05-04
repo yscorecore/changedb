@@ -33,9 +33,7 @@ namespace ChangeDB.Default
         {
             var sourceAgent = AgentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
             var targetAgent = AgentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
-
-
-
+            
             await using var sourceAgentContext = new AgentContext
             {
                 Agent = sourceAgent,
@@ -59,19 +57,16 @@ namespace ChangeDB.Default
                 await _databaseMapper.MapDatabase(sourceDatabaseDescriptor, targetAgent.AgentSetting, context.Setting);
 
 
+            await CreateTargetDatabaseWhenNecessary(context.Setting, targetAgentContext);
+            await ApplyPreScripts(context.Setting, targetAgentContext);
             await DoMigrateDatabase(context.Setting, databaseDescriptorMapper, sourceAgentContext, targetAgentContext);
-            await ApplyCustomScripts(context.Setting, targetAgentContext);
+            await ApplyPostScripts(context.Setting, targetAgentContext);
 
         }
 
 
         protected virtual async Task DoMigrateDatabase(MigrationSetting migrationSetting, DatabaseDescriptorMapper mapper, AgentContext sourceContext, AgentContext targetContext)
         {
-            if (migrationSetting.IncludeMeta)
-            {
-                await CreateTargetDatabase(migrationSetting, targetContext);
-            }
-
             if (migrationSetting.IncludeMeta)
             {
                 await PreMigrationMetadata(mapper.Target, targetContext);
@@ -88,16 +83,21 @@ namespace ChangeDB.Default
             }
         }
 
-        protected virtual async Task CreateTargetDatabase(MigrationSetting migrationSetting, AgentContext migrationContext)
+        protected virtual async Task CreateTargetDatabaseWhenNecessary(MigrationSetting migrationSetting, AgentContext migrationContext)
         {
-            var (targetAgent, targetConnection) = (migrationContext.Agent, migrationContext.Connection);
-            if (migrationSetting.DropTargetDatabaseIfExists)
+            if (migrationSetting.IncludeMeta)
             {
-                Log("dropping target database if exists.");
-                await targetAgent.DatabaseManger.DropTargetDatabaseIfExists(migrationContext.Connection.ConnectionString, migrationSetting);
+                            var (targetAgent, targetConnection) = (migrationContext.Agent, migrationContext.Connection);
+                            if (migrationSetting.DropTargetDatabaseIfExists)
+                            {
+                                Log("dropping target database if exists.");
+                                await targetAgent.DatabaseManger.DropTargetDatabaseIfExists(migrationContext.Connection.ConnectionString, migrationSetting);
+                            }
+                            Log("creating target database.");
+                            await targetAgent.DatabaseManger.CreateDatabase(migrationContext.ConnectionString, migrationSetting);
             }
-            Log("creating target database.");
-            await targetAgent.DatabaseManger.CreateDatabase(migrationContext.ConnectionString, migrationSetting);
+
+
         }
 
         protected virtual async Task PreMigrationMetadata(DatabaseDescriptor target, AgentContext agentContext)
@@ -216,17 +216,21 @@ namespace ChangeDB.Default
                 string BuildTableNames(IEnumerable<TableDescriptorMapper> tables) => string.Join(",", tables.Select(p => TableKey(p.Target.Schema, p.Target.Name)));
             }
         }
+        protected virtual async Task ApplyPreScripts(MigrationSetting migrationSetting, AgentContext agentContext)
+        {
+            if (!string.IsNullOrEmpty(migrationSetting.PreScript?.SqlFile))
+            {
+                await  agentContext.Agent.SqlExecutor.ExecuteFile(migrationSetting.PreScript.SqlFile, agentContext);
+            }
+        }
 
 
-
-        protected virtual Task ApplyCustomScripts(MigrationSetting migrationSetting, AgentContext agentContext)
+        protected virtual async Task ApplyPostScripts(MigrationSetting migrationSetting, AgentContext agentContext)
         {
             if (!string.IsNullOrEmpty(migrationSetting.PostScript?.SqlFile))
             {
-                // TODO use sqlimporter
-                agentContext.Connection.ExecuteSqlScriptFile(migrationSetting.PostScript.SqlFile, migrationSetting.PostScript.SqlSplit);
+               await  agentContext.Agent.SqlExecutor.ExecuteFile(migrationSetting.PostScript.SqlFile, agentContext);
             }
-            return Task.CompletedTask;
         }
 
         private async IAsyncEnumerable<DataTable> ConvertToTargetDataTable(IAsyncEnumerable<DataTable> dataTables, TableDescriptorMapper tableDescriptorMapper, MigrationSetting migrationSetting)

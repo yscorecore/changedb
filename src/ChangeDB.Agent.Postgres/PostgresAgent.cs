@@ -8,7 +8,14 @@ namespace ChangeDB.Agent.Postgres
 {
     public class PostgresAgent : BaseAgent
     {
-        public override AgentSetting AgentSetting => new AgentSetting { ObjectNameMaxLength = 63, DefaultSchema = "public", IdentityName = PostgresUtils.IdentityName, DatabaseType = "postgres" };
+        public override AgentSetting AgentSetting => 
+            new AgentSetting
+            {
+                ObjectNameMaxLength = 63, 
+                DefaultSchema = "public", 
+                IdentityName = PostgresUtils.IdentityName, 
+                DatabaseType = "postgres"
+            };
 
     }
 }

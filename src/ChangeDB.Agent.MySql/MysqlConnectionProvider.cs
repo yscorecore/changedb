@@ -11,7 +11,6 @@ namespace ChangeDB.Agent.MySql
 {
     public class MysqlConnectionProvider : IConnectionProvider
     {
-        public static readonly IConnectionProvider Default = new MysqlConnectionProvider();
         public DbConnection CreateConnection(string connectionString)
         {
             return new MySqlConnection(connectionString);

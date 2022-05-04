@@ -10,13 +10,13 @@ namespace ChangeDB.Agent.SqlServer
     {
         public static readonly IDatabaseManager Default = new SqlServerDatabaseManager();
 
-        public Task CreateDatabase(string connectionString, MigrationSetting migrationSetting)
+        public Task CreateDatabase(string connectionString, MigrationSetting setting)
         {
             CreateDatabase(connectionString);
             return Task.CompletedTask;
         }
 
-        public Task DropTargetDatabaseIfExists(string connectionString, MigrationSetting migrationSetting)
+        public Task DropTargetDatabaseIfExists(string connectionString, MigrationSetting setting)
         {
             DropDatabaseIfExists(connectionString);
             return Task.CompletedTask;

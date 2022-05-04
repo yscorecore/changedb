@@ -5,9 +5,9 @@ using ChangeDB.Import;
 using ChangeDB.Import.ContentReaders;
 using ChangeDB.Import.LineHanders;
 
-namespace ChangeDB.Agent.SqlCe
+namespace ChangeDB.Agent.Postgres
 {
-    public class SqlCeSqlScriptExecutor : BaseSqlScriptExecutor
+    public class PostgresSqlExecutor : BaseSqlExecutor
     {
         protected override IDictionary<char, IContentReader> ContentReaders()
         {
@@ -27,9 +27,7 @@ namespace ChangeDB.Agent.SqlCe
 
                 NopLineHandler.CommentLine,
 
-                new NopLineHandler(@"^\s*go\s*$",RegexOptions.IgnoreCase),
-
-                new CommandLineHandler(@"^\s*(go)?\s*$",RegexOptions.IgnoreCase)
+                new CommandLineHandler(@"^\s*\s*$",RegexOptions.IgnoreCase)
 
             };
         }

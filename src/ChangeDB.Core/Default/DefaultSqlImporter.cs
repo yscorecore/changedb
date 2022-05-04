@@ -13,7 +13,6 @@ namespace ChangeDB.Default
             AgentFactory = agentFactory;
         }
 
-        [System.Obsolete]
         public async Task Import(ImportContext context)
         {
             var targetAgent = AgentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
@@ -39,7 +38,6 @@ namespace ChangeDB.Default
                 });
         }
 
-        [System.Obsolete]
         private async Task CreateTargetDatabase(IAgent agent, string connectionString)
         {
 

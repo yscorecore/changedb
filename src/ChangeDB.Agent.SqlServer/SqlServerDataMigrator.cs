@@ -8,7 +8,7 @@ using static ChangeDB.Agent.SqlServer.SqlServerUtils;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlServerDataMigrator : BaseDataMigrator, IDataMigrator
+    public class SqlServerDataMigrator : BaseDataMigrator
     {
         public static readonly IDataMigrator Default = new SqlServerDataMigrator();
         private static readonly HashSet<CommonDataType> canNotOrderByTypes = new HashSet<CommonDataType>()
@@ -74,9 +74,9 @@ namespace ChangeDB.Agent.SqlServer
             return Task.CompletedTask;
         }
 
-        protected override Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)
+        protected override Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> data, TableDescriptor table, AgentContext agentContext)
         {
-            return WriteTargetTableInBlockCopyMode(datas, table, agentContext);
+            return WriteTargetTableInBlockCopyMode(data, table, agentContext);
         }
 
         protected override async Task WriteTargetTableInBlockCopyMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)

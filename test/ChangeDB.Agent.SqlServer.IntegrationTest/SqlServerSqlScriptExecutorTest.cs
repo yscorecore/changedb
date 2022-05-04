@@ -66,12 +66,23 @@ create table lasttable(id int);
 ")]
         public void ShouldSplitSqlScript(string content)
         {
-            ISqlScriptExecutor sqlScriptExecutor = new SqlServerSqlScriptExecutor();
+            ISqlExecutor sqlExecutor = new SqlServerSqlExecutor();
             using var database = CreateDatabase(false);
             using var tempFile = new TempFile(content);
-            sqlScriptExecutor.ExecuteFile(tempFile.FilePath, database.Connection);
+            sqlExecutor.ExecuteFile(tempFile.FilePath, CreateContext(database));
             var rowCount = database.Connection.ExecuteScalar<int>("select count(1) from lasttable");
             rowCount.Should().Be(0);
+        }
+        
+        private AgentContext CreateContext(IDatabase database)
+        {
+            return new AgentContext()
+            {
+                Agent = new SqlServerAgent(),
+                Connection = database.Connection,
+                 ConnectionString = database.ConnectionString
+                
+            };
         }
     }
 }

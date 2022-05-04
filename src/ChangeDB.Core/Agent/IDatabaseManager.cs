@@ -6,8 +6,8 @@ namespace ChangeDB
 {
     public interface IDatabaseManager
     {
-        Task CreateDatabase(string connectionString, MigrationSetting migrationSetting);
+        Task CreateDatabase(string connectionString, MigrationSetting setting);
 
-        Task DropTargetDatabaseIfExists(string connectionString, MigrationSetting migrationSetting);
+        Task DropTargetDatabaseIfExists(string connectionString, MigrationSetting setting);
     }
 }

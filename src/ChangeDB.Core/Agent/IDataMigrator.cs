@@ -16,7 +16,7 @@ namespace ChangeDB
 
         Task<long> CountSourceTable(TableDescriptor table, AgentContext agentContext);
 
-        Task WriteTargetTable(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext, InsertionKind insertionKind);
+        Task WriteTargetTable(IAsyncEnumerable<DataTable> data, TableDescriptor table, AgentContext agentContext, InsertionKind insertionKind);
 
     }
     public static class DataMigratorExtensions

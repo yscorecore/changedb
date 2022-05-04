@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Data.Common;
 using ChangeDB.Import;
 using ChangeDB.Migration;
 using Moq;
@@ -9,16 +10,27 @@ namespace ChangeDB.Agent.SqlServer
 
     public class SqlServerSqlScriptExecutorTest
     {
+
+        private AgentContext CreateContext(DbConnection connection)
+        {
+            return new AgentContext()
+            {
+                Agent = new SqlServerAgent(),
+                Connection = connection
+                
+            };
+        }
+
         [Theory]
         [InlineData("")]
         [InlineData("\n")]
         [InlineData("\r\ngo\ngo\r\n\n")]
         public void ShouldExecuteNoneTime(string sqls)
         {
-            ISqlScriptExecutor instance = new SqlServerSqlScriptExecutor();
+            ISqlExecutor instance = new SqlServerSqlExecutor();
 
-            var dbConnection = Mock.Of<IDbConnection>();
-            instance.ExecuteSqls(sqls, dbConnection);
+            var dbConnection = Mock.Of<DbConnection>();
+            instance.ExecuteSqls(sqls, CreateContext(dbConnection));
             var mockInstance = Mock.Get(dbConnection);
             mockInstance.Verify(p => p.CreateCommand(), Times.Never());
         }
@@ -29,10 +41,10 @@ namespace ChangeDB.Agent.SqlServer
         [InlineData("\ngo\ncreate table table1(id int);\rgo\n")]
         public void ShouldExecuteSingleLine(string sqls)
         {
-            ISqlScriptExecutor instance = new SqlServerSqlScriptExecutor();
+            ISqlExecutor instance = new SqlServerSqlExecutor();
             var dbCommand = Mock.Of<IDbCommand>();
-            var dbConnection = Mock.Of<IDbConnection>(p => p.CreateCommand() == dbCommand);
-            instance.ExecuteSqls(sqls, dbConnection);
+            var dbConnection = Mock.Of<DbConnection>(p => p.CreateCommand() == dbCommand);
+            instance.ExecuteSqls(sqls, CreateContext(dbConnection));
             var mockInstance = Mock.Get(dbCommand);
             mockInstance.Verify(p => p.ExecuteNonQuery(), Times.Once());
             var firstSql = "create table table1(id int);";
@@ -42,9 +54,9 @@ namespace ChangeDB.Agent.SqlServer
         [Fact]
         public void ShouldExecuteTwoSqls()
         {
-            ISqlScriptExecutor instance = new SqlServerSqlScriptExecutor();
+            ISqlExecutor instance = new SqlServerSqlExecutor();
             var dbCommand = Mock.Of<IDbCommand>();
-            var dbConnection = Mock.Of<IDbConnection>(p => p.CreateCommand() == dbCommand);
+            var dbConnection = Mock.Of<DbConnection>(p => p.CreateCommand() == dbCommand);
             var sqls = @"create table table1(id int);
 create table table1(id int);
 create table table1(id int);
@@ -54,7 +66,7 @@ Go
 GO
 create table table2(id int);
 ";
-            instance.ExecuteSqls(sqls, dbConnection);
+            instance.ExecuteSqls(sqls, CreateContext(dbConnection));
             var mockInstance = Mock.Get(dbCommand);
             mockInstance.Verify(p => p.ExecuteNonQuery(), Times.Exactly(2));
             var firstSql = "create table table1(id int);\ncreate table table1(id int);\ncreate table table1(id int);";
@@ -90,10 +102,10 @@ go
 ');")]
         public void ShouldExecuteSqlsWhenKeyworkInStringContent(string sqls)
         {
-            ISqlScriptExecutor instance = new SqlServerSqlScriptExecutor();
+            ISqlExecutor instance = new SqlServerSqlExecutor();
             var dbCommand = Mock.Of<IDbCommand>();
-            var dbConnection = Mock.Of<IDbConnection>(p => p.CreateCommand() == dbCommand);
-            instance.ExecuteSqls(sqls, dbConnection);
+            var dbConnection = Mock.Of<DbConnection>(p => p.CreateCommand() == dbCommand);
+            instance.ExecuteSqls(sqls, CreateContext(dbConnection));
             var mockInstance = Mock.Get(dbCommand);
             mockInstance.Verify(p => p.ExecuteNonQuery(), Times.Once());
 
@@ -108,10 +120,10 @@ go
 go');")]
         public void ShouldExecuteSqlsWhenCommentInScript(string sqls)
         {
-            ISqlScriptExecutor instance = new SqlServerSqlScriptExecutor();
+            ISqlExecutor instance = new SqlServerSqlExecutor();
             var dbCommand = Mock.Of<IDbCommand>();
-            var dbConnection = Mock.Of<IDbConnection>(p => p.CreateCommand() == dbCommand);
-            instance.ExecuteSqls(sqls, dbConnection);
+            var dbConnection = Mock.Of<DbConnection>(p => p.CreateCommand() == dbCommand);
+            instance.ExecuteSqls(sqls, CreateContext(dbConnection));
             var mockInstance = Mock.Get(dbCommand);
             mockInstance.Verify(p => p.ExecuteNonQuery(), Times.Once());
 

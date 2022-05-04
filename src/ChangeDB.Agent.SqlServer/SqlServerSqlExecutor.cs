@@ -9,7 +9,7 @@ using ChangeDB.Migration;
 
 namespace ChangeDB.Agent.SqlServer
 {
-    public class SqlServerSqlScriptExecutor : BaseSqlScriptExecutor
+    public class SqlServerSqlExecutor : BaseSqlExecutor
     {
         protected override IDictionary<char, IContentReader> ContentReaders()
         {

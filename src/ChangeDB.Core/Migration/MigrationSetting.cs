@@ -10,9 +10,9 @@ namespace ChangeDB.Migration
         public bool DropTargetDatabaseIfExists { get; set; } = true;
         public SourceFilter SourceFilter { get; set; } = new SourceFilter();
         public CustomSqlScript PostScript { get; set; } = new CustomSqlScript();
+        public CustomSqlScript PreScript { get; set; } = new CustomSqlScript();
         public TargetNameStyle TargetNameStyle { get; set; } = new TargetNameStyle();
 
-        public bool FixObjectNameMaxLength { get; set; } = true;
 
         public bool IncludeMeta { get => MigrationScope.HasFlag(MigrationScope.MetaData); }
         public bool IncludeData { get => MigrationScope.HasFlag(MigrationScope.Data); }

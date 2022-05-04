@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 
-namespace ChangeDB.Agent
+namespace ChangeDB
 {
 
     public abstract class BaseAgent : IAgent
@@ -21,7 +21,7 @@ namespace ChangeDB.Agent
         public virtual IDatabaseManager DatabaseManger => GetService<IDatabaseManager>();
         public abstract AgentSetting AgentSetting { get; }
         public virtual IDataDumper DataDumper => GetService<IDataDumper>();
-        public virtual ISqlScriptExecutor SqlExecutor => GetService<ISqlScriptExecutor>();
+        public virtual ISqlExecutor SqlExecutor => GetService<ISqlExecutor>();
 
 
         private T GetService<T>()

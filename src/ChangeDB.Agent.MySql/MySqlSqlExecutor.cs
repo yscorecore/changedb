@@ -7,7 +7,7 @@ using ChangeDB.Import.LineHanders;
 
 namespace ChangeDB.Agent.MySql
 {
-    public class MySqlSqlScriptExecutor : BaseSqlScriptExecutor
+    public class MySqlSqlExecutor : BaseSqlExecutor
     {
         protected override IDictionary<char, IContentReader> ContentReaders()
         {

@@ -21,23 +21,23 @@ namespace ChangeDB
             return Task.FromResult(totalCount);
         }
         public abstract Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, AgentContext agentContext);
-        public virtual Task WriteTargetTable(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext, InsertionKind insertionKind = InsertionKind.Default)
+        public virtual Task WriteTargetTable(IAsyncEnumerable<DataTable> data, TableDescriptor table, AgentContext agentContext, InsertionKind insertionKind = InsertionKind.Default)
         {
             return insertionKind switch
             {
-                InsertionKind.BlockCopy => WriteTargetTableInBlockCopyMode(datas, table, agentContext),
-                InsertionKind.BatchRow => WriteTargetTableInBatchLineMode(datas, table, agentContext),
-                InsertionKind.SingleRow => WriteTargetTableInSingleLineMode(datas, table, agentContext),
-                _ => WriteTargetTableInDefaultMode(datas, table, agentContext),
+                InsertionKind.BlockCopy => WriteTargetTableInBlockCopyMode(data, table, agentContext),
+                InsertionKind.BatchRow => WriteTargetTableInBatchLineMode(data, table, agentContext),
+                InsertionKind.SingleRow => WriteTargetTableInSingleLineMode(data, table, agentContext),
+                _ => WriteTargetTableInDefaultMode(data, table, agentContext),
             };
         }
-        protected abstract Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext);
-        protected virtual async Task WriteTargetTableInSingleLineMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)
+        protected abstract Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> data, TableDescriptor table, AgentContext agentContext);
+        protected virtual async Task WriteTargetTableInSingleLineMode(IAsyncEnumerable<DataTable> data, TableDescriptor table, AgentContext agentContext)
         {
             // insert into abc(id,val)
             var sqlSegment = BuildInsertRowSqlSegment(table, agentContext);
             var sql = $"{sqlSegment} VALUES ({string.Join(", ", table.Name.Select(p => $"@{p}"))});";
-            await foreach (var dataTable in datas)
+            await foreach (var dataTable in data)
             {
                 foreach (DataRow row in dataTable.Rows)
                 {
@@ -58,11 +58,11 @@ namespace ChangeDB
             return $"INSERT INTO {IdentityName()} ({BuildColumnNames(table, agentContext)})";
             string IdentityName() => agentContext.Agent.AgentSetting.IdentityName(table.Schema, table.Name);
         }
-        protected virtual async Task WriteTargetTableInBatchLineMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)
+        protected virtual async Task WriteTargetTableInBatchLineMode(IAsyncEnumerable<DataTable> data, TableDescriptor table, AgentContext agentContext)
         {
             const int maxCount = 1000;
             var cachedRows = new List<DataRow>();
-            await foreach (var row in datas.ToItems(p => p.Rows.OfType<DataRow>()))
+            await foreach (var row in data.ToItems(p => p.Rows.OfType<DataRow>()))
             {
                 if (cachedRows.Count < maxCount)
                 {

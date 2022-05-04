@@ -6,7 +6,7 @@ using ChangeDB.Migration;
 using static ChangeDB.Agent.SqlCe.SqlCeUtils;
 namespace ChangeDB.Agent.SqlCe
 {
-    public class SqlCeDataMigrator : BaseDataMigrator, IDataMigrator
+    public class SqlCeDataMigrator : BaseDataMigrator
     {
         public static readonly IDataMigrator Default = new SqlCeDataMigrator();
 
@@ -60,9 +60,9 @@ namespace ChangeDB.Agent.SqlCe
 
 
 
-        protected override Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)
+        protected override Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> data, TableDescriptor table, AgentContext agentContext)
         {
-            return WriteTargetTableInBatchLineMode(datas, table, agentContext);
+            return WriteTargetTableInBatchLineMode(data, table, agentContext);
         }
 
         protected override Task WriteTargetTableInBlockCopyMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)

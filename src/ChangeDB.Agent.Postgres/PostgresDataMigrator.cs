@@ -10,7 +10,7 @@ using static ChangeDB.Agent.Postgres.PostgresUtils;
 
 namespace ChangeDB.Agent.Postgres
 {
-    public class PostgresDataMigrator : BaseDataMigrator, IDataMigrator
+    public class PostgresDataMigrator : BaseDataMigrator
     {
         public static readonly PostgresDataMigrator Default = new PostgresDataMigrator();
 
@@ -101,9 +101,9 @@ namespace ChangeDB.Agent.Postgres
 
 
 
-        protected override Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)
+        protected override Task WriteTargetTableInDefaultMode(IAsyncEnumerable<DataTable> data, TableDescriptor table, AgentContext agentContext)
         {
-            return WriteTargetTableInBlockCopyMode(datas, table, agentContext);
+            return WriteTargetTableInBlockCopyMode(data, table, agentContext);
         }
 
         protected override async Task WriteTargetTableInBlockCopyMode(IAsyncEnumerable<DataTable> datas, TableDescriptor table, AgentContext agentContext)

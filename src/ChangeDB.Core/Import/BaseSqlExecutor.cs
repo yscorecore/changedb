@@ -6,18 +6,18 @@ using System.Threading.Tasks;
 
 namespace ChangeDB.Import
 {
-    public abstract class BaseSqlScriptExecutor : ISqlScriptExecutor
+    public abstract class BaseSqlExecutor : ISqlExecutor
     {
         protected abstract IDictionary<char, IContentReader> ContentReaders();
 
         protected abstract ISqlLineHandler[] SqlScriptHandlers();
-        public Task ExecuteReader(TextReader textReader, IDbConnection connection)
+        public Task ExecuteReader(TextReader textReader, AgentContext agentContext)
         {
             var scriptReader = new SqlScriptReader(textReader, ContentReaders());
             var context = new SqlScriptContext
             {
                 Reader = scriptReader,
-                Connection = connection
+                Connection = agentContext.Connection
             };
             var handlers = SqlScriptHandlers() ?? Array.Empty<ISqlLineHandler>();
             while (true)

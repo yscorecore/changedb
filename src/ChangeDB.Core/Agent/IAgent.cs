@@ -14,6 +14,6 @@ namespace ChangeDB
         AgentSetting AgentSetting { get; }
         IDataDumper DataDumper { get; }
 
-        ISqlScriptExecutor SqlExecutor { get; }
+        ISqlExecutor SqlExecutor { get; }
     }
 }
