@@ -2,8 +2,6 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
-using ChangeDB.Import;
-using ChangeDB.Migration;
 
 namespace ChangeDB.Agent
 {

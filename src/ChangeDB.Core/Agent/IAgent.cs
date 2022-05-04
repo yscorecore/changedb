@@ -13,5 +13,7 @@ namespace ChangeDB
         IDatabaseManager DatabaseManger { get; }
         AgentSetting AgentSetting { get; }
         IDataDumper DataDumper { get; }
+        
+        ISqlScriptExecutor SqlExecutor { get;  }
     }
 }
