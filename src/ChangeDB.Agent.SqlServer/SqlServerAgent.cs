@@ -8,7 +8,7 @@ namespace ChangeDB.Agent.SqlServer
 
     public class SqlServerAgent : BaseAgent
     {
-        public override AgentSetting AgentSetting => new AgentSetting { ObjectNameMaxLength = 128, DefaultSchema = "dbo", SupportSchema = true, IdentityName = SqlServerUtils.IdentityName, DatabaseType = "sqlserver" };
+        public override AgentSetting AgentSetting => new AgentSetting { ObjectNameMaxLength = 128, DefaultSchema = "dbo", IdentityName = SqlServerUtils.IdentityName, DatabaseType = "sqlserver" };
 
     }
 }
