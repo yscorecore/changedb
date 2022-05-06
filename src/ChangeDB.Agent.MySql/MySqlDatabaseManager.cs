@@ -10,21 +10,16 @@ namespace ChangeDB.Agent.MySql
         public static readonly IDatabaseManager Default = new MySqlDatabaseManager();
 
 
-        public Task CreateDatabase(string connectionString, MigrationSetting setting)
+        public Task CreateDatabase(string connectionString)
         {
-            CreateDatabase(connectionString);
+            using var newConnection = CreateNoDatabaseConnection(connectionString);
+            var connectionInfo = new MySqlConnectionStringBuilder(connectionString);
+            newConnection.ExecuteNonQuery($"CREATE DATABASE {IdentityName(connectionInfo.Database)};");
             return Task.CompletedTask;
         }
 
-        public Task DropTargetDatabaseIfExists(string connectionString, MigrationSetting setting)
+        public Task DropDatabaseIfExists(string connectionString)
         {
-            DropDatabaseIfExists(connectionString);
-            return Task.CompletedTask;
-        }
-
-        private static void DropDatabaseIfExists(string connectionString)
-        {
-
             using (var connection = new MySqlConnection(connectionString))
             {
                 MySqlConnection.ClearPool(connection);
@@ -34,15 +29,10 @@ namespace ChangeDB.Agent.MySql
             newConnection.ExecuteNonQuery(
                 $"DROP DATABASE IF EXISTS {IdentityName(connectionInfo.Database)};"
             );
+            return Task.CompletedTask;
         }
 
-
-        private static void CreateDatabase(string connectionString)
-        {
-            using var newConnection = CreateNoDatabaseConnection(connectionString);
-            var connectionInfo = new MySqlConnectionStringBuilder(connectionString);
-            newConnection.ExecuteNonQuery($"CREATE DATABASE {IdentityName(connectionInfo.Database)};");
-        }
+      
 
 
 

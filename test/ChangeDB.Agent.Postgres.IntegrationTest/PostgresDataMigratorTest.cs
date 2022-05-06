@@ -187,9 +187,9 @@ namespace ChangeDB.Agent.Postgres
         private async Task WriteTargetTable(DataTable data, TableDescriptor tableDescriptor,
             AgentContext agentContext)
         {
-            await _dataMigrator.BeforeWriteTargetTable(tableDescriptor, agentContext);
+            await _dataMigrator.BeforeWriteTable(tableDescriptor, agentContext);
             await _dataMigrator.WriteTargetTable(data, tableDescriptor, agentContext);
-            await _dataMigrator.AfterWriteTargetTable(tableDescriptor, agentContext);
+            await _dataMigrator.AfterWriteTable(tableDescriptor, agentContext);
         }
 
     }

@@ -10,9 +10,9 @@ namespace ChangeDB
 {
     public abstract class BaseDataMigrator : IDataMigrator
     {
-        public abstract Task AfterWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext);
+        public abstract Task AfterWriteTable(TableDescriptor tableDescriptor, AgentContext agentContext);
 
-        public abstract Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext);
+        public abstract Task BeforeWriteTable(TableDescriptor tableDescriptor, AgentContext agentContext);
 
         public virtual Task<long> CountSourceTable(TableDescriptor table, AgentContext agentContext)
         {

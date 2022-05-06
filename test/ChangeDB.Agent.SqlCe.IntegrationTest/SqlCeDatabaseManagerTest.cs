@@ -17,7 +17,7 @@ namespace ChangeDB.Agent.SqlCe
             {
                 await using var database = CreateDatabase(false);
                 IDatabaseManager _databaseManager = SqlCeDatabaseManager.Default;
-                await _databaseManager.DropTargetDatabaseIfExists(database.ConnectionString, new MigrationSetting());
+                await _databaseManager.DropDatabaseIfExists(database.ConnectionString);
                 database.Connection.Open();
             };
             await action.Should().ThrowAsync<SqlCeException>()
@@ -28,7 +28,7 @@ namespace ChangeDB.Agent.SqlCe
         {
             await using var database = RequestDatabase();
             IDatabaseManager _databaseManager = SqlCeDatabaseManager.Default;
-            await _databaseManager.CreateDatabase(database.ConnectionString, new MigrationSetting());
+            await _databaseManager.CreateDatabase(database.ConnectionString);
             Action action = () =>
             {
                 database.Connection.Open();

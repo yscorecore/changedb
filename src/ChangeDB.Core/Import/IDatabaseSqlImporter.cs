@@ -4,6 +4,6 @@ namespace ChangeDB.Import
 {
     public interface IDatabaseSqlImporter
     {
-        Task Import(ImportContext importContext);
+        Task Import(ImportSetting importSetting, IEventReporter eventReporter);
     }
 }

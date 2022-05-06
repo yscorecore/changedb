@@ -45,7 +45,7 @@ namespace ChangeDB.Agent.SqlServer
             return Task.FromResult(agentContext.Connection.ExecuteReaderAsTable(sql));
         }
 
-        public override Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
+        public override Task BeforeWriteTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             var tableFullName = IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
@@ -57,7 +57,7 @@ namespace ChangeDB.Agent.SqlServer
             return Task.CompletedTask;
         }
 
-        public override Task AfterWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
+        public override Task AfterWriteTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
             {

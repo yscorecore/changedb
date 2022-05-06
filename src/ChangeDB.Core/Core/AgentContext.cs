@@ -29,7 +29,10 @@ namespace ChangeDB
         }
     }
 
-
+    public record AgentContext<T> : AgentContext
+    {
+        public T Setting { get; init; }
+    }
 
     public static class AgentContextExtensions
     {
@@ -42,26 +45,26 @@ namespace ChangeDB
         {
             _ = context.Connection.ExecuteNonQuery(sql);
 
-            context.EventReporter?.RaiseObjectCreated(new ObjectInfo { ObjectType = objectType, FullName = fullName, OwnerName = ownerName });
+            //context.EventReporter?.RaiseObjectCreated(new ObjectInfo { ObjectType = objectType, FullName = fullName, OwnerName = ownerName });
 
         }
 
         public static void RaiseObjectCreated(this AgentContext context, ObjectType objectType, string objectName, string ownerName = null)
         {
             // TODO
-            //context.EventReporter?.RaiseObjectCreated(objectType, objectName, ownerName);
+            //setting.EventReporter?.RaiseObjectCreated(objectType, objectName, ownerName);
         }
         public static void RaiseTableDataMigrated(this AgentContext context, TableDataInfo tableDataInfo)
         {
             // TODO
-            //context.EventReporter?.RaiseTableDataMigrated(tableDataInfo);
+            //setting.EventReporter?.RaiseTableDataMigrated(tableDataInfo);
         }
 
         public static void RaiseTableDataMigrated(this AgentContext context, string table, long totalCount,
             long migratedCount, bool completed)
         {
             //TODO 
-            //context.EventReporter?.RaiseTableDataMigrated(table, totalCount, migratedCount, completed);
+            //setting.EventReporter?.RaiseTableDataMigrated(table, totalCount, migratedCount, completed);
 
         }
         public static void RaiseStageChanged(this AgentContext context, StageKind stage)

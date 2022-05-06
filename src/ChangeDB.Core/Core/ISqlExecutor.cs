@@ -20,7 +20,7 @@ namespace ChangeDB
             return executor.ExecuteReader(sqlReader, agentContext);
         }
 
-        public static Task ExecuteSqls(this ISqlExecutor executor,string sql, AgentContext agentContext)
+        public static Task ExecuteSqls(this ISqlExecutor executor, string sql, AgentContext agentContext)
         {
             using var sqlReader = new StringReader(sql ?? string.Empty);
             return executor.ExecuteReader(sqlReader, agentContext);

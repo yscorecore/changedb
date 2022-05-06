@@ -158,9 +158,9 @@ namespace ChangeDB.Agent.SqlServer
             AgentContext agentContext)
         {
             throw new NotImplementedException();
-            //await dataMigrator.BeforeWriteTargetTable(tableDescriptor, agentContext);
+            //await dataMigrator.BeforeWriteTable(tableDescriptor, agentContext);
             //await dataMigrator.WriteTargetTable(data, tableDescriptor, agentContext);
-            //await dataMigrator.AfterWriteTargetTable(tableDescriptor, agentContext);
+            //await dataMigrator.AfterWriteTable(tableDescriptor, agentContext);
         }
     }
 }

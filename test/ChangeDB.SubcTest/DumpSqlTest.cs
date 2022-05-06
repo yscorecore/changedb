@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ChangeDB.Default;
 using ChangeDB.Dump;
 using ChangeDB.Migration;
 using FluentAssertions;
@@ -30,23 +31,24 @@ namespace ChangeDB
             using var tempFile = new TempFile();
             using (var streamWriter = tempFile.GetStreamWriter())
             {
-                var dumpContext = new DumpContext()
+                DumpSetting basicSetting = CreateSetting(caseFolder);
+                var dumpContext = basicSetting with
                 {
                     Writer = streamWriter,
-                    Setting = CreateSetting(caseFolder),
+
                     SourceDatabase = new DatabaseInfo() { DatabaseType = sourceType, ConnectionString = sourceDatabase.ConnectionString },
                     TargetDatabase = new DatabaseInfo() { DatabaseType = targetType, ConnectionString = string.Empty },
                 };
-                await dumper.DumpSql(dumpContext);
+                await dumper.DumpSql(dumpContext, new DefaultEventReporter());
                 streamWriter.Flush();
             }
             var expectedFile = Path.Combine(caseFolder, $"{sourceType}_{databaseName}_{targetType}", "dump.sql");
             AssertDumpfile(tempFile.FilePath, expectedFile);
         }
-        private MigrationSetting CreateSetting(string caseFolder)
+        private DumpSetting CreateSetting(string caseFolder)
         {
             var settingFile = Path.Combine(caseFolder, "settings.json");
-            return ReadFromDataFile<MigrationSetting>(settingFile);
+            return ReadFromDataFile<DumpSetting>(settingFile);
         }
         private void AssertDumpfile(string filePath, string expectedFile)
         {

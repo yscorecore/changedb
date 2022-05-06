@@ -13,36 +13,31 @@ namespace ChangeDB.Default
             AgentFactory = agentFactory;
         }
 
-        public async Task Import(ImportContext context)
+        public async Task Import(ImportSetting setting,IEventReporter eventReporter)
         {
-            var targetAgent = AgentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
-            await using var targetConnection = targetAgent.ConnectionProvider.CreateConnection(context.TargetDatabase.ConnectionString);
+            var targetAgent = AgentFactory.CreateAgent(setting.TargetDatabase.DatabaseType);
+            await using var targetConnection = targetAgent.ConnectionProvider.CreateConnection(setting.TargetDatabase.ConnectionString);
 
-            var migrationContext = new AgentContext()
+            var context = new ImportContext()
             {
                 Connection = targetConnection,
-
+                ConnectionString = setting.TargetDatabase.ConnectionString,
+                Agent = targetAgent,
+                Setting = setting,
+                EventReporter = eventReporter
             };
-            //migrationContext.EventReporter.ObjectCreated += (s, e) =>
-            //{
-            //    context.ReportObjectCreated(e);
-            //};
-            if (context.ReCreateTargetDatabase)
+            var sqlExecutor = targetAgent.SqlExecutor;
+            if (setting.ReCreateTargetDatabase)
             {
-                await CreateTargetDatabase(targetAgent, context.TargetDatabase.ConnectionString);
+                await CreateTargetDatabase(targetAgent, setting.TargetDatabase.ConnectionString);
             }
-            targetConnection.ExecuteSqlScriptFile(context.SqlScripts.SqlFile, context.SqlScripts.SqlSplit,
-                (info) =>
-                {
-                    context.ReportSqlExecuted(info.StartLine, info.LineCount, info.Sql, info.Result);
-                });
+            await sqlExecutor.ExecuteFile(setting.SqlScripts.SqlFile, context);
         }
 
         private async Task CreateTargetDatabase(IAgent agent, string connectionString)
         {
-
-            await agent.DatabaseManger.DropTargetDatabaseIfExists(connectionString, new MigrationSetting());
-            await agent.DatabaseManger.CreateDatabase(connectionString, new MigrationSetting());
+            await agent.DatabaseManger.DropDatabaseIfExists(connectionString);
+            await agent.DatabaseManger.CreateDatabase(connectionString);
         }
     }
 }

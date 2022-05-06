@@ -26,43 +26,44 @@ namespace ChangeDB.Default
             _tableDataMapper = tableDataMapper;
         }
 
-        [Obsolete]
-        public async Task DumpSql(DumpContext context)
+        public async Task DumpSql(DumpSetting setting, IEventReporter eventReporter)
         {
-            var sourceAgent = AgentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
-            var targetAgent = AgentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
+            var sourceAgent = AgentFactory.CreateAgent(setting.SourceDatabase.DatabaseType);
+            var targetAgent = AgentFactory.CreateAgent(setting.TargetDatabase.DatabaseType);
 
-            await using var sourceAgentContext = new AgentContext
+            await using var sourceAgentContext = new DumpContext
             {
                 Agent = sourceAgent,
-                Connection = sourceAgent.ConnectionProvider.CreateConnection(context.SourceDatabase.ConnectionString),
-                ConnectionString = context.SourceDatabase.ConnectionString,
-                EventReporter = null
+                Connection = sourceAgent.ConnectionProvider.CreateConnection(setting.SourceDatabase.ConnectionString),
+                ConnectionString = setting.SourceDatabase.ConnectionString,
+                EventReporter = eventReporter,
+                Setting = setting,
             };
 
-            await using var targetAgentContext = new AgentContext
+            await using var targetAgentContext = new DumpContext
             {
                 Agent = targetAgent,
-                Connection = new SqlScriptDbConnection(context.Writer),
+                Connection = new SqlScriptDbConnection(setting.Writer),
                 ConnectionString = string.Empty,
-                EventReporter = null
+                EventReporter = eventReporter,
+                Setting = setting,
             };
 
 
             var sourceDatabaseDescriptor = await sourceAgent.MetadataMigrator.GetDatabaseDescriptor(sourceAgentContext);
 
             var databaseDescriptorMapper =
-                await _databaseMapper.MapDatabase(sourceDatabaseDescriptor, targetAgent.AgentSetting, context.Setting);
+                await _databaseMapper.MapDatabase(sourceDatabaseDescriptor, targetAgent.AgentSetting, setting);
 
 
-            await ApplyPreScripts(context);
-            await DoDumpDatabase(context.Setting, databaseDescriptorMapper, sourceAgentContext, targetAgentContext);
-            await ApplyPostScripts(context);
+            await ApplyPreScripts(setting);
+            await DoDumpDatabase(setting, databaseDescriptorMapper, sourceAgentContext, targetAgentContext);
+            await ApplyPostScripts(setting);
             // flush to file
-            await context.Writer.FlushAsync();
+            await setting.Writer.FlushAsync();
         }
 
-        protected virtual async Task DoDumpDatabase(MigrationSetting setting, DatabaseDescriptorMapper mapper, AgentContext sourceContext, AgentContext targetContext)
+        protected virtual async Task DoDumpDatabase(DumpSetting setting, DatabaseDescriptorMapper mapper, AgentContext sourceContext, AgentContext targetContext)
         {
 
             if (setting.IncludeMeta)
@@ -97,9 +98,12 @@ namespace ChangeDB.Default
         }
 
 
-
+/* Unmerged change from project 'ChangeDB.Core(net6)'
+Added:
         [Obsolete]
-        protected virtual async Task DumpData(MigrationSetting migrationSetting, DatabaseDescriptorMapper mapper, AgentContext sourceContext, AgentContext targetContext)
+*/
+        [Obsolete]
+        protected virtual async Task DumpData(DumpSetting migrationSetting, DatabaseDescriptorMapper mapper, AgentContext sourceContext, AgentContext targetContext)
         {
             targetContext.RaiseStageChanged(StageKind.StartingTableData);
             if (NeedOrderByDependency())
@@ -180,29 +184,29 @@ namespace ChangeDB.Default
             }
         }
 
-        protected virtual Task ApplyPreScripts(DumpContext dumpContext)
+        protected virtual Task ApplyPreScripts(DumpSetting dumpSetting)
         {
-            var migrationSetting = dumpContext.Setting;
+            var migrationSetting = dumpSetting;
             if (!string.IsNullOrEmpty(migrationSetting.PreScript?.SqlFile))
             {
                 using var reader = new StreamReader(migrationSetting.PreScript.SqlFile);
-                dumpContext.Writer.AppendReader(reader); 
-            }
-            return Task.CompletedTask;
-        }
-        
-        protected virtual Task ApplyPostScripts(DumpContext dumpContext)
-        {
-            var migrationSetting = dumpContext.Setting;
-            if (!string.IsNullOrEmpty(migrationSetting.PostScript?.SqlFile))
-            {
-                    using var reader = new StreamReader(migrationSetting.PostScript.SqlFile);
-                    dumpContext.Writer.AppendReader(reader); 
+                dumpSetting.Writer.AppendReader(reader);
             }
             return Task.CompletedTask;
         }
 
-        private async IAsyncEnumerable<DataTable> ConvertToTargetDataTable(IAsyncEnumerable<DataTable> dataTables, TableDescriptorMapper tableDescriptorMapper, MigrationSetting migrationSetting)
+        protected virtual Task ApplyPostScripts(DumpSetting dumpSetting)
+        {
+            var migrationSetting = dumpSetting;
+            if (!string.IsNullOrEmpty(migrationSetting.PostScript?.SqlFile))
+            {
+                using var reader = new StreamReader(migrationSetting.PostScript.SqlFile);
+                dumpSetting.Writer.AppendReader(reader);
+            }
+            return Task.CompletedTask;
+        }
+
+        private async IAsyncEnumerable<DataTable> ConvertToTargetDataTable(IAsyncEnumerable<DataTable> dataTables, TableDescriptorMapper tableDescriptorMapper, DumpSetting migrationSetting)
         {
             await foreach (var dataTable in dataTables)
             {
@@ -211,11 +215,11 @@ namespace ChangeDB.Default
         }
 
         [Obsolete]
-        protected virtual async Task DumpTable(MigrationSetting migrationSetting, TableDescriptorMapper tableMapper, AgentContext sourceContext, AgentContext targetContext)
+        protected virtual async Task DumpTable(DumpSetting migrationSetting, TableDescriptorMapper tableMapper, AgentContext sourceContext, AgentContext targetContext)
         {
             var targetTableFullName = targetContext.Agent.AgentSetting.IdentityName(tableMapper.Target.Schema, tableMapper.Target.Name);
 
-            await targetContext.Agent.DataMigrator.BeforeWriteTargetTable(tableMapper.Target, targetContext);
+            await targetContext.Agent.DataMigrator.BeforeWriteTable(tableMapper.Target, targetContext);
 
             var sourceCount = await sourceContext.Agent.DataMigrator.CountSourceTable(tableMapper.Source, sourceContext);
             var sourceDataTables = sourceContext.Agent.DataMigrator.ReadSourceTable(tableMapper.Source, sourceContext, migrationSetting);
@@ -223,7 +227,7 @@ namespace ChangeDB.Default
             await targetContext.Agent.DataDumper.WriteTables(targetDataTables, tableMapper.Target, null);
 
 
-            await targetContext.Agent.DataMigrator.AfterWriteTargetTable(tableMapper.Target, targetContext);
+            await targetContext.Agent.DataMigrator.AfterWriteTable(tableMapper.Target, targetContext);
             targetContext.RaiseTableDataMigrated(targetTableFullName, sourceCount, sourceCount, true);
         }
 

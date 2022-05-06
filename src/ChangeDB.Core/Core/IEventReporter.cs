@@ -9,6 +9,13 @@ namespace ChangeDB
 {
     public interface IEventReporter
     {
-        void RaiseObjectCreated(ObjectInfo objectInfo);
+        // void RaiseObjectCreated(ObjectInfo objectInfo);
+        // void RaiseTableDataMigrated(TableDataInfo tableDataInfo);
+        // void RaiseWarning(object warning);
+        void RaiseEvent<T>(T eventInfo) where T : IEventInfo;
+    }
+
+    public interface IEventInfo
+    {
     }
 }

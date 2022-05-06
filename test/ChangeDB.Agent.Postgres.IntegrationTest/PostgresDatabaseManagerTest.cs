@@ -20,7 +20,7 @@ namespace ChangeDB.Agent.Postgres
             {
                 await using var database = CreateDatabase(false);
                 var databaseManager = PostgresDatabaseManager.Default;
-                await databaseManager.DropTargetDatabaseIfExists(database.ConnectionString, new MigrationSetting());
+                await databaseManager.DropDatabaseIfExists(database.ConnectionString);
                 database.Connection.Open();
             };
             await action.Should().ThrowAsync<PostgresException>()
@@ -33,7 +33,7 @@ namespace ChangeDB.Agent.Postgres
 
             await using var database = RequestDatabase();
             var databaseManager = PostgresDatabaseManager.Default;
-            await databaseManager.CreateDatabase(database.ConnectionString, new MigrationSetting());
+            await databaseManager.CreateDatabase(database.ConnectionString);
             var currentDatabase = database.Connection.ExecuteScalar<string>("select current_database()");
             currentDatabase.Should().Be(database.DatabaseName);
         }

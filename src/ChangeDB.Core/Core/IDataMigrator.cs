@@ -8,9 +8,9 @@ namespace ChangeDB
 {
     public interface IDataMigrator
     {
-        Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext);
+        Task BeforeWriteTable(TableDescriptor tableDescriptor, AgentContext agentContext);
 
-        Task AfterWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext);
+        Task AfterWriteTable(TableDescriptor tableDescriptor, AgentContext agentContext);
 
         Task<DataTable> ReadSourceTable(TableDescriptor table, PageInfo pageInfo, AgentContext agentContext);
 

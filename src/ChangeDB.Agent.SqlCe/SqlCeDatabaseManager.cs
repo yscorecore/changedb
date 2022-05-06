@@ -11,19 +11,14 @@ namespace ChangeDB.Agent.SqlCe
     {
         public static readonly IDatabaseManager Default = new SqlCeDatabaseManager();
 
-        public Task CreateDatabase(string connectionString, MigrationSetting setting)
+        public Task CreateDatabase(string connectionString)
         {
-            CreateDatabase(connectionString);
+            SqlCeEngine engine = new SqlCeEngine(connectionString);
+            engine.CreateDatabase();
             return Task.CompletedTask;
         }
 
-        public Task DropTargetDatabaseIfExists(string connectionString, MigrationSetting setting)
-        {
-            DropDatabaseIfExists(connectionString);
-            return Task.CompletedTask;
-        }
-
-        private static void DropDatabaseIfExists(string connectionString)
+        public Task DropDatabaseIfExists(string connectionString)
         {
             var builder = new SqlCeConnectionStringBuilder(connectionString);
             var fileName = builder.DataSource;
@@ -31,12 +26,10 @@ namespace ChangeDB.Agent.SqlCe
             {
                 File.Delete(fileName);
             }
+            return Task.CompletedTask;
         }
 
-        private static void CreateDatabase(string connectionString)
-        {
-            SqlCeEngine engine = new SqlCeEngine(connectionString);
-            engine.CreateDatabase();
-        }
+     
+        
     }
 }

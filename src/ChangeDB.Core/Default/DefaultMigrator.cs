@@ -13,7 +13,7 @@ namespace ChangeDB.Default
 {
     public class DefaultMigrator : IDatabaseMigrate
     {
-        protected IAgentFactory AgentFactory { get; }
+        private IAgentFactory AgentFactory { get; }
 
 
         private IDatabaseMapper _databaseMapper;
@@ -29,24 +29,24 @@ namespace ChangeDB.Default
 
         protected static Action<string> Log = (a) => { };
 
-        public virtual async Task MigrateDatabase(MigrationContext context)
+        public virtual async Task MigrateDatabase(MigrationSetting setting, IEventReporter eventReporter)
         {
-            var sourceAgent = AgentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
-            var targetAgent = AgentFactory.CreateAgent(context.TargetDatabase.DatabaseType);
+            var sourceAgent = AgentFactory.CreateAgent(setting.SourceDatabase.DatabaseType);
+            var targetAgent = AgentFactory.CreateAgent(setting.TargetDatabase.DatabaseType);
             
             await using var sourceAgentContext = new AgentContext
             {
                 Agent = sourceAgent,
-                Connection = sourceAgent.ConnectionProvider.CreateConnection(context.SourceDatabase.ConnectionString),
-                ConnectionString = context.SourceDatabase.ConnectionString,
+                Connection = sourceAgent.ConnectionProvider.CreateConnection(setting.SourceDatabase.ConnectionString),
+                ConnectionString = setting.SourceDatabase.ConnectionString,
                 EventReporter = null
             };
 
             await using var targetAgentContext = new AgentContext
             {
                 Agent = targetAgent,
-                Connection = targetAgent.ConnectionProvider.CreateConnection(context.TargetDatabase.ConnectionString),
-                ConnectionString = context.TargetDatabase.ConnectionString,
+                Connection = targetAgent.ConnectionProvider.CreateConnection(setting.TargetDatabase.ConnectionString),
+                ConnectionString = setting.TargetDatabase.ConnectionString,
                 EventReporter = null
             };
 
@@ -54,13 +54,13 @@ namespace ChangeDB.Default
             var sourceDatabaseDescriptor = await sourceAgent.MetadataMigrator.GetDatabaseDescriptor(sourceAgentContext);
 
             var databaseDescriptorMapper =
-                await _databaseMapper.MapDatabase(sourceDatabaseDescriptor, targetAgent.AgentSetting, context.Setting);
+                await _databaseMapper.MapDatabase(sourceDatabaseDescriptor, targetAgent.AgentSetting, setting);
 
 
-            await CreateTargetDatabaseWhenNecessary(context.Setting, targetAgentContext);
-            await ApplyPreScripts(context.Setting, targetAgentContext);
-            await DoMigrateDatabase(context.Setting, databaseDescriptorMapper, sourceAgentContext, targetAgentContext);
-            await ApplyPostScripts(context.Setting, targetAgentContext);
+            await CreateTargetDatabaseWhenNecessary(setting, targetAgentContext);
+            await ApplyPreScripts(setting, targetAgentContext);
+            await DoMigrateDatabase(setting, databaseDescriptorMapper, sourceAgentContext, targetAgentContext);
+            await ApplyPostScripts(setting, targetAgentContext);
 
         }
 
@@ -91,10 +91,10 @@ namespace ChangeDB.Default
                             if (migrationSetting.DropTargetDatabaseIfExists)
                             {
                                 Log("dropping target database if exists.");
-                                await targetAgent.DatabaseManger.DropTargetDatabaseIfExists(migrationContext.Connection.ConnectionString, migrationSetting);
+                                await targetAgent.DatabaseManger.DropDatabaseIfExists(migrationContext.Connection.ConnectionString);
                             }
                             Log("creating target database.");
-                            await targetAgent.DatabaseManger.CreateDatabase(migrationContext.ConnectionString, migrationSetting);
+                            await targetAgent.DatabaseManger.CreateDatabase(migrationContext.ConnectionString);
             }
 
 
@@ -244,7 +244,7 @@ namespace ChangeDB.Default
         protected virtual async Task MigrationTable(MigrationSetting migrationSetting, TableDescriptorMapper tableMapper, AgentContext sourceContext, AgentContext targetContext)
         {
             var targetTableFullName = targetContext.Agent.AgentSetting.IdentityName(tableMapper.Target.Schema, tableMapper.Target.Name);
-            await targetContext.Agent.DataMigrator.BeforeWriteTargetTable(tableMapper.Target, targetContext);
+            await targetContext.Agent.DataMigrator.BeforeWriteTable(tableMapper.Target, targetContext);
 
             var sourceCount = await sourceContext.Agent.DataMigrator.CountSourceTable(tableMapper.Source, sourceContext);
             var sourceDataTables = sourceContext.Agent.DataMigrator.ReadSourceTable(tableMapper.Source, sourceContext, migrationSetting);
@@ -253,7 +253,7 @@ namespace ChangeDB.Default
 
 
             var targetCount = await targetContext.Agent.DataMigrator.CountSourceTable(tableMapper.Target, targetContext);
-            await targetContext.Agent.DataMigrator.AfterWriteTargetTable(tableMapper.Target, targetContext);
+            await targetContext.Agent.DataMigrator.AfterWriteTable(tableMapper.Target, targetContext);
 
             targetContext.RaiseTableDataMigrated(targetTableFullName, targetCount, targetCount, true);
 

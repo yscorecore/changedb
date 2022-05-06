@@ -154,9 +154,9 @@ namespace ChangeDB.Agent.MySql
         private async Task WriteTargetTable(DataTable data, TableDescriptor tableDescriptor,
             AgentContext migrationContext)
         {
-            await _dataMigrator.BeforeWriteTargetTable(tableDescriptor, migrationContext);
+            await _dataMigrator.BeforeWriteTable(tableDescriptor, migrationContext);
             await _dataMigrator.WriteTargetTable(data, tableDescriptor, migrationContext);
-            await _dataMigrator.AfterWriteTargetTable(tableDescriptor, migrationContext);
+            await _dataMigrator.AfterWriteTable(tableDescriptor, migrationContext);
         }
 
     }

@@ -7,6 +7,6 @@ namespace ChangeDB
 {
     public interface IDataDumper
     {
-        Task WriteTables(IAsyncEnumerable<DataTable> datas, TableDescriptor tableDescriptor, DumpContext dumpContext);
+        Task WriteTables(IAsyncEnumerable<DataTable> datas, TableDescriptor tableDescriptor, DumpSetting dumpSetting);
     }
 }

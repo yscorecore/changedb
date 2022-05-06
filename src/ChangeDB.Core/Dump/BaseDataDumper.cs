@@ -25,7 +25,7 @@ namespace ChangeDB.Dump
         {
             return string.Join(", ", columnValues.Select(p => ReprValue(p.Column, p.Value)));
         }
-        public virtual async Task WriteTables(IAsyncEnumerable<DataTable> datas, TableDescriptor tableDescriptor, DumpContext dumpContext)
+        public virtual async Task WriteTables(IAsyncEnumerable<DataTable> datas, TableDescriptor tableDescriptor, DumpSetting dumpSetting)
         {
 
             await foreach (DataTable dataTable in datas)
@@ -33,8 +33,8 @@ namespace ChangeDB.Dump
                 foreach (DataRow row in dataTable.Rows)
                 {
                     var line = BuildInsertCommand(row, tableDescriptor);
-                    dumpContext.Writer.WriteLine(line);
-                    dumpContext.Writer.WriteLine();
+                    await dumpSetting.Writer.WriteLineAsync(line);
+                    await dumpSetting.Writer.WriteLineAsync();
                 }
             }
         }

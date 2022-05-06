@@ -1,10 +1,7 @@
-﻿using System.IO;
-using ChangeDB.Migration;
-
-namespace ChangeDB.Dump
+﻿namespace ChangeDB.Dump
 {
-    public record DumpContext : MigrationContext
+    public record DumpContext : AgentContext<DumpSetting>
     {
-        public TextWriter Writer { get; set; }
+        
     }
 }

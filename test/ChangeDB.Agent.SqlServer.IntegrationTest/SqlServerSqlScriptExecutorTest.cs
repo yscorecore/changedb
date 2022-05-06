@@ -73,15 +73,15 @@ create table lasttable(id int);
             var rowCount = database.Connection.ExecuteScalar<int>("select count(1) from lasttable");
             rowCount.Should().Be(0);
         }
-        
+
         private AgentContext CreateContext(IDatabase database)
         {
             return new AgentContext()
             {
                 Agent = new SqlServerAgent(),
                 Connection = database.Connection,
-                 ConnectionString = database.ConnectionString
-                
+                ConnectionString = database.ConnectionString
+
             };
         }
     }

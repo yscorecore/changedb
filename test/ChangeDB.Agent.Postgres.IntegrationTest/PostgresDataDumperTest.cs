@@ -76,9 +76,9 @@ namespace ChangeDB.Agent.Postgres
             string dumpFile = $"dump_{Path.GetRandomFileName()}.sql";
             await using (var writer = new StreamWriter(dumpFile))
             {
-                var dumpContext = new DumpContext
+                var dumpContext = new DumpSetting
                 {
-                    Setting = new MigrationSetting { OptimizeInsertion = optimizeInsertion },
+                    OptimizeInsertion = optimizeInsertion,
                     Writer = writer
 
                 };
@@ -118,9 +118,9 @@ namespace ChangeDB.Agent.Postgres
             string dumpFile = $"dump_{Path.GetRandomFileName()}.sql";
             await using (var writer = new StreamWriter(dumpFile))
             {
-                var dumpContext = new DumpContext
+                var dumpContext = new DumpSetting
                 {
-                    Setting = new MigrationSetting { OptimizeInsertion = false },
+                    OptimizeInsertion = false,
                     Writer = writer
 
                 };
@@ -154,9 +154,9 @@ namespace ChangeDB.Agent.Postgres
             string dumpFile = $"dump_{Path.GetRandomFileName()}.sql";
             await using (var writer = new StreamWriter(dumpFile))
             {
-                var dumpContext = new DumpContext
+                var dumpContext = new DumpSetting
                 {
-                    Setting = new MigrationSetting { OptimizeInsertion = true },
+                    OptimizeInsertion = true,
                     Writer = writer
 
                 };

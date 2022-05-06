@@ -17,7 +17,7 @@ namespace ChangeDB.Agent.SqlServer
             {
                 Agent = new SqlServerAgent(),
                 Connection = connection
-                
+
             };
         }
 

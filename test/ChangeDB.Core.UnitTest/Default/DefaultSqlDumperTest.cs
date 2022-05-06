@@ -15,7 +15,6 @@ namespace ChangeDB.Core.Default
     public class DefaultSqlDumperTest
     {
         [Fact]
-        [System.Obsolete]
         public async Task ShouldIncludePostScript()
         {
             var emptyDatabaseTask = Task.FromResult(new DatabaseDescriptor());
@@ -37,16 +36,15 @@ namespace ChangeDB.Core.Default
             });
             var sb = new StringBuilder();
             using var writer = new StringWriter(sb);
-            await dumper.DumpSql(new DumpContext
+            await dumper.DumpSql(new DumpSetting
             {
                 SourceDatabase = new DatabaseInfo { DatabaseType = "sourcedb" },
                 TargetDatabase = new DatabaseInfo { DatabaseType = "targetdb" },
-                Setting = new MigrationSetting
-                {
-                    PostScript = new CustomSqlScript { SqlFile = customSqlScript }
-                },
+
+                PostScript = new CustomSqlScript { SqlFile = customSqlScript },
+
                 Writer = writer
-            });
+            }, new DefaultEventReporter());
             using var reader = new StringReader(sb.ToString());
             var allLines = reader.ReadAllLines().ToArray();
             allLines[0].Should().Be("Hello;");

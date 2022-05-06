@@ -13,29 +13,29 @@ namespace ChangeDB.Agent.Postgres
     {
         public static readonly IDataDumper Default = new PostgresDataDumper();
 
-        public override async Task WriteTables(IAsyncEnumerable<DataTable> datas, TableDescriptor tableDescriptor, DumpContext dumpContext)
+        public override async Task WriteTables(IAsyncEnumerable<DataTable> datas, TableDescriptor tableDescriptor, DumpSetting dumpSetting)
         {
-            if (dumpContext.Setting.OptimizeInsertion)
+            if (dumpSetting.OptimizeInsertion)
             {
-                await dumpContext.Writer.WriteLineAsync($"COPY {IdentityName(tableDescriptor.Schema, tableDescriptor.Name)}({BuildColumnNames(tableDescriptor.Columns)}) FROM STDIN;");
+                await dumpSetting.Writer.WriteLineAsync($"COPY {IdentityName(tableDescriptor.Schema, tableDescriptor.Name)}({BuildColumnNames(tableDescriptor.Columns)}) FROM STDIN;");
 
                 await foreach (var dataTable in datas)
                 {
                     foreach (DataRow row in dataTable.Rows)
                     {
                         var values = tableDescriptor.Columns.Select(p => FormatValue(row[p.Name]));
-                        await dumpContext.Writer.WriteLineAsync(string.Join('\t', values));
+                        await dumpSetting.Writer.WriteLineAsync(string.Join('\t', values));
                     }
                 }
-                await dumpContext.Writer.WriteLineAsync("\\.");
-                await dumpContext.Writer.WriteLineAsync("");
+                await dumpSetting.Writer.WriteLineAsync("\\.");
+                await dumpSetting.Writer.WriteLineAsync("");
                 // copy mode
 
             }
             else
             {
                 // insert mode
-                await base.WriteTables(datas, tableDescriptor, dumpContext);
+                await base.WriteTables(datas, tableDescriptor, dumpSetting);
             }
         }
 

@@ -82,12 +82,12 @@ namespace ChangeDB.Agent.Postgres
         };
 
 
-        public override Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
+        public override Task BeforeWriteTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             return Task.CompletedTask;
         }
 
-        public override Task AfterWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
+        public override Task AfterWriteTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             var tableFullName = IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
             tableDescriptor.Columns.Where(p => p.IdentityInfo?.CurrentValue != null)

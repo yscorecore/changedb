@@ -18,7 +18,7 @@ namespace ChangeDB.Agent.MySql
             {
                 await using var database = CreateDatabase(false);
                 var databaseManager = MySqlDatabaseManager.Default;
-                await databaseManager.DropTargetDatabaseIfExists(database.ConnectionString, new MigrationSetting());
+                await databaseManager.DropDatabaseIfExists(database.ConnectionString);
                 database.Connection.Open();
             };
             await action.Should().ThrowAsync<MySqlException>()
@@ -31,7 +31,7 @@ namespace ChangeDB.Agent.MySql
 
             await using var database = RequestDatabase();
             var databaseManager = MySqlDatabaseManager.Default;
-            await databaseManager.CreateDatabase(database.ConnectionString, new MigrationSetting());
+            await databaseManager.CreateDatabase(database.ConnectionString);
             var currentDatabase = database.Connection.ExecuteScalar<string>("select database()");
             currentDatabase.Should().Be(database.DatabaseName);
         }

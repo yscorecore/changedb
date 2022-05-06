@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ChangeDB.Default;
 using ChangeDB.Migration;
 using Microsoft.Extensions.DependencyInjection;
 using TestDB;
@@ -26,14 +27,14 @@ namespace ChangeDB
 
             using var sourceDatabase = Databases.CreateDatabaseFromFile(sourceType, true, GetDatabaseFile(sourceType, databaseName));
             using var targetDatabase = Databases.RequestDatabase(targetType);
-            var migrationContext = new MigrationContext()
+            var basicSetting = CreateSetting(caseFolder);
+            var migrationContext = basicSetting with
             {
-                Setting = CreateSetting(caseFolder),
                 SourceDatabase = new DatabaseInfo() { DatabaseType = sourceType, ConnectionString = sourceDatabase.ConnectionString },
                 TargetDatabase = new DatabaseInfo() { DatabaseType = targetType, ConnectionString = targetDatabase.ConnectionString },
             };
             var migrate = ServiceProvider.GetRequiredService<IDatabaseMigrate>();
-            await migrate.MigrateDatabase(migrationContext);
+            await migrate.MigrateDatabase(migrationContext, new DefaultEventReporter());
 
             var targetFolder = Path.Combine(caseFolder, $"{sourceType}_{databaseName}_{targetType}");
             await AssertTargetResult(targetType, targetDatabase, targetFolder);

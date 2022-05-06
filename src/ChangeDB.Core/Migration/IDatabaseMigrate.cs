@@ -4,6 +4,6 @@ namespace ChangeDB.Migration
 {
     public interface IDatabaseMigrate
     {
-        Task MigrateDatabase(MigrationContext context);
+        Task MigrateDatabase(MigrationSetting setting, IEventReporter eventReporter);
     }
 }

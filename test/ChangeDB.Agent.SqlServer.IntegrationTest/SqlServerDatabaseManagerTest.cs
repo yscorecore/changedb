@@ -18,7 +18,7 @@ namespace ChangeDB.Agent.SqlServer
             {
                 await using var database = CreateDatabase(false);
                 var databaseManager = SqlServerDatabaseManager.Default;
-                await databaseManager.DropTargetDatabaseIfExists(database.ConnectionString, new MigrationSetting());
+                await databaseManager.DropDatabaseIfExists(database.ConnectionString);
                 database.Connection.Open();
             };
             await action.Should().ThrowAsync<Exception>()
@@ -30,7 +30,7 @@ namespace ChangeDB.Agent.SqlServer
         {
             await using var database = RequestDatabase();
             var databaseManager = SqlServerDatabaseManager.Default;
-            await databaseManager.CreateDatabase(database.ConnectionString, new MigrationSetting());
+            await databaseManager.CreateDatabase(database.ConnectionString);
             var currentDatabase = database.Connection.ExecuteScalar<string>("select DB_NAME()");
             currentDatabase.Should().Be(database.DatabaseName);
         }

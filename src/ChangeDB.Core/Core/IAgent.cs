@@ -11,9 +11,8 @@ namespace ChangeDB
         IDataMigrator DataMigrator { get; }
         IMetadataMigrator MetadataMigrator { get; }
         IDatabaseManager DatabaseManger { get; }
-        AgentSetting AgentSetting { get; }
         IDataDumper DataDumper { get; }
-
         ISqlExecutor SqlExecutor { get; }
+        AgentSetting AgentSetting { get; }
     }
 }

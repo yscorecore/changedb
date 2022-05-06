@@ -10,19 +10,15 @@ namespace ChangeDB.Agent.Postgres
         public static readonly IDatabaseManager Default = new PostgresDatabaseManager();
 
 
-        public Task CreateDatabase(string connectionString, MigrationSetting setting)
+        public Task CreateDatabase(string connectionString)
         {
-            CreateDatabase(connectionString);
+            using var newConnection = CreateNoDatabaseConnection(connectionString);
+            var connectionInfo = new NpgsqlConnectionStringBuilder(connectionString);
+            newConnection.ExecuteNonQuery($"CREATE DATABASE {PostgresUtils.IdentityName(connectionInfo.Database)};");
             return Task.CompletedTask;
         }
 
-        public Task DropTargetDatabaseIfExists(string connectionString, MigrationSetting setting)
-        {
-            DropDatabaseIfExists(connectionString);
-            return Task.CompletedTask;
-        }
-
-        private static void DropDatabaseIfExists(string connectionString)
+        public Task DropDatabaseIfExists(string connectionString)
         {
             using (var connection = new NpgsqlConnection(connectionString))
             {
@@ -37,18 +33,16 @@ WHERE pid <> pg_backend_pid() and datname ='{databaseName}'");
             newConnection.ExecuteNonQuery(
                 $"drop database if exists {PostgresUtils.IdentityName(databaseName)}"
             );
+            return Task.CompletedTask;
         }
+
+       
         private static string GetDatabaseName(string connectionString)
         {
             return new NpgsqlConnectionStringBuilder(connectionString).Database;
         }
 
-        private static void CreateDatabase(string connectionString)
-        {
-            using var newConnection = CreateNoDatabaseConnection(connectionString);
-            var connectionInfo = new NpgsqlConnectionStringBuilder(connectionString);
-            newConnection.ExecuteNonQuery($"CREATE DATABASE {PostgresUtils.IdentityName(connectionInfo.Database)};");
-        }
+    
 
         private static NpgsqlConnection CreateNoDatabaseConnection(string connectionString)
         {

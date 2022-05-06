@@ -4,6 +4,6 @@ namespace ChangeDB.Dump
 {
     public interface IDatabaseSqlDumper
     {
-        Task DumpSql(DumpContext dumpContext);
+        Task DumpSql(DumpSetting dumpSetting, IEventReporter eventReporter);
     }
 }

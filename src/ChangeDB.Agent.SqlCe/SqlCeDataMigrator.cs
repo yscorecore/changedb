@@ -27,7 +27,7 @@ namespace ChangeDB.Agent.SqlCe
         }
 
 
-        public override Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
+        public override Task BeforeWriteTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             var tableFullName = SqlCeUtils.IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
@@ -39,7 +39,7 @@ namespace ChangeDB.Agent.SqlCe
             return Task.CompletedTask;
         }
 
-        public override Task AfterWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
+        public override Task AfterWriteTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             if (tableDescriptor.Columns.Any(p => p.IdentityInfo != null))
             {

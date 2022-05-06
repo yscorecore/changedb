@@ -1,14 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using ChangeDB.Migration.Mapper;
 
 namespace ChangeDB.Migration
 {
-    public class MigrationSetting
+    public record MigrationSetting
     {
+        public DatabaseInfo SourceDatabase { get; init; }
+        public DatabaseInfo TargetDatabase { get; init; }
+
         public int FetchDataMaxSize { get; set; } = 1024 * 10;
         public MigrationScope MigrationScope { get; set; } = MigrationScope.All;
         public bool DropTargetDatabaseIfExists { get; set; } = true;
-        public SourceFilter SourceFilter { get; set; } = new SourceFilter();
         public CustomSqlScript PostScript { get; set; } = new CustomSqlScript();
         public CustomSqlScript PreScript { get; set; } = new CustomSqlScript();
         public TargetNameStyle TargetNameStyle { get; set; } = new TargetNameStyle();
@@ -25,9 +29,11 @@ namespace ChangeDB.Migration
 
 
         public bool OptimizeInsertion { get; set; } = true;
+
     }
 
-    public enum InsertionKind
+
+ public enum InsertionKind
     {
         Default,
         SingleRow,
@@ -52,11 +58,6 @@ namespace ChangeDB.Migration
         public string SqlSplit { get; set; } = ";;";
     }
 
-    public class SourceFilter
-    {
-        public List<string> SourceTablesPattern { get; set; } = new List<string> { "*" };
-        public List<string> SourceTableFilter { get; set; } = new List<string> { };
-    }
     public class TargetNameStyle
     {
         static readonly Random Random = new();
@@ -95,6 +96,57 @@ namespace ChangeDB.Migration
                 _ => Origin
             };
         }
+
+    }
+
+    public class ObjectInfo : IEventInfo
+    {
+        public ObjectType ObjectType { get; set; }
+
+        public string FullName { get; set; }
+
+        public string OwnerName { get; set; }
+
+    }
+
+
+
+    public enum ObjectType
+    {
+        Database,
+        Schema,
+        Table,
+        Index,
+        ForeignKey,
+        PrimaryKey,
+        Unique,
+        UniqueIndex
+
+    }
+
+    public class TableDataInfo : IEventInfo
+    {
+        public long TotalCount { get; set; }
+        public long MigratedCount { get; set; }
+        public string Table { get; set; }
+
+        public bool Completed { get; set; }
+
+    }
+
+    public enum StageKind
+    {
+        StartingPreMeta,
+        FinishedPreMeta,
+        StartingTableData,
+        FinishedTableData,
+        StartingPostMeta,
+        FinishedPostMeta
+    }
+
+    public record StageInfo : IEventInfo
+    {
+        public StageKind Stage { get; set; }
 
     }
 }

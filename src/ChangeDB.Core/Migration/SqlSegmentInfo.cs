@@ -1,6 +1,6 @@
 ﻿namespace ChangeDB.Migration
 {
-    public record SqlSegmentInfo
+    public record SqlSegmentInfo : IEventInfo
     {
         public int StartLine { get; set; }
         public int LineCount { get; set; }

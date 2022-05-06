@@ -25,12 +25,12 @@ namespace ChangeDB.Agent.MySql
             return Task.FromResult(agentContext.Connection.ExecuteReaderAsTable(sql));
         }
 
-        public override Task BeforeWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
+        public override Task BeforeWriteTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             return Task.CompletedTask;
         }
 
-        public override Task AfterWriteTargetTable(TableDescriptor tableDescriptor, AgentContext agentContext)
+        public override Task AfterWriteTable(TableDescriptor tableDescriptor, AgentContext agentContext)
         {
             var identityColumn = tableDescriptor.Columns.FirstOrDefault(p => p.IsIdentity && p.IdentityInfo?.CurrentValue != null);
             if (identityColumn != null)

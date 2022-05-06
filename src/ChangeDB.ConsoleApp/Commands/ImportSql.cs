@@ -28,13 +28,14 @@ namespace ChangeDB.ConsoleApp.Commands
         protected override void OnRunCommand()
         {
             var service = ServiceHost.Default.GetRequiredService<IDatabaseSqlImporter>();
-            var context = this.BuildImportContext();
-            service.Import(context).Wait();
+            var info = this.BuildImportInfo();
+            var eventReporter = new EventReporter();
+            service.Import(info, eventReporter).Wait();
         }
 
-        private ImportContext BuildImportContext()
+        private ImportSetting BuildImportInfo()
         {
-            var context = new ImportContext
+            return new()
             {
                 TargetDatabase = new DatabaseInfo
                 {
@@ -48,18 +49,31 @@ namespace ChangeDB.ConsoleApp.Commands
                 },
                 ReCreateTargetDatabase = ReCreateTargetDatabase
             };
+        }
 
-            context.ObjectCreated += (sender, e) =>
+        class EventReporter : IEventReporter
+        {
+            public void RaiseEvent<T>(T eventInfo)
+                where T : IEventInfo
             {
-                Console.WriteLine(string.IsNullOrEmpty(e.OwnerName)
-                    ? $"{e.ObjectType} {e.FullName} created."
-                    : $"{e.ObjectType} {e.FullName} on {e.OwnerName} created.");
-            };
-            context.SqlExecuted += (sender, e) =>
-            {
-                Console.WriteLine($"Execute sql file line {e.StartLine:d3}...{e.StartLine + e.LineCount - 1:d3} success, return value {e.Result}.");
-            };
-            return context;
+                switch (eventInfo)
+                {
+                    case ObjectInfo objectInfo:
+                        Console.WriteLine(string.IsNullOrEmpty(objectInfo.OwnerName)
+                            ? $"{objectInfo.ObjectType} {objectInfo.FullName} created."
+                            : $"{objectInfo.ObjectType} {objectInfo.FullName} on {objectInfo.OwnerName} created.");
+                        break;
+                    case SqlSegmentInfo sqlSegmentInfo:
+                        Console.WriteLine(
+                            $"Execute sql file line {sqlSegmentInfo.StartLine:d3}...{sqlSegmentInfo.StartLine + sqlSegmentInfo.LineCount - 1:d3} success, return value {sqlSegmentInfo.Result}.");
+                        break;
+                    default:
+                        Console.WriteLine(eventInfo);
+                        break;
+                }
+            }
         }
     }
+
+
 }

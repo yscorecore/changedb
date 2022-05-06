@@ -10,19 +10,15 @@ namespace ChangeDB.Agent.SqlServer
     {
         public static readonly IDatabaseManager Default = new SqlServerDatabaseManager();
 
-        public Task CreateDatabase(string connectionString, MigrationSetting setting)
+        public Task CreateDatabase(string connectionString)
         {
-            CreateDatabase(connectionString);
+            using var newConnection = CreateNoDatabaseConnection(connectionString);
+            var connectionInfo = new SqlConnectionStringBuilder(connectionString);
+            newConnection.ExecuteNonQuery($"create database {IdentityName(connectionInfo.InitialCatalog)}");
             return Task.CompletedTask;
         }
 
-        public Task DropTargetDatabaseIfExists(string connectionString, MigrationSetting setting)
-        {
-            DropDatabaseIfExists(connectionString);
-            return Task.CompletedTask;
-        }
-
-        private static void DropDatabaseIfExists(string connectionString)
+        public Task DropDatabaseIfExists(string connectionString)
         {
             var databaseName = GetDatabaseName(connectionString);
 
@@ -40,14 +36,7 @@ namespace ChangeDB.Agent.SqlServer
             newConnection.ExecuteNonQuery(
                 $" drop database if exists {IdentityName(connectionInfo.InitialCatalog)}"
             );
-        }
-
-
-        private static void CreateDatabase(string connection)
-        {
-            using var newConnection = CreateNoDatabaseConnection(connection);
-            var connectionInfo = new SqlConnectionStringBuilder(connection);
-            newConnection.ExecuteNonQuery($"create database {IdentityName(connectionInfo.InitialCatalog)}");
+            return Task.CompletedTask;
         }
 
         private static DbConnection CreateNoDatabaseConnection(string connection)
