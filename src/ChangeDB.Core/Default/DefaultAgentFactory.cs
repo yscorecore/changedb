@@ -20,5 +20,10 @@ namespace ChangeDB.Default
             }
             throw new NotSupportedException($"Not support agent type '{type}', the agent type should be one of the [{string.Join(", ", _allMigrators.Keys)}].");
         }
+
+        public IEnumerable<IAgent> ListAll()
+        {
+            return this._allMigrators.Values;
+        }
     }
 }

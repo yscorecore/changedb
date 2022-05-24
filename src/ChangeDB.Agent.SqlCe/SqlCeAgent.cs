@@ -8,12 +8,14 @@ namespace ChangeDB.Agent.SqlCe
     public class SqlCeAgent : BaseAgent
     {
         public override AgentSetting AgentSetting =>
-            new AgentSetting
+            new ()
             {
                 DefaultSchema = null,
                 ObjectNameMaxLength = 128,
                 IdentityName = SqlCeUtils.IdentityName,
-                DatabaseType = "sqlce"
+                DatabaseType = "sqlce",
+                 SupportOs = Os.Windows,
+                  ConnectionTemplate = "Data Source=myDatabase.sdf;Persist Security Info=False;"
             };
     }
 }
