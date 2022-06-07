@@ -31,8 +31,8 @@ namespace ChangeDB.Migration
 
     public class Filter
     {
-        public List<string> Tables { get; set; }
-        public List<string> Schemas { get; set; }
+        public IEnumerable<string> Tables { get; set; }
+        public IEnumerable<string> Schemas { get; set; }
     }
 
     [Flags]

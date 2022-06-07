@@ -4,6 +4,10 @@
       "commandName": "Project",
       "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" -f "
     },
+    "mssql_postgres_filter": {
+      "commandName": "Project",
+      "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" -f --tables Orders"
+    },
     "mssql_postgres_metadata_only": {
       "commandName": "Project",
       "commandLineArgs": "migration sqlserver \"Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=myStrong(!)Password;\" postgres \"Server=127.0.0.1;Port=5432;Database=northwind;User Id=postgres;Password=mypassword;\" -f --migration-scope metadata "

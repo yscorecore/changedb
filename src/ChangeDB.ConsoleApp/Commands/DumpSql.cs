@@ -57,9 +57,9 @@ namespace ChangeDB.ConsoleApp.Commands
             HelpText = "hide progress bar.", Default = false)]
         public bool HideProgress { get; set; }
         [Option( "tables", HelpText = "the tables to include. if empty, include all tables.", Separator = ',')]
-        public List<string> Tables { get; set; }
+        public IEnumerable<string> Tables { get; set; }
         [Option( "schemas", HelpText = "the schemas to include. if empty, include all schemas.", Separator = ',')]
-        public List<string> Schemas { get; set; }
+        public IEnumerable<string> Schemas { get; set; }
 
         protected override void OnRunCommand()
         {
