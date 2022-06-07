@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
+using ChangeDB.Migration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
 using Microsoft.EntityFrameworkCore.Internal;
@@ -24,7 +25,7 @@ namespace ChangeDB.Agent.SqlServer
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "<Pending>")]
-        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
+        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection, Filter settingFilter)
         {
             var loggerFactory = new LoggerFactory();
             var databaseModelFactory = new SqlServerDatabaseModelFactory(
@@ -34,7 +35,7 @@ namespace ChangeDB.Agent.SqlServer
                     new DiagnosticListener("sqlserver"),
                     new SqlServerLoggingDefinitions(),
                     new NullDbContextLogger()));
-            var options = new DatabaseModelFactoryOptions();
+            var options = new DatabaseModelFactoryOptions(settingFilter?.Tables,settingFilter?.Schemas);
             var model = databaseModelFactory.Create(dbConnection, options);
             return FromDatabaseModel(model, dbConnection);
         }

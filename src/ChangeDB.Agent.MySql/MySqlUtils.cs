@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.Common;
 using System.Linq;
+using ChangeDB.Migration;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
@@ -18,10 +19,10 @@ namespace ChangeDB.Agent.MySql
         public static string IdentityName(string schema, string objectName) => $"{IdentityName(objectName)}";
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
-        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
+        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection, Filter settingFilter)
         {
             var databaseModelFactory = GetModelFactory();
-            var model = databaseModelFactory.Create(dbConnection, new DatabaseModelFactoryOptions());
+            var model = databaseModelFactory.Create(dbConnection, new DatabaseModelFactoryOptions(settingFilter?.Tables,settingFilter?.Schemas));
             return FromDatabaseModel(model, dbConnection);
         }
 

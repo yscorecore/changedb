@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using ChangeDB.Agent.SqlCe.EFCore.SqlServerCompact;
+using ChangeDB.Migration;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
@@ -18,11 +19,11 @@ namespace ChangeDB.Agent.SqlCe
         public static string IdentityName(TableDescriptor table) => IdentityName(table.Schema, table.Name);
 
 
-        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection)
+        public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection, Filter settingFilter)
         {
 
             var databaseModelFactory = new SqlCeDatabaseModelFactory();
-            var options = new DatabaseModelFactoryOptions();
+            var options = new DatabaseModelFactoryOptions(settingFilter?.Tables,settingFilter?.Schemas);
             var model = databaseModelFactory.Create(dbConnection, options);
             return FromDatabaseModel(model, dbConnection);
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using ChangeDB.Migration;
 using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,7 +53,10 @@ namespace ChangeDB.ConsoleApp.Commands
            HelpText = "hide progress bar.", Default = false)]
         public bool HideProgress { get; set; }
 
-
+        [Option( "tables", HelpText = "the tables to include. if empty, include all tables.", Separator = ',')]
+        public List<string> Tables { get; set; }
+        [Option( "schemas", HelpText = "the schemas to include. if empty, include all schemas.", Separator = ',')]
+        public List<string> Schemas { get; set; }
         protected override void OnRunCommand()
         {
             var service = ServiceHost.Default.GetRequiredService<IDatabaseMigrate>();
@@ -78,7 +82,8 @@ namespace ChangeDB.ConsoleApp.Commands
                         SqlFile = PostSqlFile,
                         SqlSplit = PostSqlSplit,
                     },
-                    TargetDefaultSchema = TargetDefaultSchema
+                    TargetDefaultSchema = TargetDefaultSchema,
+                    Filter = new Filter{ Tables = Tables,Schemas = Schemas}
                 },
 
                 SourceDatabase = new DatabaseInfo { DatabaseType = SourceType, ConnectionString = SourceConnectionString },

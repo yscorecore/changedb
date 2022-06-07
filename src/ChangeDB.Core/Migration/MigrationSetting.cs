@@ -25,6 +25,14 @@ namespace ChangeDB.Migration
 
 
         public bool OptimizeInsertion { get; set; } = true;
+
+        public Filter Filter { get; set; } = new Filter();
+    }
+
+    public class Filter
+    {
+        public List<string> Tables { get; set; }
+        public List<string> Schemas { get; set; }
     }
 
     [Flags]

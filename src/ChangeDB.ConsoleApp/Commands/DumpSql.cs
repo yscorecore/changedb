@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using ChangeDB.Dump;
 using ChangeDB.Migration;
 using CommandLine;
@@ -55,8 +56,10 @@ namespace ChangeDB.ConsoleApp.Commands
         [Option("hide-progress",
             HelpText = "hide progress bar.", Default = false)]
         public bool HideProgress { get; set; }
-
-
+        [Option( "tables", HelpText = "the tables to include. if empty, include all tables.", Separator = ',')]
+        public List<string> Tables { get; set; }
+        [Option( "schemas", HelpText = "the schemas to include. if empty, include all schemas.", Separator = ',')]
+        public List<string> Schemas { get; set; }
 
         protected override void OnRunCommand()
         {
@@ -83,7 +86,8 @@ namespace ChangeDB.ConsoleApp.Commands
                         SqlFile = PostSqlFile,
                         SqlSplit = PostSqlSplit,
                     },
-                    TargetDefaultSchema = TargetDefaultSchema
+                    TargetDefaultSchema = TargetDefaultSchema,
+                    Filter = new Filter{ Tables = Tables, Schemas = Schemas}
 
                 },
 
