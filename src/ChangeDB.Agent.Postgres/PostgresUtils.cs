@@ -39,7 +39,7 @@ namespace ChangeDB.Agent.Postgres
                        new DiagnosticListener("postgres"),
                        new NpgsqlLoggingDefinitions(),
                        new NullDbContextLogger()));
-            var options = new DatabaseModelFactoryOptions(settingFilter?.Tables,settingFilter?.Schemas);
+            var options = new DatabaseModelFactoryOptions(settingFilter?.Tables, settingFilter?.Schemas);
             var model = databaseModelFactory.Create(dbConnection, options);
             return FromDatabaseModel(model, dbConnection);
         }

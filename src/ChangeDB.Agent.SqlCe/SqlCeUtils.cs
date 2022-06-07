@@ -23,7 +23,7 @@ namespace ChangeDB.Agent.SqlCe
         {
 
             var databaseModelFactory = new SqlCeDatabaseModelFactory();
-            var options = new DatabaseModelFactoryOptions(settingFilter?.Tables,settingFilter?.Schemas);
+            var options = new DatabaseModelFactoryOptions(settingFilter?.Tables, settingFilter?.Schemas);
             var model = databaseModelFactory.Create(dbConnection, options);
             return FromDatabaseModel(model, dbConnection);
         }

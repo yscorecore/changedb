@@ -22,7 +22,7 @@ namespace ChangeDB.Agent.MySql
         public static DatabaseDescriptor GetDataBaseDescriptorByEFCore(DbConnection dbConnection, Filter settingFilter)
         {
             var databaseModelFactory = GetModelFactory();
-            var model = databaseModelFactory.Create(dbConnection, new DatabaseModelFactoryOptions(settingFilter?.Tables,settingFilter?.Schemas));
+            var model = databaseModelFactory.Create(dbConnection, new DatabaseModelFactoryOptions(settingFilter?.Tables, settingFilter?.Schemas));
             return FromDatabaseModel(model, dbConnection);
         }
 

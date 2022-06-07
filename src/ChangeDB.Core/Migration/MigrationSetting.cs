@@ -7,9 +7,11 @@ namespace ChangeDB.Migration
     {
         public int FetchDataMaxSize { get; set; } = 1024 * 10;
         public MigrationScope MigrationScope { get; set; } = MigrationScope.All;
-        public bool DropTargetDatabaseIfExists { get; set; } = true;
+        //public bool DropTargetDatabaseIfExists { get; set; } = true;
         public SourceFilter SourceFilter { get; set; } = new SourceFilter();
         public CustomSqlScript PostScript { get; set; } = new CustomSqlScript();
+
+        public CustomSqlScript PreScript { get; set; } = new CustomSqlScript();
         public TargetNameStyle TargetNameStyle { get; set; } = new TargetNameStyle();
 
         public bool FixObjectNameMaxLength { get; set; } = true;
@@ -27,8 +29,16 @@ namespace ChangeDB.Migration
         public bool OptimizeInsertion { get; set; } = true;
 
         public Filter Filter { get; set; } = new Filter();
+
+        public CreateDatabaseKind CreateTargetDatabase { get; set; } = CreateDatabaseKind.New;
     }
 
+    public enum CreateDatabaseKind
+    {
+        New,
+        ForceNew,
+        Never
+    }
     public class Filter
     {
         public IEnumerable<string> Tables { get; set; }

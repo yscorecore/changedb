@@ -46,8 +46,11 @@ namespace ChangeDB.Default
 
             await ApplyMigrationSettings(context);
             await ApplyTargetAgentSettings(context);
+
+            await CreateTargetDatabase(context);
+            await ApplyCustomScripts(context, context.Setting?.PreScript);
             await DoMigrateDatabase(context);
-            await ApplyCustomScripts(context);
+            await ApplyCustomScripts(context, context.Setting?.PostScript);
 
         }
 
@@ -71,10 +74,7 @@ namespace ChangeDB.Default
         protected virtual async Task DoMigrateDatabase(MigrationContext migrationContext)
         {
             var (target, source, migrationSetting) = (migrationContext.Target, migrationContext.Source, migrationContext.Setting);
-            if (migrationContext.Setting.IncludeMeta)
-            {
-                await CreateTargetDatabase(migrationContext);
-            }
+
 
             if (migrationContext.Setting.IncludeMeta)
             {
@@ -94,13 +94,20 @@ namespace ChangeDB.Default
         protected virtual async Task CreateTargetDatabase(MigrationContext migrationContext)
         {
             var (targetAgent, targetConnection) = (migrationContext.Target.Agent, migrationContext.TargetConnection);
-            if (migrationContext.Setting.DropTargetDatabaseIfExists)
+            var kind = migrationContext.Setting?.CreateTargetDatabase;
+            if (kind == CreateDatabaseKind.ForceNew)
             {
                 Log("dropping target database if exists.");
                 await targetAgent.DatabaseManger.DropTargetDatabaseIfExists(migrationContext);
+                Log("creating target database.");
+                await targetAgent.DatabaseManger.CreateTargetDatabase(migrationContext);
+
             }
-            Log("creating target database.");
-            await targetAgent.DatabaseManger.CreateTargetDatabase(migrationContext);
+            else if (kind == CreateDatabaseKind.New)
+            {
+                Log("creating target database.");
+                await targetAgent.DatabaseManger.CreateTargetDatabase(migrationContext);
+            }
         }
         protected virtual async Task PreMigrationMetadata(AgentRunTimeInfo target, MigrationContext migrationContext)
         {
@@ -216,12 +223,11 @@ namespace ChangeDB.Default
         }
 
 
-        protected virtual Task ApplyCustomScripts(MigrationContext migrationContext)
+        protected virtual Task ApplyCustomScripts(MigrationContext migrationContext, CustomSqlScript customSqlScript)
         {
-            var migrationSetting = migrationContext.Setting;
-            if (!string.IsNullOrEmpty(migrationSetting.PostScript?.SqlFile))
+            if (!string.IsNullOrEmpty(customSqlScript?.SqlFile))
             {
-                migrationContext.TargetConnection.ExecuteSqlScriptFile(migrationSetting.PostScript.SqlFile, migrationSetting.PostScript.SqlSplit);
+                migrationContext.TargetConnection.ExecuteSqlScriptFile(customSqlScript.SqlFile, customSqlScript.SqlSplit);
             }
             return Task.CompletedTask;
         }

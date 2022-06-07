@@ -15,7 +15,7 @@ namespace ChangeDB.Agent.MySql
             // mysql get descriptor need a new connection
             using var newSourceConnection =
                 migrationContext.Source.Agent.CreateConnection(migrationContext.SourceDatabase.ConnectionString);
-            var databaseDescriptor = GetDataBaseDescriptorByEFCore(newSourceConnection,migrationContext.Setting?.Filter);
+            var databaseDescriptor = GetDataBaseDescriptorByEFCore(newSourceConnection, migrationContext.Setting?.Filter);
             return Task.FromResult(databaseDescriptor);
         }
 

@@ -26,7 +26,7 @@ namespace ChangeDB.Default
             var sourceAgent = AgentFactory.CreateAgent(context.SourceDatabase.DatabaseType);
             var targetAgent = AgentFactory.CreateAgent(context.DumpInfo.DatabaseType);
             await using var sourceConnection = sourceAgent.CreateConnection(context.SourceDatabase.ConnectionString);
-            var createNew = context.Setting.DropTargetDatabaseIfExists;
+            // var createNew = context.Setting.DropTargetDatabaseIfExists;
             await using var sqlWriter = new StreamWriter(context.DumpInfo.SqlScriptFile, false);
             await using var targetConnection = new SqlScriptDbConnection(sqlWriter,
                 targetAgent.Repr);
@@ -51,8 +51,9 @@ namespace ChangeDB.Default
 
             await ApplyMigrationSettings(context);
             await ApplyTargetAgentSettings(context);
+            await ApplyCustomScripts(context, context?.Setting?.PreScript);
             await DoDumpDatabase(context);
-            await ApplyCustomScripts(context);
+            await ApplyCustomScripts(context, context?.Setting?.PostScript);
             // flush to file
             await sqlWriter.FlushAsync();
         }
@@ -191,12 +192,11 @@ namespace ChangeDB.Default
         }
 
 
-        protected virtual Task ApplyCustomScripts(MigrationContext migrationContext)
+        protected virtual Task ApplyCustomScripts(MigrationContext migrationContext, CustomSqlScript customSqlScript)
         {
-            var migrationSetting = migrationContext.Setting;
-            if (!string.IsNullOrEmpty(migrationSetting.PostScript?.SqlFile))
+            if (!string.IsNullOrEmpty(customSqlScript?.SqlFile))
             {
-                migrationContext.TargetConnection.ExecuteSqlScriptFile(migrationSetting.PostScript.SqlFile, migrationSetting.PostScript.SqlSplit);
+                migrationContext.TargetConnection.ExecuteSqlScriptFile(customSqlScript.SqlFile, customSqlScript.SqlSplit);
             }
             return Task.CompletedTask;
         }

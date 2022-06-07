@@ -17,7 +17,7 @@ namespace ChangeDB.Agent.Postgres
 
         public Task<DatabaseDescriptor> GetSourceDatabaseDescriptor(MigrationContext migrationContext)
         {
-            var databaseDescriptor = PostgresUtils.GetDataBaseDescriptorByEFCore(migrationContext.SourceConnection,migrationContext.Setting?.Filter);
+            var databaseDescriptor = PostgresUtils.GetDataBaseDescriptorByEFCore(migrationContext.SourceConnection, migrationContext.Setting?.Filter);
             return Task.FromResult(databaseDescriptor);
         }
         public Task PreMigrateTargetMetadata(DatabaseDescriptor databaseDescriptor, MigrationContext migrationContext)

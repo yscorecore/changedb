@@ -35,7 +35,7 @@ namespace ChangeDB.Agent.SqlServer
                     new DiagnosticListener("sqlserver"),
                     new SqlServerLoggingDefinitions(),
                     new NullDbContextLogger()));
-            var options = new DatabaseModelFactoryOptions(settingFilter?.Tables,settingFilter?.Schemas);
+            var options = new DatabaseModelFactoryOptions(settingFilter?.Tables, settingFilter?.Schemas);
             var model = databaseModelFactory.Create(dbConnection, options);
             return FromDatabaseModel(model, dbConnection);
         }

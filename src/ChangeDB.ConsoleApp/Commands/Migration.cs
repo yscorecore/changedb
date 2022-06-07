@@ -22,7 +22,6 @@ namespace ChangeDB.ConsoleApp.Commands
         [Value(4, MetaName = "target-connection", Required = true, HelpText = "target database connection strings")]
         public string TargetConnectionString { get; set; }
 
-
         [Option('f', "force", HelpText = "drop target database if exists")]
         public bool DropTargetDatabaseIfExists { get; set; } = false;
 
@@ -36,6 +35,13 @@ namespace ChangeDB.ConsoleApp.Commands
 
         [Option("max-fetch-bytes", HelpText = "max fetch bytes when read source database (unit KB), default value is 100 (100KB).")]
         public int MaxFetchBytes { get; set; } = 100;
+
+        [Option("pre-sql-file",
+HelpText = "pre sql file, execute these sql script before the migration one-by-one.")]
+        public string PreSqlFile { get; set; }
+
+        [Option("pre-sql-file-split", Required = false, HelpText = "pre sql file split chars, default value is \"\"", Default = "")]
+        public string PreSqlSplit { get; set; } = "";
 
         [Option("post-sql-file",
             HelpText = "post sql file, execute these sql script after the migration one-by-one.")]
@@ -53,10 +59,13 @@ namespace ChangeDB.ConsoleApp.Commands
            HelpText = "hide progress bar.", Default = false)]
         public bool HideProgress { get; set; }
 
-        [Option( "tables", HelpText = "the tables to include. if empty, include all tables.", Separator = ',')]
+        [Option("tables", HelpText = "the tables to include. if empty, include all tables.", Separator = ',')]
         public IEnumerable<string> Tables { get; set; }
-        [Option( "schemas", HelpText = "the schemas to include. if empty, include all schemas.", Separator = ',')]
+        [Option("schemas", HelpText = "the schemas to include. if empty, include all schemas.", Separator = ',')]
         public IEnumerable<string> Schemas { get; set; }
+
+        [Option("create-target-database", HelpText = "the behavior of how to create target database (New/ForceNew/Never).", Default = CreateDatabaseKind.New)]
+        public CreateDatabaseKind CreateTargetDatabase { get; set; } = CreateDatabaseKind.New;
         protected override void OnRunCommand()
         {
             var service = ServiceHost.Default.GetRequiredService<IDatabaseMigrate>();
@@ -71,19 +80,24 @@ namespace ChangeDB.ConsoleApp.Commands
                 Setting = new MigrationSetting()
                 {
                     MigrationScope = MigrationScope,
-                    DropTargetDatabaseIfExists = DropTargetDatabaseIfExists,
                     TargetNameStyle = new TargetNameStyle
                     {
                         NameStyle = NameStyle
                     },
                     FetchDataMaxSize = MaxFetchBytes * 1024,
+                    PreScript = new CustomSqlScript()
+                    {
+                        SqlFile = PreSqlFile,
+                        SqlSplit = PreSqlSplit,
+                    },
                     PostScript = new CustomSqlScript()
                     {
                         SqlFile = PostSqlFile,
                         SqlSplit = PostSqlSplit,
                     },
                     TargetDefaultSchema = TargetDefaultSchema,
-                    Filter = new Filter{ Tables = Tables,Schemas = Schemas}
+                    Filter = new Filter { Tables = Tables, Schemas = Schemas },
+                    CreateTargetDatabase = DropTargetDatabaseIfExists ? CreateDatabaseKind.ForceNew : CreateTargetDatabase,
                 },
 
                 SourceDatabase = new DatabaseInfo { DatabaseType = SourceType, ConnectionString = SourceConnectionString },
