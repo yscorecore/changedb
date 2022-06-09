@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using ChangeDB.Import;
 using ChangeDB.Migration;
 
@@ -33,11 +34,16 @@ namespace ChangeDB.Default
             {
                 await CreateTargetDatabase(migrationContext);
             }
-            targetConnection.ExecuteSqlScriptFile(context.SqlScripts.SqlFile, context.SqlScripts.SqlSplit,
-                (info) =>
-                {
-                    context.ReportSqlExecuted(info.StartLine, info.LineCount, info.Sql, info.Result);
-                });
+
+            foreach (var file in context.SqlScripts?.SqlFile ?? Enumerable.Empty<string>())
+            {
+                targetConnection.ExecuteSqlScriptFile(file, context.SqlScripts.SqlSplit,
+                       (info) =>
+                       {
+                           context.ReportSqlExecuted(info.StartLine, info.LineCount, info.Sql, info.Result);
+                       });
+            }
+
         }
         private async Task CreateTargetDatabase(MigrationContext migrationContext)
         {

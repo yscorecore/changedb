@@ -56,7 +56,7 @@ namespace ChangeDB.Migration
 
     public class CustomSqlScript
     {
-        public string SqlFile { get; set; }
+        public IEnumerable<string> SqlFile { get; set; }
 
         public string SqlSplit { get; set; } = ";;";
     }

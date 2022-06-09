@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using ChangeDB.Import;
 using ChangeDB.Migration;
 using CommandLine;
@@ -43,7 +45,7 @@ namespace ChangeDB.ConsoleApp.Commands
                 },
                 SqlScripts = new CustomSqlScript()
                 {
-                    SqlFile = TargetScriptFile,
+                    SqlFile = new[] { TargetScriptFile }.Where(p => !string.IsNullOrEmpty(p)),
                     SqlSplit = SqlSplit,
                 },
                 ReCreateTargetDatabase = ReCreateTargetDatabase

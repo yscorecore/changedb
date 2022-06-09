@@ -38,15 +38,15 @@ namespace ChangeDB.ConsoleApp.Commands
 
 
         [Option("pre-sql-file",
-  HelpText = "pre sql file, execute these sql script before the migration one-by-one.")]
-        public string PreSqlFile { get; set; }
+  HelpText = "pre sql file, execute these sql script before the migration one-by-one.", Separator = ',')]
+        public IEnumerable<string> PreSqlFile { get; set; }
 
         [Option("pre-sql-file-split", Required = false, HelpText = "pre sql file split chars, default value is \"\"", Default = "")]
         public string PreSqlSplit { get; set; } = "";
 
         [Option("post-sql-file",
-          HelpText = "post sql file, execute these sql script after the migration one-by-one.")]
-        public string PostSqlFile { get; set; }
+          HelpText = "post sql file, execute these sql script after the migration one-by-one.", Separator = ',')]
+        public IEnumerable<string> PostSqlFile { get; set; }
 
         [Option("post-sql-file-split", Required = false, HelpText = "post sql file split chars, default value is \"\"", Default = "")]
         public string PostSqlSplit { get; set; } = "";

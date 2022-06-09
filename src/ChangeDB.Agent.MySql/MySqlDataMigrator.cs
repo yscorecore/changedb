@@ -66,7 +66,7 @@ namespace ChangeDB.Agent.MySql
             if (identityColumn != null)
             {
                 var tableFullName = IdentityName(tableDescriptor.Schema, tableDescriptor.Name);
-                migrationContext.TargetConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} AUTO_INCREMENT = {identityColumn.IdentityInfo.CurrentValue + identityColumn.IdentityInfo.IncrementBy }");
+                migrationContext.TargetConnection.ExecuteNonQuery($"ALTER TABLE {tableFullName} AUTO_INCREMENT = {identityColumn.IdentityInfo.CurrentValue + identityColumn.IdentityInfo.IncrementBy}");
             }
             return Task.CompletedTask;
         }

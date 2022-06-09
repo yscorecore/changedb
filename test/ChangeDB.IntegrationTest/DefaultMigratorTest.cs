@@ -69,7 +69,7 @@ namespace ChangeDB.IntegrationTest
             {
                 TargetDatabase = new DatabaseInfo { DatabaseType = agentType, ConnectionString = dbConnectionString },
                 ReCreateTargetDatabase = true,
-                SqlScripts = new CustomSqlScript { SqlFile = tempFile, SqlSplit = split }
+                SqlScripts = new CustomSqlScript { SqlFile = new[] { tempFile }, SqlSplit = split }
             };
             await databaseSqlImporter.Import(importContext);
         }

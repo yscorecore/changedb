@@ -225,9 +225,9 @@ namespace ChangeDB.Default
 
         protected virtual Task ApplyCustomScripts(MigrationContext migrationContext, CustomSqlScript customSqlScript)
         {
-            if (!string.IsNullOrEmpty(customSqlScript?.SqlFile))
+            foreach (var file in customSqlScript?.SqlFile ?? Enumerable.Empty<string>())
             {
-                migrationContext.TargetConnection.ExecuteSqlScriptFile(customSqlScript.SqlFile, customSqlScript.SqlSplit);
+                migrationContext.TargetConnection.ExecuteSqlScriptFile(file, customSqlScript.SqlSplit);
             }
             return Task.CompletedTask;
         }
