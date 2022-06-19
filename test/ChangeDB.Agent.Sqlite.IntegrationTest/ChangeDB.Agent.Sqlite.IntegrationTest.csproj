@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Nullable>enable</Nullable>
+        <RootNamespace>ChangeDB.Agent.Sqlite</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\ChangeDB.Agent.Sqlite\ChangeDB.Agent.Sqlite.csproj" />
+        <ProjectReference Include="..\..\testdb\TestDB.Sqlite\TestDB.Sqlite.csproj" />
+    </ItemGroup>
+</Project>

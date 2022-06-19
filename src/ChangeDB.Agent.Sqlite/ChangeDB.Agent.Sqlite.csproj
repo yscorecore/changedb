@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+
+
+    <ItemGroup>
+      <!--<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.17" />-->
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.5" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.17" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ChangeDB.Core\ChangeDB.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net6'">
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite">
+        <Version>6.0.5</Version>
+      </PackageReference>
+    </ItemGroup>
+
+</Project>
