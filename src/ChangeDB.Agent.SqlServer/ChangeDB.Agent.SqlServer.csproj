@@ -3,7 +3,7 @@
 
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.12" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.2" />
     </ItemGroup>
 
     <ItemGroup>
